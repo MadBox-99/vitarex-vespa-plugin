@@ -113,14 +113,25 @@
                             </tr>
 
                             <tr class="entered-athletes" style="display:none;">
-                                <td colspan="5">
+                                <td colspan="6">
                                     <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th colspan="2"></th>
+                                                <th>Név</th>
+                                                <th>Nem</th>
+                                                <th>Születési dátum</th>
+                                                <th>Megye</th>
+                                                <th>Intézmény</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
                                         <?php
                                         $athletesagegroups = [];
                                         $athletesGroups = [];
                                         foreach ($agegroups as $agegroup) {
 
-                                            //csak azokat a versenyzőket keressük, akiknek az életkora az adott korcsoporton belülre esik, 
+                                            //csak azokat a versenyzőket keressük, akiknek az életkora az adott korcsoporton belülre esik,
                                             //illetve a fogyatékossági csoportja is az adott versenyszámban van
                                             $athletesagegroups[$agegroup->agegroup_name] = array_filter($athletes, function ($athlete) use ($agegroup, $race) {
                                                 return strtotime($athlete->birth_date) >= strtotime($agegroup->date_from)
@@ -151,12 +162,12 @@
                                                 continue;
 
                                             echo '<tr class="contest_entries-athlete">';
-                                            echo '  <td colspan="4" style="font-weight:bold;">' . $agegroupKey . '</td>';
+                                            echo '  <td colspan="7" style="font-weight:bold;">' . $agegroupKey . '</td>';
                                             echo '</tr>';
                                             foreach ($athletesagegroup as $athletedisgroupkey => $athletes_disgroup_filtered) :
                                                 echo '<tr class="contest_entries-athlete">';
                                                 echo '<td></td>';
-                                                echo '  <td colspan="4" style="font-weight:bold;">' . $athletedisgroupkey . '</td>';
+                                                echo '  <td colspan="6" style="font-weight:bold;">' . $athletedisgroupkey . '</td>';
                                                 echo '</tr>';
                                                 foreach ($athletes_disgroup_filtered as $athletekey => $athletes_filtered) :
                                                     if (empty($athletes_filtered) || array_reduce(
@@ -171,7 +182,7 @@
                                                     echo '<tr class="contest_entries-athlete">';
                                                     echo '<td></td>';
                                                     echo '<td></td>';
-                                                    echo '  <td colspan="4" style="font-weight:bold;">' . $athletekey . '</td>';
+                                                    echo '  <td colspan="5" style="font-weight:bold;">' . $athletekey . '</td>';
                                                     echo '</tr>';
                                                     foreach ($athletes_filtered as $athlete) :
                                                         if (!str_contains($race->disability_groups, $athlete->disability_type))
@@ -184,7 +195,6 @@
                                                             <td><?php echo $athlete->gender; ?></td>
                                                             <td><?php echo $athlete->birth_date; ?></td>
                                                             <td><?php echo $athlete->state_name; ?></td>
-                                                            <td><?php echo $athlete->disability_group_name; ?></td>
                                                             <td><?php echo $athlete->ins_name . ' (' . $athlete->id_number . ')'; ?></td>
                                                         </tr>
 
@@ -195,6 +205,7 @@
                                             endforeach;
                                         endforeach;
                                         ?>
+                                        </tbody>
                                     </table>
                                 </td>
                             </tr>
