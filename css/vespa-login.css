@@ -1,0 +1,26 @@
+/* login css */
+.login h1 a {
+	background-image: url('../images/vespa_logo.png');
+	background-image: none, url('../images/vespa_logo.png');
+	background-size: 360px 260px;
+	background-position: center top;
+	background-repeat: no-repeat;
+	cursor: default;
+	color: #999;
+	height: 250px;
+	font-size: 20px;
+	font-weight: normal;
+	line-height: 1.3em;
+	margin: 0 auto 25px;
+	padding: 0;
+	text-decoration: none;
+	width: 300px;
+	text-indent: -9999px;
+	outline: none;
+	overflow: hidden;
+	display: block;
+}
+
+#backtoblog {
+	display: none;;
+}

@@ -1,0 +1,77 @@
+h1, h2, h3 {
+	color: #e12d3b;
+}
+
+h1 {
+	font-size: 30px;
+}
+
+.image-footer {
+  position: fixed; /* Fixed position within the page */
+  bottom: 0;      /* Align to the bottom */
+  left: 0;        /* Align to the left */
+  width: 100%;    /* Span the full width of the page */
+  text-align: center; /* Center the image if needed */
+  z-index: 999;      /* Make sure it's above other content */
+}
+
+.image-footer img {
+	height: 100px;
+	width: auto;
+}
+
+table tbody tr td,
+table tbody tr th, 
+table tfoot tr td,
+table tfoot tr th,
+.table tbody tr td,
+.table tbody tr th, 
+.table tfoot tr td,
+.table tfoot tr th 
+{
+    page-break-inside: avoid;
+    color:#333;
+}
+
+table,
+.table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.table td, 
+.table th 
+{
+	border:#ccc 1px solid;
+	text-align: left;
+	padding: 5px;
+
+}
+
+table td,
+table th 
+{
+	text-align: left;
+	padding: 5px;
+	vertical-align: top;
+}
+
+table td.label {
+	font-weight: bold;
+	width: 25%;
+	padding-right: 5%;
+}
+
+table td.bp {
+	padding-bottom: 20px;
+}
+
+table td.bt {
+	padding-top: 20px;
+}
+
+table td.border-title {
+	border-top:#333 1px solid ;
+	border-bottom:#333 1px solid ;
+	vertical-align: middle;
+}
