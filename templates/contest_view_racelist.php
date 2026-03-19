@@ -181,11 +181,11 @@
                                                             <td></td>
                                                             <td></td>
                                                             <td><?php echo $athlete->athlete_name; ?></td>
+                                                            <td><?php echo $athlete->gender; ?></td>
                                                             <td><?php echo $athlete->birth_date; ?></td>
                                                             <td><?php echo $athlete->state_name; ?></td>
                                                             <td><?php echo $athlete->disability_group_name; ?></td>
                                                             <td><?php echo $athlete->ins_name . ' (' . $athlete->id_number . ')'; ?></td>
-                                                            <td></td>
                                                         </tr>
 
                                         <?php

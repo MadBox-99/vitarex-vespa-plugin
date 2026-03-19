@@ -231,6 +231,10 @@
                                                     </td>
 
                                                     <td>
+                                                        <?php echo $a->gender; ?>
+                                                    </td>
+
+                                                    <td>
                                                         <?php echo $a->birth_date; ?>
                                                     </td>
 
@@ -262,6 +266,7 @@
                                                                 <?php echo $a->athlete_name; ?>
                                                             </a>
                                                         </td>
+                                                        <td><?php echo $a->gender; ?></td>
                                                         <td><?php echo $a->birth_date; ?></td>
                                                     </tr>
                                             <?php

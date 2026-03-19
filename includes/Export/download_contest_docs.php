@@ -254,13 +254,19 @@ function vespa_download_medical_approval($contest_id)
     $mpdf->WriteHTML($html);
 
     $mpdf->Output($filename, 'F');
-    //exit;
+
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
     header('Content-Type: application/pdf');
-    header('Content-Disposition: inline; filename="' . basename($filename) . '"');
+    header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
     header('Content-Length: ' . filesize($filename));
+    header('Cache-Control: private, max-age=0, must-revalidate');
+    header('Pragma: public');
 
     // Read and output the PDF file
     readfile($filename);
+    exit;
 }
 
 
@@ -429,16 +435,22 @@ function vespa_download_listing($contest_id, $isBase64 = false, $saveFile = fals
     }
 
     $mpdf->WriteHTML($html);
-    $mpdf->Output($filename, 'F');  
+    $mpdf->Output($filename, 'F');
     if($saveFile)
         return $filename;
     else {
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
         header('Content-Type: application/pdf');
-        header('Content-Disposition: inline; filename="' . basename($filename) . '"');
+        header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
         header('Content-Length: ' . filesize($filename));
-    
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+
         // Read and output the PDF file
         readfile($filename);
+        exit;
     }
 }
 
@@ -1072,12 +1084,18 @@ function vespa_download_answers($contest_id)
 
     $mpdf->Output($filename, 'F');
 
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
     header('Content-Type: application/pdf');
-    header('Content-Disposition: inline; filename="' . basename($filename) . '"');
+    header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
     header('Content-Length: ' . filesize($filename));
+    header('Cache-Control: private, max-age=0, must-revalidate');
+    header('Pragma: public');
 
     // Read and output the PDF file
     readfile($filename);
+    exit;
 }
 
 
