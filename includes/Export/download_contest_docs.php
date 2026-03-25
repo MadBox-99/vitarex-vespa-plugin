@@ -960,8 +960,8 @@ FROM vespa_disability_groups WHERE FIND_IN_SET(disability_group_id, e.disability
 (SELECT agegroup_name FROM vespa_contest_agegroups as vca JOIN vespa_agegroups as va ON (va.agegroup_id=vca.agegroup_id) WHERE vca.contest_id=%d AND a.birth_date BETWEEN vca.date_from AND vca.date_to) as agname,
 (SELECT vca.agegroup_id FROM vespa_contest_agegroups as vca JOIN vespa_agegroups as va ON (va.agegroup_id=vca.agegroup_id) WHERE vca.contest_id=%d AND a.birth_date BETWEEN vca.date_from AND vca.date_to) as ag_id
 FROM vespa_athletes as a 
-                JOIN vespa_athlete_entries as ae ON (ae.athlete_id=a.athlete_id) 
-                        JOIN vespa_constest_events as e  ON (e.event_id=ae.event_id AND e.contest_id=ae.contest_id AND ae.contest_event_id = e.id)
+                JOIN vespa_athlete_entries as ae ON (ae.athlete_id=a.athlete_id)
+                        JOIN vespa_constest_events as e  ON (e.contest_id=ae.contest_id AND ae.contest_event_id = e.id)
                         JOIN vespa_sports as p ON p.sport_id = e.sport_id 
                         LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id   
                         JOIN vespa_institutions as vi ON (vi.institution_id=a.school_id)
