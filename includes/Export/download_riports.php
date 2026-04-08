@@ -686,10 +686,13 @@ function vespa_download_riport_tanev($type)
     $dateFrom = $_GET['dateFrom'];
     $dateTo = $_GET['dateTo'];
     $seriesId = $_GET['series'];
+    $stateId = is_numeric($filter) ? (int)$filter : 0;
     $filterType = '';
-    if($stateId == 0 && $schoolDistrictId == 0) $filterType = 'Országos';
+    if($filter == 'all') $filterType = 'Összes verseny';
+    else if ($filter == 'country') $filterType = 'Csak országos versenyek';
+    else if ($stateId == 0 && $schoolDistrictId == 0) $filterType = 'Országos';
     else if ($schoolDistrictId > 0) {
-        $tk = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_school_districts WHERE school_district_id=%d",$schoolDistrict));
+        $tk = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_school_districts WHERE school_district_id=%d",$schoolDistrictId));
         $filterType = "Tankerület - $tk->school_district_name";
     }
     else if ($stateId > 0) {
@@ -743,13 +746,17 @@ function vespa_download_riport_tanev($type)
         $params[] = $filterTo;
     }
 
+    if ($filter == 'country') {
+        $sql .= " AND vc.contest_type=1";
+    } elseif (is_numeric($filter) && $stateId > 0) {
+        $sql .= " AND vc.contest_type=3 AND vc.state_id=%d";
+        $params[] = $stateId;
+    } elseif (is_numeric($filter) && $stateId == 0) {
+        $sql .= " AND vc.contest_type=3";
+    }
     if($schoolDistrictId > 0) {
          $sql .= " AND vi.school_district_id=%d";
          $params[] = $schoolDistrictId;
-        }
-    if($stateId > 0) {
-        $sql .= " AND vi.ins_state=%d";
-        $params[] = $stateId;
     }
     $sql .= " GROUP BY vi.institution_id;";
     $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
@@ -757,11 +764,11 @@ function vespa_download_riport_tanev($type)
     $params = [];
     $sql = "SELECT vi.institution_id, vi.ins_name FROM `vespa_institutions` as vi
             WHERE 1";
-     if($schoolDistrictId > 0) {
+    if($schoolDistrictId > 0) {
         $sql .= " AND vi.school_district_id=%d";
         $params[] = $schoolDistrictId;
     }
-     if($stateId > 0) {
+    if($stateId > 0) {
         $sql .= " AND vi.ins_state=%d";
         $params[] = $stateId;
     }
