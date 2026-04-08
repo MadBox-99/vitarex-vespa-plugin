@@ -962,10 +962,10 @@ FROM vespa_disability_groups WHERE FIND_IN_SET(disability_group_id, e.disability
 FROM vespa_athletes as a 
                 JOIN vespa_athlete_entries as ae ON (ae.athlete_id=a.athlete_id)
                         JOIN vespa_constest_events as e  ON (e.contest_id=ae.contest_id AND ae.contest_event_id = e.id)
-                        JOIN vespa_sports as p ON p.sport_id = e.sport_id 
-                        LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id   
-                        JOIN vespa_institutions as vi ON (vi.institution_id=a.school_id)
-                        JOIN vespa_states as vs ON (vs.state_id=vi.ins_state)
+                        JOIN vespa_sports as p ON p.sport_id = e.sport_id
+                        LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id
+                        LEFT JOIN vespa_institutions as vi ON (vi.institution_id=a.school_id)
+                        LEFT JOIN vespa_states as vs ON (vs.state_id=vi.ins_state)
                         
                 WHERE $filter AND ae.contest_id=%d 
                 ORDER BY CONCAT(s.sport_event_name,' ', athlete_disgroup,' ',a.gender,' ', agname, ' ', a.athlete_name) ASC";
@@ -987,11 +987,13 @@ FROM vespa_athletes as a
     $ind = 1;
     $prev = '';
     foreach ($list as $item) {
-        $disgroups = explode(",", $item->disgroup);
-        //$multiple_disgroups=count($disgroups)>1;
+        $disgroups = explode(",", $item->disgroup ?? '');
         foreach ($disgroups as $group) {
-            if ($group != $item->athlete_disgroup)
+            if ($group === '' && ($item->athlete_disgroup === null || $item->athlete_disgroup === '')) {
+                // both empty - allow
+            } elseif ($group != $item->athlete_disgroup) {
                 continue;
+            }
             //$event_name = $item->sport_event_name . ' / ' . $item->sport_name . ', ' . $item->dfrom . ' - ' . $item->dto .', ' . $item->disgroup . ', ' . $item->gender;
             //$event_name =  $item->sport_event_name . ', ' . $item->sport_name . ', ' . $item->agname .  ', ' . $group . ', '  . $item->gender;
             $event_name =  "$item->sport_event_name, $group, $item->gender, $item->agname";

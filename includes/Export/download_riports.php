@@ -451,20 +451,18 @@ function vespa_download_riport_versenyen_resztvevo_iskolak_szama()
         ->setCellValue('B' . $ind, $filterType);
     $ind+=2;
     $sheet
-    ->setCellValue('A' . $ind, 'Verseny neve')
-    ->setCellValue('B' . $ind, 'Darabszám');
+    ->setCellValue('A' . $ind, 'Iskola neve')
+    ->setCellValue('B' . $ind, 'Versenyek száma');
     $ind++;
 
     date_default_timezone_set('Europe/Budapest');
 
-    $sql = "SELECT va.athlete_id, va.gender, va.disability_type,va.school_id, vdg.disability_group_name, va.birth_date, vc.contest_name, vc.contest_type, vc.state_id, vce.contest_id, vce.id as contest_event_id, vce.sport_id, vce.event_id, vs.sport_name, vse.sport_event_name FROM `vespa_athletes` as va
+    $sql = "SELECT vi.institution_id, vi.institution_name, COUNT(DISTINCT vc.contest_id) as contest_count
+            FROM vespa_athletes as va
             JOIN vespa_athlete_entries as vae ON va.athlete_id=vae.athlete_id
             JOIN vespa_institutions as vi ON va.school_id=vi.institution_id
             JOIN vespa_contests as vc ON vae.contest_id=vc.contest_id
             JOIN vespa_constest_events as vce ON vae.contest_event_id=vce.id
-            JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
-            LEFT JOIN vespa_sport_events as vse ON vce.event_id=vse.sport_event_id
-            JOIN vespa_disability_groups as vdg ON va.disability_type=vdg.disability_group_id
             WHERE vc.contest_series = $seriesId";
 
     if ($filter == 'country') {
@@ -482,26 +480,13 @@ function vespa_download_riport_versenyen_resztvevo_iskolak_szama()
         $params[] = $schoolDistrict ;
     }
 
+    $sql .= " GROUP BY vi.institution_id ORDER BY vi.institution_name ASC";
+
     $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
 
-    $sumVerseny = 0;
-    $contestArr = array();
     foreach ($data as $row) {
-        $contestArr[$row->contest_id][$row->contest_event_id][] = $row;
-    }
-
-    $sumJelentkezes = 0;
-
-    foreach ($contestArr as $actualContestId => $contestEvents){
-        $allSchoolIds = [];
-        foreach ($contestEvents as $lines) {
-            foreach ($lines as $line) {
-                $allSchoolIds[] = $line->school_id;
-            }
-        }
-        $uniqueSchoolCount = count(array_unique($allSchoolIds));
-        $sheet->setCellValue('A' . $ind, $contestEvents[array_key_first($contestEvents)][0]->contest_name);
-        $sheet->setCellValue('B' . $ind, "$uniqueSchoolCount");
+        $sheet->setCellValue('A' . $ind, $row->institution_name);
+        $sheet->setCellValue('B' . $ind, $row->contest_count);
         $ind++;
     }
 
