@@ -457,7 +457,7 @@ function vespa_download_riport_versenyen_resztvevo_iskolak_szama()
 
     date_default_timezone_set('Europe/Budapest');
 
-    $sql = "SELECT vi.institution_id, vi.institution_name, COUNT(DISTINCT vc.contest_id) as contest_count
+    $sql = "SELECT vi.institution_id, vi.ins_name, COUNT(DISTINCT vc.contest_id) as contest_count
             FROM vespa_athletes as va
             JOIN vespa_athlete_entries as vae ON va.athlete_id=vae.athlete_id
             JOIN vespa_institutions as vi ON va.school_id=vi.institution_id
@@ -480,12 +480,12 @@ function vespa_download_riport_versenyen_resztvevo_iskolak_szama()
         $params[] = $schoolDistrict ;
     }
 
-    $sql .= " GROUP BY vi.institution_id ORDER BY vi.institution_name ASC";
+    $sql .= " GROUP BY vi.institution_id ORDER BY vi.ins_name ASC";
 
     $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
 
     foreach ($data as $row) {
-        $sheet->setCellValue('A' . $ind, $row->institution_name);
+        $sheet->setCellValue('A' . $ind, $row->ins_name);
         $sheet->setCellValue('B' . $ind, $row->contest_count);
         $ind++;
     }

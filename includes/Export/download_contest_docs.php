@@ -962,13 +962,13 @@ FROM vespa_disability_groups WHERE FIND_IN_SET(disability_group_id, e.disability
 FROM vespa_athletes as a 
                 JOIN vespa_athlete_entries as ae ON (ae.athlete_id=a.athlete_id)
                         JOIN vespa_constest_events as e  ON (e.contest_id=ae.contest_id AND ae.contest_event_id = e.id)
-                        JOIN vespa_sports as p ON p.sport_id = e.sport_id
+                        LEFT JOIN vespa_sports as p ON p.sport_id = e.sport_id
                         LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id
                         LEFT JOIN vespa_institutions as vi ON (vi.institution_id=a.school_id)
                         LEFT JOIN vespa_states as vs ON (vs.state_id=vi.ins_state)
-                        
-                WHERE $filter AND ae.contest_id=%d 
-                ORDER BY CONCAT(s.sport_event_name,' ', athlete_disgroup,' ',a.gender,' ', agname, ' ', a.athlete_name) ASC";
+
+                WHERE $filter AND ae.contest_id=%d
+                ORDER BY CONCAT(COALESCE(s.sport_event_name, p.sport_name, ''),' ', athlete_disgroup,' ',a.gender,' ', agname, ' ', a.athlete_name) ASC";
 
     // echo $sql;
     // exit;
@@ -996,7 +996,8 @@ FROM vespa_athletes as a
             }
             //$event_name = $item->sport_event_name . ' / ' . $item->sport_name . ', ' . $item->dfrom . ' - ' . $item->dto .', ' . $item->disgroup . ', ' . $item->gender;
             //$event_name =  $item->sport_event_name . ', ' . $item->sport_name . ', ' . $item->agname .  ', ' . $group . ', '  . $item->gender;
-            $event_name =  "$item->sport_event_name, $group, $item->gender, $item->agname";
+            $sport = $item->sport_event_name ?? $item->sport_name ?? '';
+            $event_name =  "$sport, $group, $item->gender, $item->agname";
 
             if ($prev != $event_name) {
                 $cellindex = 'A' . $ind;
