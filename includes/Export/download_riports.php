@@ -337,9 +337,15 @@ function vespa_download_riport_verseny_versenyszam()
             JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
             LEFT JOIN vespa_sport_events as vse ON vce.event_id=vse.sport_event_id
             WHERE 1";
-    if('tanev_diakolimpia_versenyszam' == $type || 'tanev_diakolimpia_versenyszam_sportag' == $type){
+    if('tanev_diakolimpia_versenyszam' == $type){
         if (is_numeric($seriesId) && $seriesId > 0) {
-            $sql .= " AND vc.contest_series=%d";
+            $sql .= " AND vc.contest_series=%d AND vc.contest_type IN (1,2,3)";
+            $params[] = $seriesId;
+        }
+    }
+    else if('tanev_diakolimpia_versenyszam_sportag' == $type){
+        if (is_numeric($seriesId) && $seriesId > 0) {
+            $sql .= " AND (vc.contest_series=%d OR vc.contest_type=4)";
             $params[] = $seriesId;
         }
     }
@@ -349,12 +355,28 @@ function vespa_download_riport_verseny_versenyszam()
         $params[] = $filterTo;
     }
     //megyei szűrés ha van kiválasztva
-    if ($filter == 'country') $sql .= " AND vc.contest_type=1";
+    if ($filter == 'country') {
+        if ('tanev_diakolimpia_versenyszam_sportag' == $type) {
+            $sql .= " AND vc.contest_type IN (1,4)";
+        } else {
+            $sql .= " AND vc.contest_type=1";
+        }
+    }
     else if (is_numeric($filter) && $filter > 0) {
-        $sql .= " AND vc.contest_type=3 AND vc.state_id=%d";
+        if ('tanev_diakolimpia_versenyszam_sportag' == $type) {
+            $sql .= " AND (vc.contest_type=3 AND vc.state_id=%d OR vc.contest_type=4)";
+        } else {
+            $sql .= " AND vc.contest_type=3 AND vc.state_id=%d";
+        }
         $params[] = $filter;
     }
-    else if (is_numeric($filter) && $filter == 0) $sql .= " AND vc.contest_type=3";
+    else if (is_numeric($filter) && $filter == 0) {
+        if ('tanev_diakolimpia_versenyszam_sportag' == $type) {
+            $sql .= " AND vc.contest_type IN (3,4)";
+        } else {
+            $sql .= " AND vc.contest_type=3";
+        }
+    }
 
     $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
 

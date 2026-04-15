@@ -223,12 +223,11 @@ $sports = $wpdb->get_results("SELECT * FROM vespa_sports");
                     case 'szezon_riport':
                         return `${baseUrl}&series=${this.selectedRiportData.series}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}&disabilityGroupId=${this.selectedRiportData.disabilityGroupId}&gender=${this.selectedRiportData.gender}`        
                     case 'tanev_diakolimpia_versenyszam':
+                        return `${baseUrl}&series=${this.selectedRiportData.series}`;
                     case 'tanev_diakolimpia_versenyszam_sportag':
                         return `${baseUrl}&series=${this.selectedRiportData.series}`;
                     case 'tanev_versenyen_indult_iskolak':
                         return `${baseUrl}&series=${this.selectedRiportData.series}&schoolDistrict=${this.selectedRiportData.schoolDistrict}`
-                    case 'tanev_diakolimpia_versenyszam':
-                        return `${baseUrl}&series=${this.selectedRiportData.series}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}`
                     default:
                         break;
                 }               
