@@ -84,9 +84,9 @@ function vespa_download_riport_szezon_riport()
             JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
             LEFT JOIN vespa_sport_events as vse ON vce.event_id=vse.sport_event_id
             JOIN vespa_disability_groups as vdg ON va.disability_type=vdg.disability_group_id
-            WHERE 1";
+            WHERE vc.contest_series=%d";
 
-    $params = [];
+    $params = [$seriesId];
 
     if ($filter == 'country') {
         $sql .= " AND vc.contest_type=1";
