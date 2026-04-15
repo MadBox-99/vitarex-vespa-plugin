@@ -117,6 +117,16 @@ $sports = $wpdb->get_results("SELECT * FROM vespa_sports");
                 </select>
             </div>
         </div>
+        <div class="col-md-4" v-if="showedInputs.year">
+            <div class="form-group">
+                <label>Naptári év</label>
+                <select name="year" id="year" class="form-control input-sm" v-model="selectedRiportData.year">
+                        <option v-for="item in getYearList" :value="item">
+                            {{item === 0 ? 'Összes' : item}}
+                        </option>
+                </select>
+            </div>
+        </div>
         <div class="col-md-4" v-if="showedInputs.sport">
             <div class="form-group">
                 <label>Sport</label>
@@ -185,7 +195,7 @@ $sports = $wpdb->get_results("SELECT * FROM vespa_sports");
         },
         data(){
             return {
-                defaultShowState: {filter: 0, state: 0, schoolDistrict: 0, institution: 0, disabilityGroup: 0, gender: 0, interval: 0, series: 0, sport: 0},
+                defaultShowState: {filter: 0, state: 0, schoolDistrict: 0, institution: 0, disabilityGroup: 0, gender: 0, interval: 0, series: 0, sport: 0, year: 0},
                 defaultRiportState: {
                     filter: 'all',
                     schoolDistrict: 0, 
@@ -195,7 +205,8 @@ $sports = $wpdb->get_results("SELECT * FROM vespa_sports");
                     dateFrom: new Date( new Date().getFullYear(), 0, 2).toISOString().substr(0, 10),
                     dateTo: new Date( new Date().getFullYear(), 11, 32).toISOString().substr(0, 10),
                     gender: 'összes',
-                    sport: 0
+                    sport: 0,
+                    year: 0
                 },
                 series: <?php echo json_encode($series) ?>,
                 sports: <?php echo json_encode($sports) ?>,
@@ -221,7 +232,7 @@ $sports = $wpdb->get_results("SELECT * FROM vespa_sports");
                     case 'tanev_diakolimpia_diakok':
                         return `${baseUrl}&series=${this.selectedRiportData.series}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}&disabilityGroupId=${this.selectedRiportData.disabilityGroupId}&gender=${this.selectedRiportData.gender}`        
                     case 'szezon_riport':
-                        return `${baseUrl}&series=${this.selectedRiportData.series}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}&disabilityGroupId=${this.selectedRiportData.disabilityGroupId}&gender=${this.selectedRiportData.gender}`        
+                        return `${baseUrl}&series=${this.selectedRiportData.series}&year=${this.selectedRiportData.year}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}&disabilityGroupId=${this.selectedRiportData.disabilityGroupId}&gender=${this.selectedRiportData.gender}`
                     case 'tanev_diakolimpia_versenyszam':
                         return `${baseUrl}&series=${this.selectedRiportData.series}`;
                     case 'tanev_diakolimpia_versenyszam_sportag':
@@ -253,6 +264,14 @@ $sports = $wpdb->get_results("SELECT * FROM vespa_sports");
             getSportList() {
                 return [{sport_id: 0, sport_name: 'Összes'}, ...this.sports]
             },
+            getYearList() {
+                const currentYear = new Date().getFullYear()
+                const years = [0]
+                for (let y = 2023; y <= currentYear + 1; y++) {
+                    years.push(y)
+                }
+                return years
+            },
         },
         watch: {
             selectedRiportType(newType) {
@@ -274,7 +293,7 @@ $sports = $wpdb->get_results("SELECT * FROM vespa_sports");
                         this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1, sport: 1}
                         break;
                     case 'szezon_riport':
-                        this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1}
+                        this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, year: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1}
                         break;
                     case 'tanev_versenyen_indult_iskolak':
                         this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, schoolDistrict: 1}

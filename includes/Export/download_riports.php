@@ -53,6 +53,7 @@ function vespa_download_riport_szezon_riport()
     $schoolDistrict = $_GET['schoolDistrict'];
     $gender = $_GET['gender'];
     $disabilityGroupId = $_GET['disabilityGroupId'];
+    $year = isset($_GET['year']) ? $_GET['year'] : 0;
     $filterType = '';
 
     // if($filter == 'all') $filterType = 'Összes verseny';
@@ -72,6 +73,9 @@ function vespa_download_riport_szezon_riport()
         $sheet
             ->setCellValue('A' . $ind, 'Tanév/Diákolimpia szezon')
             ->setCellValue('B' . $ind, $st->series_name);
+        if (is_numeric($year) && $year > 0) {
+            $sheet->setCellValue('C' . $ind, "Naptári év: $year");
+        }
         $ind += 2;
     }
     else die;
@@ -105,9 +109,14 @@ function vespa_download_riport_szezon_riport()
         $params[] = $disabilityGroupId;
     }
 
-    if ($gender == 'nő' || $gender == 'férfi') { 
+    if ($gender == 'nő' || $gender == 'férfi') {
         $sql .= " AND va.gender=%s";
         $params[] = $gender;
+    }
+
+    if (is_numeric($year) && $year > 0) {
+        $sql .= " AND YEAR(vc.start_at)=%d";
+        $params[] = $year;
     }
 
 $sql .= " GROUP BY va.athlete_id";
