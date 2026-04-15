@@ -374,22 +374,23 @@ function vespa_download_riport_verseny_versenyszam()
         foreach( $row as $event ) {
             if($event->sport_event_name)
                 array_push($sportEvents, $event->sport_event_name );
-        } 
+        }
         $sportEvents = array_unique($sportEvents);
+        $uniqueContests = count(array_unique(array_column($row, 'contest_id')));
         $sheet
             ->setCellValue('A' . $ind, $row[0]->sport_name)
-            ->setCellValue('C' . $ind, count($row));
-        $sumVerseny += count($row);
+            ->setCellValue('C' . $ind, $uniqueContests);
+        $sumVerseny += $uniqueContests;
         $ind++;
         foreach( $sportEvents as $event ) {
-            $result = array_filter($data, function($f) use($event) {
+            $result = array_filter($row, function($f) use($event) {
                 return $f->sport_event_name == $event;
             });
             $sheet
                 ->setCellValue('B' . $ind, $event)
-                ->setCellValue('C' . $ind, count($result));
+                ->setCellValue('C' . $ind, count(array_unique(array_column(array_values($result), 'contest_id'))));
             $ind++;
-        } 
+        }
     }
 
     $ind++;
