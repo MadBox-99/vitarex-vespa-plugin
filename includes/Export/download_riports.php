@@ -209,7 +209,8 @@ $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
         ->setCellValue('C' . $ind, count(array_unique($iskArr)));
     $ind += 2;
 
-    $data = $wpdb->get_results($wpdb->prepare($sql . ' GROUP BY vc.contest_id', ...$params));
+    $sqlContests = str_replace('GROUP BY va.athlete_id', 'GROUP BY vc.contest_id', $sql);
+    $data = $wpdb->get_results($wpdb->prepare($sqlContests, ...$params));
     $sheet
         ->setCellValue('B' . $ind, 'Összesen')
         ->setCellValue('C' . $ind, 'Országos')
