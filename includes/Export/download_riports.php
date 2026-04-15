@@ -344,7 +344,9 @@ function vespa_download_riport_verseny_versenyszam()
         }
     }
     else {
-        $sql .= " AND vc.start_at >= '$filterFrom' AND vc.end_at <= '$filterTo'";
+        $sql .= " AND vc.start_at >= %s AND vc.end_at <= %s";
+        $params[] = $filterFrom;
+        $params[] = $filterTo;
     }
     //megyei szűrés ha van kiválasztva
     if ($filter == 'country') $sql .= " AND vc.contest_type=1";
@@ -367,8 +369,6 @@ function vespa_download_riport_verseny_versenyszam()
         $sportArr[$row->sport_id][] = $row;
     }
 
-    $sumVerseny = 0;
-
     foreach ($sportArr as $row){
         $sportEvents = array();
         foreach( $row as $event ) {
@@ -380,7 +380,6 @@ function vespa_download_riport_verseny_versenyszam()
         $sheet
             ->setCellValue('A' . $ind, $row[0]->sport_name)
             ->setCellValue('C' . $ind, $uniqueContests);
-        $sumVerseny += $uniqueContests;
         $ind++;
         foreach( $sportEvents as $event ) {
             $result = array_filter($row, function($f) use($event) {
@@ -396,7 +395,7 @@ function vespa_download_riport_verseny_versenyszam()
     $ind++;
     $sheet
         ->setCellValue('A' . $ind, "Összes verseny a tanévben:")
-        ->setCellValue('B' . $ind, $sumVerseny);
+        ->setCellValue('B' . $ind, count(array_unique(array_column($data, 'contest_id'))));
     $ind++;
 
     autosize_columns($spreadsheet->getActiveSheet());
