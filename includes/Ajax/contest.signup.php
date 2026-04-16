@@ -119,7 +119,7 @@ class VespaContestSignups
             $params[] = $userId;
         }
         $sql_entered = "SELECT athlete_id FROM vespa_athlete_entries WHERE contest_id=%d AND contest_event_id=%d AND $filter";
-        $entered = $wpdb->get_results($wpdb->prepare($sql_entered, $contest_id, $school_id, ...$params));
+        $entered = $wpdb->get_results($wpdb->prepare($sql_entered, $contest_id, $contest_event_id, ...$params));
 
         foreach ($entered as $e) {
             $entered_ids[] = $e->athlete_id;

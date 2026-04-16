@@ -47,7 +47,7 @@ $states = $wpdb->get_results($sql);
                 <div class="col-md-3"> 
                     <div class="form-group">
                         <label for="">Megye</label>
-                        <select id="state" class="form-control input-sm">
+                        <select id="state" class="form-control input-sm" autocomplete="off">
                             <option value="" selected>Összes</option>
                             <?php foreach ($states as $state) : ?>                         
                                 <option value="<?php echo $state->state_id ?>">
@@ -116,13 +116,26 @@ $states = $wpdb->get_results($sql);
     </table>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var stateSelect = document.getElementById('state');
+    var insTypeSelect = document.getElementById('ins_type');
+    var needsReload = (stateSelect && stateSelect.value !== '') || (insTypeSelect && insTypeSelect.value !== '');
+    if (stateSelect) stateSelect.value = '';
+    if (insTypeSelect) insTypeSelect.value = '';
+    if (needsReload && typeof vespa_tables !== 'undefined' && vespa_tables['institution']) {
+        vespa_tables['institution'].ajax.reload();
+    }
+});
+</script>
+
 <?php
-    echo vespa_load_template_with_vars( 
-                'confirm-box.php', 
-                array( 
+    echo vespa_load_template_with_vars(
+                'confirm-box.php',
+                array(
                     "{=TEXT=}"   => "Biztosan törlöd ezt az intézményt?",
                     "{=MODALID=}"   => "",
                     "{=ACTION=}" => 'delete_institution'
-                ) 
-            ); 
+                )
+            );
 ?>

@@ -957,11 +957,11 @@ SELECT a.*, s.sport_event_name, p.sport_name, vi.ins_name, vs.state_name, e.gend
 (SELECT GROUP_CONCAT(disability_group_name SEPARATOR ',') 
 FROM vespa_disability_groups WHERE FIND_IN_SET(disability_group_id, e.disability_groups) ) as disgroup, 
 (SELECT disability_group_name  FROM vespa_disability_groups WHERE FIND_IN_SET(disability_group_id, a.disability_type) ) as athlete_disgroup, 
-(SELECT agegroup_name FROM vespa_contest_agegroups as vca JOIN vespa_agegroups as va ON (va.agegroup_id=vca.agegroup_id) WHERE vca.contest_id=%d AND a.birth_date BETWEEN vca.date_from AND vca.date_to) as agname,
-(SELECT vca.agegroup_id FROM vespa_contest_agegroups as vca JOIN vespa_agegroups as va ON (va.agegroup_id=vca.agegroup_id) WHERE vca.contest_id=%d AND a.birth_date BETWEEN vca.date_from AND vca.date_to) as ag_id
+(SELECT agegroup_name FROM vespa_contest_agegroups as vca JOIN vespa_agegroups as va ON (va.agegroup_id=vca.agegroup_id) WHERE vca.contest_id=%d AND a.birth_date BETWEEN vca.date_from AND vca.date_to LIMIT 1) as agname,
+(SELECT vca.agegroup_id FROM vespa_contest_agegroups as vca JOIN vespa_agegroups as va ON (va.agegroup_id=vca.agegroup_id) WHERE vca.contest_id=%d AND a.birth_date BETWEEN vca.date_from AND vca.date_to LIMIT 1) as ag_id
 FROM vespa_athletes as a 
                 JOIN vespa_athlete_entries as ae ON (ae.athlete_id=a.athlete_id)
-                        JOIN vespa_constest_events as e  ON (e.contest_id=ae.contest_id AND ae.contest_event_id = e.id)
+                        LEFT JOIN vespa_constest_events as e  ON (e.contest_id=ae.contest_id AND ae.contest_event_id = e.id)
                         LEFT JOIN vespa_sports as p ON p.sport_id = e.sport_id
                         LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id
                         LEFT JOIN vespa_institutions as vi ON (vi.institution_id=a.school_id)
@@ -989,13 +989,14 @@ FROM vespa_athletes as a
     foreach ($list as $item) {
         $disgroups = explode(",", $item->disgroup ?? '');
         foreach ($disgroups as $group) {
-            if ($group === '' && ($item->athlete_disgroup === null || $item->athlete_disgroup === '')) {
+            if ($item->disgroup === null) {
+                // contest event not found (orphaned entry) - include athlete
+                $group = $item->athlete_disgroup ?? '';
+            } elseif ($group === '' && ($item->athlete_disgroup === null || $item->athlete_disgroup === '')) {
                 // both empty - allow
             } elseif ($group != $item->athlete_disgroup) {
                 continue;
             }
-            //$event_name = $item->sport_event_name . ' / ' . $item->sport_name . ', ' . $item->dfrom . ' - ' . $item->dto .', ' . $item->disgroup . ', ' . $item->gender;
-            //$event_name =  $item->sport_event_name . ', ' . $item->sport_name . ', ' . $item->agname .  ', ' . $group . ', '  . $item->gender;
             $sport = $item->sport_event_name ?? $item->sport_name ?? '';
             $event_name =  "$sport, $group, $item->gender, $item->agname";
 
