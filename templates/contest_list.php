@@ -478,7 +478,7 @@
     $list = $wpdb->get_results($wpdb->prepare($sql));
     $megye_lista = $wpdb->get_results("SELECT * FROM vespa_states ORDER BY state_name ASC");
     $fogyatekossag_lista = $wpdb->get_results("SELECT * FROM vespa_disability_groups ORDER BY disability_group_name ASC");
-    $sportag_lista = $wpdb->get_results("SELECT * FROM vespa_sports ORDER BY vespa_sports.sport_name");
+    $sportag_lista = $wpdb->get_results("SELECT * FROM vespa_sports WHERE is_deleted=0 ORDER BY vespa_sports.sport_name");
 
     $versenyek_ev_szerint = [];
     $aktualis_ev = end($series);

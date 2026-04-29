@@ -30,7 +30,7 @@ $tk = $wpdb->get_results("SELECT * FROM vespa_school_districts");
 $int = $wpdb->get_results("SELECT * FROM vespa_institutions");
 $dis = $wpdb->get_results("SELECT * FROM vespa_disability_groups");
 $series = $wpdb->get_results("SELECT * FROM vespa_series");
-$sports = $wpdb->get_results("SELECT * FROM vespa_sports");
+$sports = $wpdb->get_results("SELECT * FROM vespa_sports WHERE is_deleted=0");
 ?>
 
 <div id="app">

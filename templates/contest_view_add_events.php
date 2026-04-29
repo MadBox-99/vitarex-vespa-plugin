@@ -1,8 +1,8 @@
 <?php
 
 if (current_user_can(VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles)) :
-    $sports       = $wpdb->get_results("SELECT * FROM vespa_sports ORDER BY sport_name ASC");
-    $events       = $wpdb->get_results("SELECT * FROM vespa_sport_events ORDER BY sport_event_name ASC");
+    $sports       = $wpdb->get_results("SELECT * FROM vespa_sports WHERE is_deleted=0 ORDER BY sport_name ASC");
+    $events       = $wpdb->get_results("SELECT * FROM vespa_sport_events WHERE is_deleted=0 ORDER BY sport_event_name ASC");
     $disabilities = $wpdb->get_results("SELECT * FROM vespa_disability_groups ORDER BY disability_group_name ASC");
 
 ?>

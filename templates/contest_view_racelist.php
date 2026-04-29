@@ -7,10 +7,10 @@
             $list = null;
             if(is_numeric($record->contest_id)){
 
-            $list = $wpdb->get_results($wpdb->prepare("SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id 
-                                FROM vespa_constest_events as e 
-                                JOIN vespa_sports as p ON p.sport_id = e.sport_id 
-                                LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id    
+            $list = $wpdb->get_results($wpdb->prepare("SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id
+                                FROM vespa_constest_events as e
+                                LEFT JOIN vespa_sports as p ON p.sport_id = e.sport_id
+                                LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id
                                 WHERE e.contest_id=%d", $record->contest_id));
             }
             $disablityList = $wpdb->get_results("SELECT * FROM vespa_disability_groups");
@@ -56,12 +56,12 @@
 
 
 
-                            $sql = "SELECT e.*, a.school_id, a.athlete_name, a.birth_date,p.sport_name, s.sport_event_name, i.ins_name, i.id_number, i.institution_id, a.gender,d.disability_group_name, a.disability_type, e.contest_event_id, st.state_name              
-                                        FROM vespa_athlete_entries as e 
-                                        JOIN vespa_athletes as a ON a.athlete_id = e.athlete_id 
-                                        JOIN vespa_constest_events as e2 ON e2.id=%d AND e2.contest_id=e.contest_id AND FIND_IN_SET(a.disability_type, e2.disability_groups) 
-                                        JOIN vespa_sports as p ON p.sport_id = e2.sport_id 
-                                        LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e2.event_id   
+                            $sql = "SELECT e.*, a.school_id, a.athlete_name, a.birth_date,p.sport_name, s.sport_event_name, i.ins_name, i.id_number, i.institution_id, a.gender,d.disability_group_name, a.disability_type, e.contest_event_id, st.state_name
+                                        FROM vespa_athlete_entries as e
+                                        JOIN vespa_athletes as a ON a.athlete_id = e.athlete_id
+                                        JOIN vespa_constest_events as e2 ON e2.id=%d AND e2.contest_id=e.contest_id AND FIND_IN_SET(a.disability_type, e2.disability_groups)
+                                        LEFT JOIN vespa_sports as p ON p.sport_id = e2.sport_id
+                                        LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e2.event_id
                                         JOIN vespa_disability_groups as d ON d.disability_group_id = a.disability_type
                                         LEFT JOIN vespa_institutions as i ON i.institution_id = a.school_id
                                         LEFT JOIN vespa_states as st ON st.state_id = i.ins_state
@@ -88,8 +88,8 @@
                             // echo $sql2 . '<br>';
                         ?>
                             <tr>
-                                <td><?php echo $race->sport_name; ?></td>
-                                <td><?php echo $race->sport_event_name; ?></td>
+                                <td><?php echo $race->sport_name ?: '<em>(törölt sportág #' . (int)$race->sport_id . ')</em>'; ?></td>
+                                <td><?php echo $race->sport_event_name ?: '<em>(törölt versenyszám #' . (int)$race->event_id . ')</em>'; ?></td>
                                 <td><?php echo $race->agnames; ?></td>
                                 <td><?php foreach (mapIdsToNames($race->disability_groups, $disablityList) as $val) {
                                         echo "$val ";

@@ -78,9 +78,9 @@ if (is_numeric($id) && $id > 0) {
 
     $site_title = $record->contest_name . ' - eredmények';
     $race = $wpdb->get_row($wpdb->prepare("SELECT e.*, p.sport_name, p.result_type, s.sport_event_name, p.sport_id, s.result_type as event_result_type
-    FROM vespa_constest_events as e 
-    JOIN vespa_sports as p ON p.sport_id = e.sport_id 
-    LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id   
+    FROM vespa_constest_events as e
+    LEFT JOIN vespa_sports as p ON p.sport_id = e.sport_id
+    LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id
     WHERE e.id=%d",$race_id));
     $record = $GLOBALS['VESPA_Contests']->load($id);
     $event = $wpdb->get_results($wpdb->prepare("SELECT event_id FROM vespa_constest_events WHERE id= %d", $race_id));
@@ -156,12 +156,12 @@ function mertekegyseg($result_type)
 
 <?php
 
-$sql = "SELECT e.*, a.school_id, a.athlete_name, a.birth_date,p.sport_name, s.sport_event_name, i.ins_name, i.id_number, i.institution_id, a.gender,d.disability_group_name, a.disability_type, e.contest_event_id, st.state_name              
-        FROM vespa_athlete_entries as e 
-        JOIN vespa_athletes as a ON a.athlete_id = e.athlete_id 
-        JOIN vespa_constest_events as e2 ON e2.id=%d AND e2.contest_id=e.contest_id AND FIND_IN_SET(a.disability_type, e2.disability_groups) 
-        JOIN vespa_sports as p ON p.sport_id = e2.sport_id 
-        LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e2.event_id   
+$sql = "SELECT e.*, a.school_id, a.athlete_name, a.birth_date,p.sport_name, s.sport_event_name, i.ins_name, i.id_number, i.institution_id, a.gender,d.disability_group_name, a.disability_type, e.contest_event_id, st.state_name
+        FROM vespa_athlete_entries as e
+        JOIN vespa_athletes as a ON a.athlete_id = e.athlete_id
+        JOIN vespa_constest_events as e2 ON e2.id=%d AND e2.contest_id=e.contest_id AND FIND_IN_SET(a.disability_type, e2.disability_groups)
+        LEFT JOIN vespa_sports as p ON p.sport_id = e2.sport_id
+        LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e2.event_id
         JOIN vespa_disability_groups as d ON d.disability_group_id = a.disability_type
         LEFT JOIN vespa_institutions as i ON i.institution_id = a.school_id
         LEFT JOIN vespa_states as st ON st.state_id = i.ins_state

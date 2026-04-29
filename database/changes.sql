@@ -238,3 +238,28 @@ ALTER TABLE `vespa_contests` CHANGE `place_name` `place_name` VARCHAR(200) CHARA
 --2024.10.22.
 INSERT INTO `vespa_contest_types` (`contest_type_id`, `contest_type_name`) VALUES ('4', 'Szabadidősport')
 INSERT INTO `vespa_contest_subtypes` (`contest_subtype_id`, `contest_subtype_name`) VALUES ('3', 'Szabadidősport')
+
+--2026.04.29.
+-- Soft delete kapcsolása a sportok és versenyszámok táblákhoz
+ALTER TABLE `vespa_sports`
+    ADD COLUMN `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
+    ADD COLUMN `deleted_at` TIMESTAMP NULL DEFAULT NULL;
+ALTER TABLE `vespa_sport_events`
+    ADD COLUMN `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
+    ADD COLUMN `deleted_at` TIMESTAMP NULL DEFAULT NULL;
+
+-- Korábban hard-delete-tel eltűnt "Mezei futás" sport és versenyszám visszaállítása
+-- (71 vespa_constest_events rekord hivatkozik még rájuk, lásd contest 85, 298, stb.).
+-- is_deleted=1-re állítva, hogy ne kerüljenek be új versenyek létrehozási ürlapjába,
+-- de a régi versenyek kijelzése helyreáll a LEFT JOIN-okkal együtt.
+INSERT INTO `vespa_sports` (`sport_id`, `sport_name`, `result_type`, `is_deleted`, `deleted_at`)
+    VALUES (23, 'Mezei futás (régi)', 'helyezes_ido_k', 1, CURRENT_TIMESTAMP)
+    ON DUPLICATE KEY UPDATE `sport_name`=VALUES(`sport_name`);
+INSERT INTO `vespa_sport_events` (`sport_event_id`, `sport_id`, `sport_event_name`, `result_type`, `is_deleted`, `deleted_at`)
+    VALUES (42, 23, 'Mezei futás (régi)', 'helyezes_ido_k', 1, CURRENT_TIMESTAMP)
+    ON DUPLICATE KEY UPDATE `sport_event_name`=VALUES(`sport_event_name`);
+
+-- OPCIONÁLIS: Contest 298 árva nevezéseinek javítása (34 sportoló contest_event_id=1011-re hivatkozik,
+-- ami nincs meg). Csak akkor futtasd, ha a felhasználói visszajelzés alapján a 1011 valóban a
+-- 1051-es versenyszám duplikátuma volt. ELŐTTE backupot készíts!
+-- UPDATE `vespa_athlete_entries` SET `contest_event_id`=1051 WHERE `contest_id`=298 AND `contest_event_id`=1011;

@@ -6,11 +6,12 @@
         protected $id_field          = 'sport_event_id';
         protected $default_order_by  = 'sport_event_name';
         protected $default_order_dir = 'ASC';
+        protected $soft_delete       = true;
         protected $columns           = array('sport_event_id','sport_event_name', 'sport_name');
 
         public function joins()
         {
-            return ' JOIN vespa_sports ON (vespa_sports.sport_id=vespa_sport_events.sport_id) ';
+            return ' LEFT JOIN vespa_sports ON (vespa_sports.sport_id=vespa_sport_events.sport_id) ';
         }
 
         public function checkDelete( $id ){
@@ -69,11 +70,11 @@
 
         public function getFilters(){
             global $wpdb;
-            $filters = '1';
+            $filters = parent::getFilters();
 
             if( isset($_REQUEST['search']) && isset($_REQUEST['search']['value']) && trim($_REQUEST['search']['value']) != '' ){
                 $search = '%' . $wpdb->esc_like( sanitize_text_field($_REQUEST['search']['value']) ) . '%';
-                $filters = $wpdb->prepare("sport_event_name LIKE %s", $search);
+                $filters .= $wpdb->prepare(" AND sport_event_name LIKE %s", $search);
             }
 
             return $filters;

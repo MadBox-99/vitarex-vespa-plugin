@@ -150,10 +150,10 @@ function vespa_download_medical_approval($contest_id)
     $html .= '<hr style="margin-bottom:20px;">';
 
     //------------------------
-    $sql_list = "SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id 
-                                    FROM vespa_constest_events as e 
-                                    JOIN vespa_sports as p ON p.sport_id = e.sport_id 
-                                    LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id                            
+    $sql_list = "SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id
+                                    FROM vespa_constest_events as e
+                                    LEFT JOIN vespa_sports as p ON p.sport_id = e.sport_id
+                                    LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id
                                     WHERE e.contest_id=%d";
 
     $list=$wpdb->get_results($wpdb->prepare($sql_list,$record->contest_id));
@@ -392,10 +392,10 @@ function vespa_download_listing($contest_id, $isBase64 = false, $saveFile = fals
 
     // versenyszámok
 
-        $list = $wpdb->get_results($wpdb->prepare("SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id 
-        FROM vespa_constest_events as e 
-        JOIN vespa_sports as p ON p.sport_id = e.sport_id 
-        LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id 
+        $list = $wpdb->get_results($wpdb->prepare("SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id
+        FROM vespa_constest_events as e
+        LEFT JOIN vespa_sports as p ON p.sport_id = e.sport_id
+        LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id
         WHERE e.contest_id=%d",$record->contest_id ));
 
     

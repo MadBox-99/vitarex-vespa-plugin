@@ -85,7 +85,7 @@ function vespa_download_riport_szezon_riport()
             JOIN vespa_institutions as vi ON va.school_id=vi.institution_id
             JOIN vespa_contests as vc ON vae.contest_id=vc.contest_id
             JOIN vespa_constest_events as vce ON vae.contest_event_id=vce.id
-            JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
+            LEFT JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
             LEFT JOIN vespa_sport_events as vse ON vce.event_id=vse.sport_event_id
             JOIN vespa_disability_groups as vdg ON va.disability_type=vdg.disability_group_id
             WHERE vc.contest_series=%d";
@@ -343,7 +343,7 @@ function vespa_download_riport_verseny_versenyszam()
 
     $sql = "SELECT vc.contest_id, vc.contest_type, vc.state_id, vs.sport_id, vs.sport_name, vse.sport_event_id, vse.sport_event_name FROM `vespa_contests` as vc
             JOIN vespa_constest_events as vce ON vc.contest_id=vce.contest_id
-            JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
+            LEFT JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
             LEFT JOIN vespa_sport_events as vse ON vce.event_id=vse.sport_event_id
             WHERE 1";
     if('tanev_diakolimpia_versenyszam' == $type){
@@ -591,7 +591,7 @@ function vespa_download_riport_verseny_diak()
             JOIN vespa_institutions as vi ON va.school_id=vi.institution_id
             JOIN vespa_contests as vc ON vae.contest_id=vc.contest_id
             JOIN vespa_constest_events as vce ON vae.contest_event_id=vce.id
-            JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
+            LEFT JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
             LEFT JOIN vespa_sport_events as vse ON vce.event_id=vse.sport_event_id
             JOIN vespa_disability_groups as vdg ON va.disability_type=vdg.disability_group_id
             WHERE vc.start_at >= '$filterFrom' AND vc.end_at <= '$filterTo'";
@@ -892,13 +892,13 @@ function vespa_download_riport_legnepszerubb_sportagak()
     $filterTo = date('Y-m-d', strtotime("$dateTo"));
     $params = [];
 
-    $sql = "SELECT COUNT(va.athlete_id) as nevezettek, vce.id as contest_event_id, vce.sport_id, vce.event_id, vs.sport_name, vse.sport_event_name 
+    $sql = "SELECT COUNT(va.athlete_id) as nevezettek, vce.id as contest_event_id, vce.sport_id, vce.event_id, vs.sport_name, vse.sport_event_name
             FROM vespa_athletes as va
             JOIN vespa_athlete_entries as vae ON va.athlete_id=vae.athlete_id
             JOIN vespa_institutions as vi ON va.school_id=vi.institution_id
             JOIN vespa_contests as vc ON vae.contest_id=vc.contest_id
             JOIN vespa_constest_events as vce ON vae.contest_event_id=vce.id
-            JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
+            LEFT JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
             LEFT JOIN vespa_sport_events as vse ON vce.event_id=vse.sport_event_id
             JOIN vespa_disability_groups as vdg ON va.disability_type=vdg.disability_group_id
             WHERE vc.start_at >= %s AND vc.end_at <= %s";

@@ -10,7 +10,7 @@
         $site_title = $record->sport_event_name . ' - szerkesztése';
     }
 
-    $sql = 'SELECT * FROM vespa_sports';
+    $sql = 'SELECT * FROM vespa_sports WHERE is_deleted=0';
     $sports = $wpdb->get_results($sql);
 
     $results = [

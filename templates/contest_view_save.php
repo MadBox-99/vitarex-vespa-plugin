@@ -29,8 +29,8 @@
 
     <!-- Modal -->
     <?php
-    $sports = $wpdb->get_results("SELECT * FROM vespa_sports ORDER BY sport_name ASC");
-    $events = $wpdb->get_results("SELECT * FROM vespa_sport_events ORDER BY sport_event_name ASC");
+    $sports = $wpdb->get_results("SELECT * FROM vespa_sports WHERE is_deleted=0 ORDER BY sport_name ASC");
+    $events = $wpdb->get_results("SELECT * FROM vespa_sport_events WHERE is_deleted=0 ORDER BY sport_event_name ASC");
     ?>
     <div class="modal fade" id="contest_race_editor" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">

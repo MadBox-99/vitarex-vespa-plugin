@@ -39,11 +39,11 @@ function get_contests_list(WP_REST_Request $request )
     $data = $wpdb->get_results("SELECT * FROM `vespa_contests` as vc
                                 WHERE vc.is_final = 1 AND vc.end_at >= '$current_time'
                             ");
-    $series = $wpdb->get_results("SELECT vce.contest_id, vce.gender, vce.disability_groups, vce.agnames, 
+    $series = $wpdb->get_results("SELECT vce.contest_id, vce.gender, vce.disability_groups, vce.agnames,
                                     vs.sport_id, vs.sport_name, vse.sport_event_id, vse.sport_event_name,
                                     (SELECT GROUP_CONCAT(disability_group_name SEPARATOR ',') FROM vespa_disability_groups WHERE FIND_IN_SET(disability_group_id, vce.disability_groups) ) as disgroupname
                                 FROM `vespa_constest_events` as vce
-                                JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
+                                LEFT JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
                                 LEFT JOIN vespa_sport_events as vse ON vce.event_id=vse.sport_event_id
                                 WHERE contest_id IN (SELECT contest_id FROM vespa_contests as vc WHERE vc.is_final = 1 AND vc.end_at >= '$current_time')
                                 ");
@@ -135,9 +135,9 @@ function get_contest(WP_REST_Request $request )
     $contAgegroups = null;
     if(is_numeric($contest->contest_id)){
         $contest_events =   $wpdb->get_results($wpdb->prepare("SELECT vce.*, vs.sport_name,
-        (SELECT GROUP_CONCAT(disability_group_name SEPARATOR ',') FROM vespa_disability_groups WHERE FIND_IN_SET(disability_group_id, vce.disability_groups) ) as disgroup 
+        (SELECT GROUP_CONCAT(disability_group_name SEPARATOR ',') FROM vespa_disability_groups WHERE FIND_IN_SET(disability_group_id, vce.disability_groups) ) as disgroup
         FROM `vespa_constest_events` as vce
-        JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
+        LEFT JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
         WHERE vce.contest_id = %d",$contest->contest_id));
     $contAgegroups = $wpdb->get_results($wpdb->prepare("SELECT vca.agegroup_id as k_szam, vca.date_from as tol, vca.date_to as ig FROM `vespa_contest_agegroups` as vca WHERE vca.contest_id =%d",$contest->contest_id));
 
@@ -263,7 +263,7 @@ function search_contests(WP_REST_Request $request )
     $sqlParams = array();
     $sql = "SELECT vce.contest_id, vce.gender, vce.disability_groups, vce.agnames, vs.sport_id, vs.sport_name, vse.sport_event_id, vse.sport_event_name, (SELECT GROUP_CONCAT(disability_group_name SEPARATOR ',') FROM vespa_disability_groups WHERE FIND_IN_SET(disability_group_id, vce.disability_groups) ) as disgroupname
             FROM `vespa_constest_events` as vce
-            JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
+            LEFT JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
             LEFT JOIN vespa_sport_events as vse ON vce.event_id=vse.sport_event_id
             WHERE contest_id IN ($idList)";
     if($disGroup) {

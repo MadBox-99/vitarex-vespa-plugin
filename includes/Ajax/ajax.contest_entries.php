@@ -43,7 +43,7 @@
                                         FROM vespa_athlete_entries as e
                                         JOIN vespa_athletes as a ON a.athlete_id = e.athlete_id
                                         JOIN vespa_constest_events as e2 ON e2.id = e.contest_event_id
-                                        JOIN vespa_sports as p ON p.sport_id = e2.sport_id
+                                        LEFT JOIN vespa_sports as p ON p.sport_id = e2.sport_id
                                         LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e2.event_id
                                         WHERE e.contest_id= %d";
         $sqlAthletes = $wpdb->prepare($sqlAthletes, $id);

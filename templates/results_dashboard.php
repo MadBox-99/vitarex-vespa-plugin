@@ -6,7 +6,7 @@ if (!current_user_can(VESPA_Roles::riportalas)) {
   exit;
 }
 
-$sportok = $wpdb->get_results("SELECT * FROM vespa_sports ORDER BY sport_name");
+$sportok = $wpdb->get_results("SELECT * FROM vespa_sports WHERE is_deleted=0 ORDER BY sport_name");
 $verseny_sql = "SELECT DISTINCT vc.*, vce.sport_id AS sport_id FROM vespa_contests AS vc
 INNER JOIN vespa_constest_events AS vce ON vce.contest_id=vc.contest_id
 WHERE vce.id IN (SELECT DISTINCT contest_event_id FROM vespa_constest_events_results)";

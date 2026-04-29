@@ -66,11 +66,11 @@ function vespa_get_contest_results()
     if (isset($_POST["rendezes_irany"]))
         $rendezes_irany = $_POST["rendezes_irany"];
     $event_sql = "SELECT vcer.*, vse.sport_event_name AS sport_event_name, vse.result_type as sport_event_result_type,
-    vs.result_type as sport_result_type   
+    vs.result_type as sport_result_type
     FROM vespa_constest_events_results AS vcer
     INNER JOIN vespa_constest_events AS vce ON vce.id=vcer.contest_event_id
-    INNER JOIN vespa_sport_events AS vse ON vse.sport_event_id=vce.event_id
-    INNER JOIN vespa_sports AS vs ON vs.sport_id=vse.sport_id
+    LEFT JOIN vespa_sport_events AS vse ON vse.sport_event_id=vce.event_id
+    LEFT JOIN vespa_sports AS vs ON vs.sport_id=vce.sport_id
     WHERE vcer.contest_id=%d";
 
     $event_results = $wpdb->get_results($wpdb->prepare($event_sql, $contest_id));

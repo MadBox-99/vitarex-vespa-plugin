@@ -10,10 +10,10 @@ function ajax_table_contest_races_display($id = null)
 
 
     ob_start();
-    $sqlList = "SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id, (SELECT GROUP_CONCAT(disability_group_name SEPARATOR ',') FROM vespa_disability_groups WHERE FIND_IN_SET(disability_group_id, e.disability_groups) ) as disgroup  
-                                    FROM vespa_constest_events as e 
-                                    JOIN vespa_sports as p ON p.sport_id = e.sport_id 
-                                    LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id                     
+    $sqlList = "SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id, (SELECT GROUP_CONCAT(disability_group_name SEPARATOR ',') FROM vespa_disability_groups WHERE FIND_IN_SET(disability_group_id, e.disability_groups) ) as disgroup
+                                    FROM vespa_constest_events as e
+                                    LEFT JOIN vespa_sports as p ON p.sport_id = e.sport_id
+                                    LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id
                                     WHERE e.contest_id= %d";
 
     $list = $wpdb->get_results($wpdb->prepare($sqlList, $id));
@@ -39,8 +39,8 @@ function ajax_table_contest_races_display($id = null)
                 $result_url = admin_url('admin.php?page=contests') . '&action=results&id=' . $id . '&race_id=' . $item->id;
             ?>
                 <tr class="contest_races-item" data-event_id="<?php echo $item->event_id; ?>" data-sport_id="<?php echo $item->sport_id; ?>" data-id="<?php echo $item->id; ?>">
-                    <td><?php echo $item->sport_name; ?></td>
-                    <td><?php echo $item->sport_event_name; ?></td>
+                    <td><?php echo $item->sport_name ?: '<em>(törölt sportág #' . (int)$item->sport_id . ')</em>'; ?></td>
+                    <td><?php echo $item->sport_event_name ?: '<em>(törölt versenyszám #' . (int)$item->event_id . ')</em>'; ?></td>
                     <td><?php echo $item->gender; ?></td>
                     <td><?php echo $item->disgroup; ?></td>
                     <td><?php echo $item->dfrom . ' - ' . $item->dto; ?></td>
@@ -134,11 +134,11 @@ function ajax_table_contest_races_add_record()
         }
     }
     //létező rekordok ellenőrzése
-    $sql_list = "SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id, 
-    (SELECT GROUP_CONCAT(disability_group_name SEPARATOR ',') FROM vespa_disability_groups WHERE FIND_IN_SET(disability_group_id, e.disability_groups) ) as disgroup    
-     FROM vespa_constest_events as e 
-     JOIN vespa_sports as p ON p.sport_id = e.sport_id 
-     LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id 
+    $sql_list = "SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id,
+    (SELECT GROUP_CONCAT(disability_group_name SEPARATOR ',') FROM vespa_disability_groups WHERE FIND_IN_SET(disability_group_id, e.disability_groups) ) as disgroup
+     FROM vespa_constest_events as e
+     LEFT JOIN vespa_sports as p ON p.sport_id = e.sport_id
+     LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id
      WHERE e.contest_id= %d";
      
 
@@ -149,7 +149,7 @@ function ajax_table_contest_races_add_record()
     $eventIds = $_POST['event_ids'];
     $ids = explode(',', $eventIds);
     
-     $sql_sport_events = "SELECT * FROM vespa_sport_events WHERE sport_id= %d";
+     $sql_sport_events = "SELECT * FROM vespa_sport_events WHERE sport_id= %d AND is_deleted=0";
      $sportEvents = $wpdb->get_results($wpdb->prepare($sql_sport_events, $sport_id));
      
     if(isset($sportEvents) && count($sportEvents) > 0){

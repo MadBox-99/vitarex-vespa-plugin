@@ -46,6 +46,7 @@
                     array( $this->id_field => $id ),
                     array( '%d' )
                 );
+                $delete_mode = 'hard';
             }
             else {
                 $success = $wpdb->update( $this->tablename, array(
@@ -58,7 +59,20 @@
                     '%d',
                     '%s',
                 ));
+                $delete_mode = 'soft';
             }
+
+            vitarex_log(
+                'datalist_delete',
+                json_encode([
+                    'mode'    => $delete_mode,
+                    'success' => ( $success == 1 ),
+                    'id'      => $id,
+                    'record'  => $record,
+                ], JSON_UNESCAPED_UNICODE),
+                $this->tablename,
+                'info'
+            );
 
             wp_send_json( array("success" => ( $success == 1 ? true : false) ) );
         }

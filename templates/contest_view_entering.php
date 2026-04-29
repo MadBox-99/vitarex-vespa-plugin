@@ -74,10 +74,10 @@
                 <?php
                 $school_id = vespa_get_my_school_id();
 
-                $list = $wpdb->get_results($wpdb->prepare("SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id 
-                                        FROM vespa_constest_events as e 
-                                        JOIN vespa_sports as p ON p.sport_id = e.sport_id 
-                                        LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id   
+                $list = $wpdb->get_results($wpdb->prepare("SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id
+                                        FROM vespa_constest_events as e
+                                        LEFT JOIN vespa_sports as p ON p.sport_id = e.sport_id
+                                        LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id
                                         WHERE e.contest_id=%d",$record->contest_id));
 
                 
@@ -182,11 +182,11 @@
                         <div class="vespa-race-item">
                             <div class="row">
                                 <div class="col-md-3">
-                                    <span class=""><?php echo $race->sport_name; ?></span>
+                                    <span class=""><?php echo $race->sport_name ?: '<em>(törölt sportág #' . (int)$race->sport_id . ')</em>'; ?></span>
                                 </div>
 
                                 <div class="col-md-3">
-                                    <span class=""><?php echo $race->sport_event_name; ?></span>
+                                    <span class=""><?php echo $race->sport_event_name ?: '<em>(törölt versenyszám #' . (int)$race->event_id . ')</em>'; ?></span>
                                 </div>
 
                                 <div class="col-md-3">
