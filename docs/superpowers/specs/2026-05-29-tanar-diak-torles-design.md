@@ -38,6 +38,23 @@ visszaállítható.
 
 ## Komponensek
 
+### 0. Iskolaigazgató hozzáférése a Sportolók listához — `includes/Core/vespa_roles.php`
+
+Az ISKOLAIGAZGATÓ jelenleg **nem** rendelkezik a `sportolok_listazasa`
+joggal, ezért ma el sem éri a Sportolók oldalt (`page=athletes` ezt a jogot
+követeli). Hogy a törlés értelmes legyen nála, a `get_role_capabilites()`
+capability-mapben az ISKOLAIGAZGATÓ kapja meg:
+
+```php
+VESPA_Roles::sportolok_listazasa => true,
+```
+
+A `VESPA_Roles::init_custom_roles()` minden `init` hookon lefut és
+`$role->add_cap()`-pal alkalmazza a mapet, így a jog a **következő
+oldalbetöltéskor automatikusan** érvénybe lép — nincs szükség a plugin
+újraaktiválására vagy migrációra. (A listát a meglévő
+`vespa_get_contest_athlete_filter()` az igazgatónál is a saját iskolára szűri.)
+
 ### 1. DB migráció — `database/changes.sql`
 
 Dátumozott bejegyzés a fájl végére:
@@ -134,6 +151,7 @@ fenti „élő diák" csoportba esőkre teszi a szűrőt.
 
 ## Érintett fájlok összefoglalva
 
+- `includes/Core/vespa_roles.php` — `sportolok_listazasa` jog az ISKOLAIGAZGATÓ-nak.
 - `database/changes.sql` — `is_deleted` + `deleted_at` a `vespa_athletes`-hez.
 - `includes/Datalist/datalist.athletes.php` — `$soft_delete`, `checkDelete`,
   `getFilters`, `addActionButtons`.
