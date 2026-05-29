@@ -169,3 +169,65 @@ function vespa_beszamolo_figyelmeztetes($logolas_bekapcsolva_json)
         vitarex_log("Beszámoló emlékeztető", "Hiba történt: $hiba");
     }
 }
+
+/**
+ * Verseny státusz szerinti háttérszín a verseny-listához.
+ * PIROS: a verseny napja már elmúlt. ZÖLD: véglegesített és épp nyitva a nevezés.
+ * KÉK: minden más jövőbeli állapot (nincs véglegesítve, vagy a nevezés még nem indult,
+ * vagy a nevezés már lezárult, de a verseny napja még nem volt meg).
+ */
+function vespa_contest_status_color($contest)
+{
+    $now = date('Y-m-d H:i:s');
+
+    if ($contest->end_at < $now) {
+        return '#ec5a64'; // piros – elmúlt verseny
+    }
+
+    if ($contest->is_final
+        && $contest->school_entry_start_at <= $now
+        && $contest->school_entry_end_at  >= $now) {
+        return '#63c27c'; // zöld – nevezhető
+    }
+
+    return '#5bc0de'; // kék – létrehozva, de még nem nyitott
+}
+
+/**
+ * Egy iskola pedagógusai egy adott versenyre.
+ * @return array vespa_contest_teachers sorok
+ */
+function vespa_get_teachers($school_id, $contest_id)
+{
+    global $wpdb;
+
+    if (!is_numeric($school_id) || !is_numeric($contest_id)) {
+        return array();
+    }
+
+    return $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM vespa_contest_teachers WHERE school_id=%d AND contest_id=%d ORDER BY id ASC",
+        $school_id,
+        $contest_id
+    ));
+}
+
+/**
+ * Van-e legalább egy pedagógus megadva az adott iskola+verseny párosra.
+ */
+function vespa_school_has_teachers($school_id, $contest_id)
+{
+    global $wpdb;
+
+    if (!is_numeric($school_id) || !is_numeric($contest_id)) {
+        return false;
+    }
+
+    $count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM vespa_contest_teachers WHERE school_id=%d AND contest_id=%d",
+        $school_id,
+        $contest_id
+    ));
+
+    return intval($count) > 0;
+}

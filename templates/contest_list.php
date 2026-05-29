@@ -633,7 +633,7 @@
                                 ?>
                                 <tr id="contest<?php echo $race->contest_id; ?>">
                                     <td><?php echo $race->contest_id; ?></td>
-                                    <td style="background-color: <?php echo ($race->is_final && $race->school_entry_start_at <= date('Y-m-d H:i:s') && $race->school_entry_end_at >= date('Y-m-d H:i:s')) ? '#63c27c' : '#ec5a64'; ?>">
+                                    <td style="background-color: <?php echo vespa_contest_status_color($race); ?>">
                                         <a style="color:black;" href="<?php echo admin_url('admin.php?page=contests&action=view&id=' . $race->contest_id); ?>">
                                             <?php echo stripslashes($race->contest_name); ?>
                                         </a>
@@ -753,7 +753,7 @@
                                 ?>
                                 <tr>
                                     <td><?php echo $race->contest_id; ?></td>
-                                    <td style="background-color: <?php echo ($race->is_final && $race->school_entry_start_at <= date('Y-m-d H:i:s') && $race->school_entry_end_at >= date('Y-m-d H:i:s')) ? '#63c27c' : '#ec5a64'; ?>">
+                                    <td style="background-color: <?php echo vespa_contest_status_color($race); ?>">
                                         <a style="color:black;" href="<?php echo admin_url('admin.php?page=contests&action=view&id=' . $race->contest_id); ?>">
                                             <?php echo stripslashes($race->contest_name); ?>
                                         </a>
@@ -846,7 +846,7 @@
                                 ?>
                                 <tr>
                                     <td><?php echo $race->contest_id; ?></td>
-                                    <td style="background-color: <?php echo ($race->is_final && $race->school_entry_start_at <= date('Y-m-d H:i:s') && $race->school_entry_end_at >= date('Y-m-d H:i:s')) ? '#63c27c' : '#ec5a64'; ?>">
+                                    <td style="background-color: <?php echo vespa_contest_status_color($race); ?>">
                                         <a style="color:black;" href="<?php echo admin_url('admin.php?page=contests&action=view&id=' . $race->contest_id); ?>">
                                             <?php echo stripslashes($race->contest_name); ?>
                                         </a>
@@ -925,7 +925,7 @@
                                 ?>
                                 <tr>
                                     <td><?php echo $race->contest_id; ?></td>
-                                    <td style="background-color: <?php echo ($race->is_final && $race->school_entry_start_at <= date('Y-m-d H:i:s') && $race->school_entry_end_at >= date('Y-m-d H:i:s')) ? '#63c27c' : '#ec5a64'; ?>">
+                                    <td style="background-color: <?php echo vespa_contest_status_color($race); ?>">
                                         <a style="color:black;" href="<?php echo admin_url('admin.php?page=contests&action=view&id=' . $race->contest_id); ?>">
                                             <?php echo stripslashes($race->contest_name); ?>
                                         </a>

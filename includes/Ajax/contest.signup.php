@@ -147,7 +147,17 @@ class VespaContestSignups
             }
         } else {
             $response['action'] = 'add';
-            // check if can be entered     
+
+            // Pedagógus-feltétel: csak akkor nevezhető új sportoló, ha az iskola
+            // megadott legalább egy pedagógust erre a versenyre.
+            if (!vespa_school_has_teachers($school_id, $contest_id)) {
+                $response['success'] = false;
+                $response['message'] = 'Előbb add meg legalább egy pedagógust a "Pedagógusok" szekcióban a nevezéshez!';
+                wp_send_json($response);
+                die();
+            }
+
+            // check if can be entered
             $contest = $GLOBALS['VESPA_Contests']->load($contest_id);
             $isSzabadidosport = $contest->contest_type == 4;
             $sql = "SELECT count(a.athlete_id) as num 

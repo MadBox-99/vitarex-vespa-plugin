@@ -263,3 +263,19 @@ INSERT INTO `vespa_sport_events` (`sport_event_id`, `sport_id`, `sport_event_nam
 -- ami nincs meg). Csak akkor futtasd, ha a felhasználói visszajelzés alapján a 1011 valóban a
 -- 1051-es versenyszám duplikátuma volt. ELŐTTE backupot készíts!
 -- UPDATE `vespa_athlete_entries` SET `contest_event_id`=1051 WHERE `contest_id`=298 AND `contest_event_id`=1011;
+
+--2026.05.29.
+-- Pedagógusok tárolása verseny-nevezéshez (versenyenként+iskolánként tetszőleges számú sor)
+CREATE TABLE IF NOT EXISTS `vespa_contest_teachers` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `contest_id` INT NOT NULL,
+    `school_id` INT NOT NULL,
+    `teljes_nev` VARCHAR(200) NOT NULL,
+    `mobil` VARCHAR(50) NOT NULL,
+    `email` VARCHAR(200) NOT NULL,
+    `szuletesi_hely` VARCHAR(200) NOT NULL,
+    `szuletesi_ido` DATE NOT NULL,
+    `iskola_neve` VARCHAR(255) NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `contest_school` (`contest_id`, `school_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_hungarian_ci;

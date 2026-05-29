@@ -70,6 +70,75 @@
             </div>
 
 
+            <div class="vespa-teachers" style="margin-bottom:40px;">
+                <h1>Pedagógusok</h1>
+                <p>A nevezéshez legalább egy pedagógus megadása kötelező. Mind a hat mező kitöltése szükséges pedagógusonként.</p>
+
+                <?php
+                $teachers = vespa_get_teachers(vespa_get_my_school_id(), $record->contest_id);
+                if (empty($teachers)) {
+                    // egy üres sablonsor, hogy legyen mit kitölteni
+                    $teachers = array(null);
+                }
+                ?>
+
+                <form action="" class="ajax-form" id="vespa-teachers-form">
+                    <input type="hidden" name="action" value="save_teachers" autocomplete="off">
+                    <input type="hidden" name="school_id" value="<?php echo vespa_get_my_school_id(); ?>" autocomplete="off">
+                    <input type="hidden" name="contest_id" value="<?php echo $record->contest_id; ?>" autocomplete="off">
+
+                    <div class="row kisero-row" style="font-weight:bold;">
+                        <div class="col-md-2">Teljes név</div>
+                        <div class="col-md-2">Mobil telefonszám</div>
+                        <div class="col-md-2">E-mail</div>
+                        <div class="col-md-2">Születési hely</div>
+                        <div class="col-md-2">Születési idő</div>
+                        <div class="col-md-2">Iskola neve</div>
+                    </div>
+
+                    <div id="teacher_rows">
+                        <?php foreach ($teachers as $t) : ?>
+                            <div class="row kisero-row teacher-row">
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control" name="teacher_teljes_nev[]" value="<?php echo $t ? esc_attr($t->teljes_nev) : ''; ?>">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control" name="teacher_mobil[]" value="<?php echo $t ? esc_attr($t->mobil) : ''; ?>">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control" name="teacher_email[]" value="<?php echo $t ? esc_attr($t->email) : ''; ?>">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control" name="teacher_szuletesi_hely[]" value="<?php echo $t ? esc_attr($t->szuletesi_hely) : ''; ?>">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="date" class="form-control" name="teacher_szuletesi_ido[]" value="<?php echo $t ? esc_attr($t->szuletesi_ido) : ''; ?>">
+                                </div>
+                                <div class="col-md-1">
+                                    <input type="text" class="form-control" name="teacher_iskola_neve[]" value="<?php echo $t ? esc_attr($t->iskola_neve) : ''; ?>">
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="button btn-remove-teacher" onclick="removeTeacherRow(this);">✕</button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div class="row" style="margin-top:10px;">
+                        <div class="col-md-12">
+                            <button type="button" class="button" onclick="addTeacherRow();">➕ Pedagógus hozzáadása</button>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top:10px;">
+                        <div class="col-md-12">
+                            <div id="teacher_success"></div>
+                            <button type="submit" class="button">Pedagógusok mentése</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
             <div class="vespa-races">
                 <?php
                 $school_id = vespa_get_my_school_id();
