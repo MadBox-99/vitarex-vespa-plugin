@@ -123,7 +123,7 @@
     <?php
     $filter = vespa_get_contest_athlete_filter("1", $record);
 
-    $athletes = $wpdb->get_results("SELECT * FROM vespa_athletes WHERE $filter ORDER BY athlete_name ASC");
+    $athletes = $wpdb->get_results("SELECT * FROM vespa_athletes WHERE $filter AND is_deleted=0 ORDER BY athlete_name ASC");
     ?>
     <div class="modal fade" id="contest_entry_modal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">

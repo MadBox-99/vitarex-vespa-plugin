@@ -140,7 +140,7 @@ function getDuplicates($athlete_name, $birth_place, $birth_date,$mothers_name)
     global $wpdb;
     $list = $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT * FROM vespa_athletes WHERE athlete_name=%s AND birth_place=%s AND birth_date=%s AND mothers_name=%s",
+            "SELECT * FROM vespa_athletes WHERE is_deleted=0 AND athlete_name=%s AND birth_place=%s AND birth_date=%s AND mothers_name=%s",
             $athlete_name, $birth_place, $birth_date, $mothers_name
         )
     );

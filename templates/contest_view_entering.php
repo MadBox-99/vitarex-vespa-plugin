@@ -210,7 +210,7 @@
                         $disabilityGroups = explode(',', $race->disability_groups); 
                         $placeholders = implode(',', array_fill(0, count($disabilityGroups), '%s')); 
                     
-                        $filters = "a.school_id=%d AND a.active=1 AND a.disability_type IN ($placeholders) ";
+                        $filters = "a.school_id=%d AND a.active=1 AND a.is_deleted=0 AND a.disability_type IN ($placeholders) ";
                         $filters .= " AND DATE(a.birth_date) >= DATE('%s') ";
                         $filters .= " AND DATE(a.birth_date) <= DATE('%s') ";
                         $params[] = $school_id;
