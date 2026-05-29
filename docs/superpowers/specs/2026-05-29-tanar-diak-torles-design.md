@@ -102,11 +102,14 @@ a történeti (entries/results-on átmenő) lekérdezéseket **nem** szűrjük.
   megmarad — ez szándékos.
 - `templates/contest_view_save.php` — a diáklista lekérdezése.
 - `includes/Export/export_athletes.php` — aktuális sportoló-export.
-- `templates/results_dashboard.php` — a sportoló-választó lista.
 - `templates/import_athletes.php` — a dedup-ellenőrzés (az archivált diákot ne
   vegye létező találatnak; új importnál friss rekord jön létre).
 
 **NEM szűrendő (történeti kontextus, athlete_entries/results JOIN athlete_id):**
+- `templates/results_dashboard.php` — a sportoló-lista csak **eredménnyel
+  rendelkező** diákokat tartalmaz (INNER JOIN `athlete_entries` + `results`),
+  tehát történeti nézet: az archivált, de eredményes diák eredménye maradjon
+  elérhető.
 - `templates/contest_view_racelist.php`, `templates/contest_results.php`,
   `includes/Ajax/ajax.contest_entries.php`, `includes/Ajax/ajax.contest_results.php`,
   `includes/Ajax/contest.signup.php` (a benevezettek számolása),
@@ -156,6 +159,5 @@ fenti „élő diák" csoportba esőkre teszi a szűrőt.
 - `includes/Datalist/datalist.athletes.php` — `$soft_delete`, `checkDelete`,
   `getFilters`, `addActionButtons`.
 - `templates/contest_view_entering.php`, `templates/contest_view_save.php`,
-  `templates/results_dashboard.php`, `templates/import_athletes.php`,
-  `includes/Export/export_athletes.php` — `is_deleted=0` szűrő az élő-diák
-  lekérdezésekbe.
+  `templates/import_athletes.php`, `includes/Export/export_athletes.php` —
+  `is_deleted=0` szűrő az élő-diák lekérdezésekbe.
