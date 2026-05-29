@@ -279,3 +279,26 @@ CREATE TABLE IF NOT EXISTS `vespa_contest_teachers` (
     PRIMARY KEY (`id`),
     KEY `contest_school` (`contest_id`, `school_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_hungarian_ci;
+
+--2026.05.29.
+-- A 9425-ös "TESZT ISKOLA, ÁTMENETI DIÁKADAT TÁROLÓ - NEM SZÁMÍT A VERSENYEKNÉL"
+-- intézmény és a hozzá tartozó ~4307 árva diák kitakarítása.
+-- A diákok mind inaktívak, egyetlen admin tömeges importjából származnak, és
+-- az ellenőrzés szerint egyetlen versenyhez/nevezéshez/eredményhez sem kapcsolódnak.
+--
+-- KÖTELEZŐ ELŐTTE: készíts BACKUPOT, és futtasd le az alábbi ellenőrzést.
+-- Csak akkor töröld, ha a nevezesek + eredmenyek + iskola_nevezesek + kiserok MIND 0:
+--
+-- SELECT
+--   (SELECT COUNT(*) FROM vespa_athletes WHERE school_id=9425) AS sportolok,
+--   (SELECT COUNT(*) FROM vespa_athlete_entries
+--      WHERE athlete_id IN (SELECT athlete_id FROM vespa_athletes WHERE school_id=9425)) AS nevezesek,
+--   (SELECT COUNT(*) FROM vespa_constest_events_results
+--      WHERE athlete_id IN (SELECT athlete_id FROM vespa_athletes WHERE school_id=9425)) AS eredmenyek,
+--   (SELECT COUNT(*) FROM vespa_school_entries WHERE school_id=9425) AS iskola_nevezesek,
+--   (SELECT COUNT(*) FROM vespa_contests_escorts WHERE school_id=9425) AS kiserok;
+--
+-- 2026.05.29-i ellenőrzés (élesben): sportolok=4307, nevezesek=0, eredmenyek=0,
+-- iskola_nevezesek=0, kiserok=0  -> a törlés biztonságos.
+DELETE FROM `vespa_athletes`     WHERE `school_id`=9425;
+DELETE FROM `vespa_institutions` WHERE `institution_id`=9425;
