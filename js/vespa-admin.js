@@ -1159,3 +1159,28 @@ function tabKivalasztas(evt, tabId) {
 
   document.getElementById("selected_tab").value = tabId;
 }
+
+function addTeacherRow() {
+  var rows = jQuery("#teacher_rows");
+  var html =
+    '<div class="row kisero-row teacher-row">' +
+    '  <div class="col-md-2"><input type="text" class="form-control" name="teacher_teljes_nev[]"></div>' +
+    '  <div class="col-md-2"><input type="text" class="form-control" name="teacher_mobil[]"></div>' +
+    '  <div class="col-md-2"><input type="text" class="form-control" name="teacher_email[]"></div>' +
+    '  <div class="col-md-2"><input type="text" class="form-control" name="teacher_szuletesi_hely[]"></div>' +
+    '  <div class="col-md-2"><input type="date" class="form-control" name="teacher_szuletesi_ido[]"></div>' +
+    '  <div class="col-md-1"><input type="text" class="form-control" name="teacher_iskola_neve[]"></div>' +
+    '  <div class="col-md-1"><button type="button" class="button btn-remove-teacher" onclick="removeTeacherRow(this);">✕</button></div>' +
+    "</div>";
+  rows.append(html);
+}
+
+function removeTeacherRow(btn) {
+  var rows = jQuery("#teacher_rows");
+  // ne lehessen az utolsó sort is törölni – maradjon legalább egy üres sor
+  if (rows.find(".teacher-row").length <= 1) {
+    jQuery(btn).closest(".teacher-row").find("input").val("");
+    return;
+  }
+  jQuery(btn).closest(".teacher-row").remove();
+}
