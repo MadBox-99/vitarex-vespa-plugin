@@ -1,2 +1,5 @@
 fodisz_vespa.sql
 .DS_Store
+deploy.env
+build/
+*.zip
