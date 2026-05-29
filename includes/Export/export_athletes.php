@@ -50,8 +50,8 @@
             $sql = "SELECT vespa_athletes.*, vespa_institutions.ins_name, vespa_disability_groups.disability_group_name 
             FROM vespa_athletes 
             JOIN vespa_institutions ON vespa_institutions.institution_id = vespa_athletes.school_id 
-            JOIN vespa_disability_groups ON vespa_disability_groups.disability_group_id = vespa_athletes.disability_type 
-            WHERE 1";
+            JOIN vespa_disability_groups ON vespa_disability_groups.disability_group_id = vespa_athletes.disability_type
+            WHERE vespa_athletes.is_deleted=0";
     
             $params = [];
             

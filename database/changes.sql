@@ -302,3 +302,10 @@ CREATE TABLE IF NOT EXISTS `vespa_contest_teachers` (
 -- iskola_nevezesek=0, kiserok=0  -> a törlés biztonságos.
 DELETE FROM `vespa_athletes`     WHERE `school_id`=9425;
 DELETE FROM `vespa_institutions` WHERE `institution_id`=9425;
+
+--2026.05.29.
+-- Soft delete a sportolóknál: a testnevelő/igazgató archiválhatja a saját
+-- iskolája diákjait. A diák a DB-ben marad, csak is_deleted=1 jelölést kap.
+ALTER TABLE `vespa_athletes`
+    ADD COLUMN `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
+    ADD COLUMN `deleted_at` TIMESTAMP NULL DEFAULT NULL;

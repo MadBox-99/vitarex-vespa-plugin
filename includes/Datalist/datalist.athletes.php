@@ -8,6 +8,7 @@ class VESPA_Athletes extends VESPA_Datalist
     protected $default_order_by  = 'athlete_name';
     protected $default_order_dir = 'ASC';
     protected $columns           = array('athlete_id', 'athlete_name', 'ins_name', 'birth_place', 'birth_date', 'mothers_name');
+    protected $soft_delete       = true;
 
     public function joins()
     {
@@ -158,13 +159,34 @@ class VESPA_Athletes extends VESPA_Datalist
     }
 
     public function checkDelete( $id ){
-        return current_user_can( 'manage_options' ) || current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles );
+        // admin / versenykezelő: változatlanul törölhet
+        if ( current_user_can( 'manage_options' ) || current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles ) ) {
+            return true;
+        }
+
+        // testnevelő / iskolaigazgató: csak a saját iskolája diákját
+        $is_school_user = VESPA_Roles::getInstance()->current_user_has_role( VESPA_Roles::TESTNEVELO )
+            || VESPA_Roles::getInstance()->current_user_has_role( VESPA_Roles::ISKOLAIGAZGATO );
+
+        if ( ! $is_school_user ) {
+            return false;
+        }
+
+        // $id == 0: csak a gomb megjelenítési próbája (addActionButtons) –
+        // a valódi tulajdonlás a tényleges törléskor ($id > 0) dől el.
+        if ( intval( $id ) === 0 ) {
+            return true;
+        }
+
+        $athlete = $this->load( $id );
+
+        return $athlete && intval( $athlete->school_id ) === intval( vespa_get_my_school_id() );
     }
 
     public function getFilters()
     {
         global $wpdb;
-        $filters = '1';
+        $filters = 'vespa_athletes.is_deleted=0';
 
         if (isset($_REQUEST['search']) && isset($_REQUEST['search']['value']) && trim($_REQUEST['search']['value']) != '') {
             $search = '%' . $wpdb->esc_like( sanitize_text_field($_REQUEST['search']['value']) ) . '%';
@@ -198,7 +220,7 @@ class VESPA_Athletes extends VESPA_Datalist
         $btns .= '  <i class="fa fa-pencil" aria-hidden="true"></i>';
         $btns .= '</a>&nbsp;';
 
-        if( $this->checkDelete(0) ){
+        if( $this->checkDelete( $item->{$this->id_field} ) ){
             $btns .= '<button class="btn btn-sm btn-default color-red delete-entity" data-modalid="" data-id="' . $item->{$this->id_field} . '">';
             $btns .= '  <i class="fa fa-trash" aria-hidden="true"></i>';
             $btns .= '</button>';

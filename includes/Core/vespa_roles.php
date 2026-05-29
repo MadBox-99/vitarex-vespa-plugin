@@ -130,6 +130,7 @@ class VESPA_Roles extends Singleton
                         VESPA_Roles::intezmenyek_listazasa => true,
                     ),
                     VESPA_Roles::ISKOLAIGAZGATO => array(
+                        VESPA_Roles::sportolok_listazasa => true,
                         VESPA_Roles::tanulok_listazasa => true,
                         VESPA_Roles::tanulok_letrehozasa_modositasa => true,
                         VESPA_Roles::versenyek_megtekintese => true,
