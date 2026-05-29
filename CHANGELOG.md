@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.3.0] - 2026-05-29
+
+### Új funkciók
+- **Pedagógusok a nevezésnél:** A verseny nevezési oldalán új „Pedagógusok" szekció, ahol tetszőleges számú pedagógus adható meg (teljes név, mobil, e-mail, születési hely, születési idő, iskola neve — mind a 6 mező kötelező). Új `vespa_contest_teachers` tábla, `save_teachers` AJAX végpont. **Sportolót csak akkor lehet nevezni, ha az iskola megadott legalább egy pedagógust** az adott versenyre (a már nevezett sportoló levétele nem blokkolt).
+- **Háromállapotú színkódolás a verseny-listában:** A versenynév cellája mostantól három állapotot jelez — 🔴 piros: a verseny napja már elmúlt; 🟢 zöld: véglegesített és épp nyitva a nevezés; 🔵 kék (`#5bc0de`): létrehozva, de még nem nyitott (vagy a nevezés már lezárult, de a verseny napja még nem volt meg). A 4× ismétlődő inline feltétel egy `vespa_contest_status_color()` segédfüggvénybe szervezve.
+
+### Fejlesztői / üzemeltetési
+- **`build.sh` deploy script:** Telepíthető ZIP artifact készítése a pluginból (`build/vitarex-vespa-plugin-<verzió>.zip`), a dev/meta fájlok kihagyásával, a `lib/vendor` megtartásával. Opcionális `--upload` (scp, `deploy.env` alapján). Minden build automatikusan +1 patch verziót lép.
+- **9425-ös „átmeneti diákadat-tároló" intézmény takarítása:** Dokumentált, ellenőrzéssel és figyelmeztetéssel a `database/changes.sql`-ben (a ~4307 árva, versenyhez nem kapcsolódó diák + az intézmény törlése).
+
+### Adatbázis migráció
+- `database/changes.sql` (2026.05.29) — új `vespa_contest_teachers` tábla; valamint a 9425-ös intézmény és diákjainak (opcionális, ellenőrzéshez kötött) törlése.
+
 ## [2.2.0] - 2026-04-29
 
 ### Javítások

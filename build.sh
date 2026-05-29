@@ -3,9 +3,13 @@
 # build.sh — telepíthető ZIP artifact készítése a VESPA pluginból éles deployhoz.
 #
 # Használat:
-#   ./build.sh                 # csak builderol: build/vitarex-vespa-plugin-<verzio>.zip
-#   ./build.sh --upload        # builderol, majd scp-vel felteszi a szerverre (deploy.env kell)
+#   ./build.sh                 # patch verziót emel, majd builderol: build/vitarex-vespa-plugin-<verzio>.zip
+#   ./build.sh --upload        # ugyanaz + scp-vel felteszi a szerverre (deploy.env kell)
 #   ./build.sh --help
+#
+# Minden build AUTOMATIKUSAN +1 patch verziót lép a fő plugin fájlban (Version: + define).
+# A major/minor emelés szándékos és kézi (szerkeszd a vitarex-vespa-plugin.php-t).
+# A megemelt verziót utána commitold!
 #
 # A szerver-adatokat egy gitignore-olt deploy.env fájlból olvassa (lásd deploy.env.example).
 #
@@ -46,6 +50,23 @@ if [[ -z "${VERSION:-}" ]]; then
     echo "HIBA: nem sikerült kiolvasni a verziót a fejlécből (Version: ...)." >&2
     exit 1
 fi
+
+# --- automatikus PATCH verzióemelés (minden buildnél) ---
+# A major/minor emelés szándékos, kézi marad; a patch automatikusan nő minden buildnél.
+if [[ ! "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+    echo "HIBA: a verzió nem 'X.Y.Z' formátumú: '$VERSION'." >&2
+    exit 1
+fi
+OLD_VERSION="$VERSION"
+NEW_VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$(( BASH_REMATCH[3] + 1 ))"
+OLD_ESC="${OLD_VERSION//./\\.}"
+sed -i.bak -E \
+    -e "s/(Version:[[:space:]]*)$OLD_ESC/\1$NEW_VERSION/" \
+    -e "s/(VITAREX_VESPA_VERSION'[[:space:]]*,[[:space:]]*')$OLD_ESC/\1$NEW_VERSION/" \
+    "$MAIN_FILE"
+rm -f "$MAIN_FILE.bak"
+VERSION="$NEW_VERSION"
+echo "==> Verzió emelve: $OLD_VERSION -> $NEW_VERSION (fő fájl frissítve)"
 
 ZIP_NAME="$SLUG-$VERSION.zip"
 ZIP_PATH="$BUILD_DIR/$ZIP_NAME"
@@ -118,4 +139,5 @@ if [[ "$UPLOAD" -eq 1 ]]; then
     echo "    unzip -o $REMOTE_UPLOAD_DIR/$ZIP_NAME -d /útvonal/wp-content/plugins/"
 fi
 
+echo "==> Emlékeztető: a megemelt verziót ($VERSION) commitold a vitarex-vespa-plugin.php-ben!"
 echo "==> Emlékeztető: új telepítésnél futtasd a database/changes.sql új migrációit az éles DB-n."
