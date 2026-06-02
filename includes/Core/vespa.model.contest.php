@@ -16,6 +16,11 @@ class VespaContest
 
 	public function can_delete()
 	{
+		// A testnevelő semmilyen esetben (még saját kiírásként sem) nem törölhet versenykiírást.
+		if (VESPA_Roles::getInstance()->current_user_has_role(VESPA_Roles::TESTNEVELO)) {
+			return false;
+		}
+
 		if (
 			$this->record->creator_user_id == get_current_user_id() ||
 			is_super_admin() ||

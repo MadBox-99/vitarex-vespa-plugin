@@ -157,6 +157,9 @@
 
     $date = date('Y-m-d H:i:s');
 
+    // A testnevelő nem törölhet versenykiírást, ezért a Törlés gomb sem jelenik meg nála.
+    $vespa_show_delete_btn = ! VESPA_Roles::getInstance()->current_user_has_role(VESPA_Roles::TESTNEVELO);
+
     if (
         VESPA_Roles::getInstance()->current_user_has_role(VESPA_Roles::TESTNEVELO) ||
         VESPA_Roles::getInstance()->current_user_has_role(VESPA_Roles::ISKOLAIGAZGATO)
@@ -660,7 +663,9 @@
                                                     Résztvevők száma: <?php echo $resztvevok_szama; ?>
                                                 </span>
                                             </div>
+                                                <?php if ($vespa_show_delete_btn) : ?>
                                                 <button class="btn btn-danger delete-contest-btn" data-id="<?php echo $race->contest_id; ?>">Törlés</button>
+                                                <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
@@ -780,7 +785,9 @@
                                                     Résztvevők száma: <?php echo $resztvevok_szama; ?>
                                                 </span>
                                             </div>
+                                                <?php if ($vespa_show_delete_btn) : ?>
                                                 <button class="btn btn-danger delete-contest-btn" data-id="<?php echo $race->contest_id; ?>">Törlés</button>
+                                                <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
@@ -873,7 +880,9 @@
                                                     Résztvevők száma: <?php echo $resztvevok_szama; ?>
                                                 </span>
                                             </div>
+                                                <?php if ($vespa_show_delete_btn) : ?>
                                                 <button class="btn btn-danger delete-contest-btn" data-id="<?php echo $race->contest_id; ?>">Törlés</button>
+                                                <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
@@ -952,7 +961,9 @@
                                                     Résztvevők száma: <?php echo $resztvevok_szama; ?>
                                                 </span>
                                             </div>
+                                                <?php if ($vespa_show_delete_btn) : ?>
                                                 <button class="btn btn-danger delete-contest-btn" data-id="<?php echo $race->contest_id; ?>">Törlés</button>
+                                                <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>

@@ -596,7 +596,13 @@ function vespa_download_riport_verseny_diak()
             JOIN vespa_disability_groups as vdg ON va.disability_type=vdg.disability_group_id
             WHERE vc.start_at >= '$filterFrom' AND vc.end_at <= '$filterTo'";
 
-    if ($filter == 'country') {
+    if ($filter == 'all') {
+        // Az "Összes" csak az országos (1) és megyei (3) versenyeket tartalmazza,
+        // így megegyezik az országos + összes megyei lekérdezés összegével.
+        // (A regionális [2] és szabadidős [4] versenyek nem szerepelnek ebben a riportban.)
+        $sql .= " AND vc.contest_type IN (1,3)";
+    }
+    else if ($filter == 'country') {
         $sql .= " AND vc.contest_type=1";
     }
     else if (is_numeric($filter) && $filter > 0){
