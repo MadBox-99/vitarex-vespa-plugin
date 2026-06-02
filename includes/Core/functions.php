@@ -181,16 +181,15 @@ function vespa_contest_status_color($contest)
     $now = date('Y-m-d H:i:s');
 
     if ($contest->end_at < $now) {
-        return '#ec5a64'; // piros – elmúlt verseny
+        return '#ec5a64'; // piros – a verseny véget ért
     }
 
     if ($contest->is_final
-        && $contest->school_entry_start_at <= $now
-        && $contest->school_entry_end_at  >= $now) {
-        return '#63c27c'; // zöld – nevezhető
+        && $contest->school_entry_start_at <= $now) {
+        return '#63c27c'; // zöld – a nevezés megnyílt (a verseny végéig)
     }
 
-    return '#5bc0de'; // kék – létrehozva, de még nem nyitott
+    return '#5bc0de'; // kék – még nem nyitott a nevezés (vagy nincs véglegesítve)
 }
 
 /**
