@@ -570,7 +570,10 @@
                 // 1) Országos táblázat 
                 $orszagosVersenyek = getContestsByType($versenyek_ev_szerint[$ev->series_id], 'Országos');
                 ?>
-                <h1 class="title">Országos</h1>
+                <div class="vespa-section-header">
+                    <h1 class="title">Országos</h1>
+                    <?php echo vespa_contest_color_legend(); ?>
+                </div>
                 <div class="m2 szurok orszagos_szuro" style="display: flex; align-items: center;">
 
                     Fogyatékossági csoport
@@ -685,7 +688,10 @@
                 
                 ?>
                 
-                <h1  class="title">Megyei</h1>
+                <div class="vespa-section-header">
+                    <h1 class="title">Megyei</h1>
+                    <?php echo vespa_contest_color_legend(); ?>
+                </div>
                 <div class="m2 szurok megyei_szuro" style="display: flex; align-items: center;">
                     Fogyatékossági csoport
                     <select name="megyei_fogyatekossagi_csoport_id_<?php echo $ev->series_id; ?>" id="megyei_fogyatekossagi_csoport_id" class="form-control" style="width: 150px;margin: 8px 16px;">
@@ -802,7 +808,10 @@
 
                 <!-- 3) Regionális táblázat -->
                 <?php $regionalisVersenyek = getContestsByType($versenyek_ev_szerint[$ev->series_id], 'Regionális'); ?>
-                <h1  class="title">Regionális</h1>
+                <div class="vespa-section-header">
+                    <h1 class="title">Regionális</h1>
+                    <?php echo vespa_contest_color_legend(); ?>
+                </div>
                 <div class="m2 szurok regionalis_szuro" style="display: flex; align-items: center;">
                     Sportág
                     <select name="regionalis_sportag_id_<?php echo $ev->series_id; ?>" id="regionalis_sportag_id" class="form-control" style="width: 150px;margin: 8px 16px;">
@@ -897,7 +906,10 @@
 
                 <!-- 4) Szabadidősport táblázat -->
                 <?php $szabadidosVersenyek = getContestsByType($versenyek_ev_szerint[$ev->series_id], 'Szabadidősport'); ?>
-                <h1 class="title">Szabadidősport</h1>
+                <div class="vespa-section-header">
+                    <h1 class="title">Szabadidősport</h1>
+                    <?php echo vespa_contest_color_legend(); ?>
+                </div>
                 <?php if (count($szabadidosVersenyek) > 0) : ?>
                     <table 
                         id="szabadidos_table_<?php echo $ev->series_id; ?>" 

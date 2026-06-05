@@ -180,16 +180,45 @@ function vespa_contest_status_color($contest)
 {
     $now = date('Y-m-d H:i:s');
 
-    if ($contest->end_at < $now) {
-        return '#ec5a64'; // piros – a verseny véget ért
+    // A '0000-00-00 00:00:00' alapértelmezést nem tekintjük valódi határidőnek.
+    $entry_end = $contest->school_entry_end_at ?? null;
+    $has_entry_end = !empty($entry_end) && $entry_end > '0001-01-01 00:00:00';
+
+    // Piros – a nevezés lejárt, VAGY a verseny véget ért (már nem nevezhető).
+    if (($has_entry_end && $entry_end < $now) || $contest->end_at < $now) {
+        return '#ec5a64';
     }
 
     if ($contest->is_final
         && $contest->school_entry_start_at <= $now) {
-        return '#63c27c'; // zöld – a nevezés megnyílt (a verseny végéig)
+        return '#63c27c'; // zöld – nevezhető (a nevezés megnyílt)
     }
 
     return '#5bc0de'; // kék – még nem nyitott a nevezés (vagy nincs véglegesítve)
+}
+
+/**
+ * A versenysorok színeit megmagyarázó jelmagyarázat HTML-je.
+ * A színek megegyeznek a vespa_contest_status_color() által visszaadottakkal.
+ */
+function vespa_contest_color_legend()
+{
+    $items = array(
+        '#ec5a64' => 'Már nem nevezhető',
+        '#5bc0de' => 'Még nem nevezhető',
+        '#63c27c' => 'Nevezhető',
+    );
+
+    $html = '<div class="vespa-color-legend">';
+    foreach ($items as $color => $label) {
+        $html .= '<span class="vespa-color-legend__item">'
+            . '<span class="vespa-color-legend__swatch" style="background-color: ' . $color . ';"></span>'
+            . esc_html($label)
+            . '</span>';
+    }
+    $html .= '</div>';
+
+    return $html;
 }
 
 /**
