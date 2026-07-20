@@ -296,6 +296,57 @@ function vespa_save_extra_user_profile_fields3( $user_id ) {
     return false;
 }
 
+##############
+## TELEFON  ##
+##############
+
+
+//------------------------------
+add_action( 'show_user_profile', 'vespa_extra_user_profile_fields4' );
+add_action( 'edit_user_profile', 'vespa_extra_user_profile_fields4' );
+add_action( 'user_new_form', 'vespa_extra_user_profile_fields4' );
+
+function vespa_extra_user_profile_fields4( $user ) {
+
+        // Input hiba esetén ne vesszen el a már beírt szám!
+        $phone = isset($_POST['phone']) ? $_POST['phone'] : '';
+
+        // Új felhasználónál a $user objektum még nem létezik!
+        if ( isset( $user ) && is_object( $user ) && isset( $user->ID ) ) {
+            $phone = get_user_meta( $user->ID, 'phone', true );
+        }
+    ?>
+        <table class="form-table" id="phone_row" style="display: none;">
+        <tr>
+            <th><label for="phone">Telefonszám: (kötelező)</label></th>
+            <td>
+                <input type="tel" class="regular-text" name="phone" id="phone" value="<?php echo esc_attr($phone); ?>">
+            </td>
+        </tr>
+        </table>
+    <?php
+}
+
+add_action( 'user_register', 'vespa_save_extra_user_profile_fields4');
+add_action( 'personal_options_update', 'vespa_save_extra_user_profile_fields4' );
+add_action( 'edit_user_profile_update', 'vespa_save_extra_user_profile_fields4' );
+
+function vespa_save_extra_user_profile_fields4( $user_id ) {
+    if ( !current_user_can( 'edit_user', $user_id ) ) {
+        return false;
+    }
+
+    // FIGYELEM: itt SZÁNDÉKOSAN nincs extra capability-feltétel (szemben az
+    // iskola mentőjével). A testnevelőnek a saját telefonszámát el kell tudnia
+    // menteni, különben a validate_extra() örökre kizárná a profiljából.
+    if( isset($_POST['phone']) ){
+        update_user_meta( $user_id, 'phone', sanitize_text_field( $_POST['phone'] ) );
+        return true;
+    }
+
+    return false;
+}
+
     ### közös
     add_action( 'user_profile_update_errors', 'validate_extra' );
     function validate_extra(&$errors, $update = null, &$user  = null)
