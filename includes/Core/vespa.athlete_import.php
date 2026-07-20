@@ -233,4 +233,48 @@ class VESPA_Athlete_Importer
 
         return $result;
     }
+
+    /**
+     * A jó sorok beszúrása a vespa_athletes-be, tranzakcióban. Minden sorra
+     * BIZTONSÁGI újra-dedup közvetlenül a beszúrás előtt (az előnézet óta
+     * létrejöhetett ütközés) — a közben duplikálttá vált sort átugorja.
+     *
+     * @param array $valid_rows a validate() 'valid' tömbje
+     * @param int   $school_id  a transientből (nem újraküldött POST-ból)
+     * @return int a ténylegesen beszúrt sorok száma
+     */
+    public static function commit(array $valid_rows, $school_id)
+    {
+        global $wpdb;
+
+        $inserted = 0;
+        $now = date('Y-m-d H:i:s');
+        $user_id = get_current_user_id();
+
+        $wpdb->query('START TRANSACTION');
+        try {
+            foreach ($valid_rows as $row) {
+                if (self::is_duplicate($row['athlete_name'], $row['birth_place'], $row['birth_date'], $row['mothers_name'])) {
+                    continue; // az előnézet óta duplikálttá vált
+                }
+
+                $data = $row;
+                $data['school_id']   = (int) $school_id;
+                $data['modified_at'] = $now;
+                $data['modified_by'] = $user_id;
+
+                $ok = $wpdb->insert('vespa_athletes', $data);
+                if ($ok === false) {
+                    throw new \Exception('Beszúrási hiba: ' . $wpdb->last_error);
+                }
+                $inserted++;
+            }
+            $wpdb->query('COMMIT');
+        } catch (\Exception $e) {
+            $wpdb->query('ROLLBACK');
+            return 0;
+        }
+
+        return $inserted;
+    }
 }
