@@ -71,7 +71,7 @@ function vespa_szabadidos_register()
     update_user_meta($user_id, 'vespa_szabadidos_confirm_token', $token);
 
     global $wpdb;
-    $wpdb->insert('vespa_external_participants', array(
+    $beszurva = $wpdb->insert('vespa_external_participants', array(
         'user_id'    => $user_id,
         'full_name'  => $nev,
         'birth_date' => $szul,
@@ -82,6 +82,13 @@ function vespa_szabadidos_register()
         'created_at' => current_time('mysql'),
     ));
 
+    if ($beszurva === false) {
+        // A résztvevő-sor nélkül a fiók használhatatlan lenne: visszavonjuk.
+        require_once ABSPATH . 'wp-admin/includes/user.php';
+        wp_delete_user($user_id);
+        wp_send_json_error(array('message' => 'A regisztráció nem sikerült. Kérjük, próbáld újra később.'));
+    }
+
     // Megerősítő link.
     $link = add_query_arg(array(
         'vespa_szabadidos_confirm' => $token,
@@ -89,7 +96,7 @@ function vespa_szabadidos_register()
     ), home_url('/'));
 
     $targy = 'Szabadidős regisztráció megerősítése';
-    $body  = "Kedves " . esc_html($nev) . "!\n\n"
+    $body  = "Kedves " . $nev . "!\n\n"
         . "Köszönjük a regisztrációt. A fiók aktiválásához kattints az alábbi megerősítő linkre:\n"
         . esc_url_raw($link) . "\n\n"
         . "Ha nem te regisztráltál, hagyd figyelmen kívül ezt az üzenetet.";
