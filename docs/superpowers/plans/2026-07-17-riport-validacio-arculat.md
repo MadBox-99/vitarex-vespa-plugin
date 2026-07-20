@@ -26,12 +26,17 @@
 
 ---
 
-## Két korrekció a spec-hez képest
+## Korrekciók a spec-hez képest
 
 A terv írásakor a tényleges kód két ponton eltért attól, amit a spec feltételezett. **A terv az alábbi, helyes változatot követi:**
 
 1. **`#e12d3b` előfordulások száma.** A spec „öt hardkódolt" előfordulást ír (`:170, :178, :185, :190, :345`). Valójában **19 db** van (`grep -c`), plusz 2 db `#1d2327`. A Task 10 **mindet** lecseréli.
 2. **A kísérő mezők `name` attribútuma.** A spec szerint a hibakulcs `'"kiserok_email['.$key.']"'` lenne. De a `templates/contest_view_entering.php:396-404` a mobil/e-mail/allergia mezőket **index nélkül** rendereli (`name="kiserok_email[]"`), csak a név indexelt (`name="kiserok_nev[0]"`). Egy `[name="kiserok_email[0]"]` szelektor **nem találna semmit**, a hiba nem jelenne meg a mezőn. Ezért a **Task 6 előbb indexeli a `name` attribútumokat**, és csak utána (Task 7) épül rá a mezőszintű hibaüzenet.
+
+## Pre-flight döntések (a végrehajtás előtt egyeztetve)
+
+3. **A paletta külön fájlba kerül: `css/vespa-palette.css`.** A terv korábbi változata a `vespa-login.css`-ben **újra definiálta** volna a palettát, mert a login oldal nem tölti be a `vespa-admin.css`-t (`includes/Admin/login.customiser.php:18` csak a `vespa-login.css`-t enqueue-olja). Ez **ellentmondott a spec saját céljának** („egy blokkban cserélhető"): a márkaszínt két helyen kellett volna kézzel szinkronban tartani. Helyette a `:root` blokk saját fájlba kerül, és **mindkét helyen** enqueue-oljuk (Task 10: wp-admin, Task 12: login).
+4. **A kísérő-inputok `id`-je is indexelt lesz** (Task 6). Ma mind az 5 sor azonos `id`-t kap (`id="kiserok_mobil[]"`), ami érvénytelen HTML. Ellenőrizve: **semmilyen CSS vagy JS nem hivatkozik ezekre az id-kre**, a javítás ingyen van, mert a sorokat úgyis átírjuk.
 
 ---
 
@@ -40,7 +45,8 @@ A terv írásakor a tényleges kód két ponton eltért attól, amit a spec felt
 **Közös alap:**
 - `includes/Core/vespa.model.contest.php` — **módosít**: `VespaContestType` konstans-osztály a meglévő `VespaContest` mellé. A `Core` könyvtár töltődik be elsőként (`vitarex-vespa-plugin.php:51`), így az `Export`/`Ajax` fájlokból elérhető.
 - `includes/Core/functions.php` — **módosít**: `vespa_validate_email()`, `vespa_validate_phone()` a „VESPA segédfüggvények" szekcióba.
-- `css/vespa-admin.css` — **módosít**: `:root` paletta + a 19 `#e12d3b` és 2 `#1d2327` cseréje.
+- `css/vespa-palette.css` — **ÚJ**: az egyetlen `:root` arculati paletta. A wp-admin és a login is ezt tölti be, így az arculatváltás **egy fájl** módosítása.
+- `css/vespa-admin.css` — **módosít**: a 19 `#e12d3b` és 2 `#1d2327` cseréje `var(--vespa-*)`-ra.
 
 **A5 (szezon riport):**
 - `includes/Export/download_riports.php` — **módosít**: `vespa_download_riport_szezon_riport()` (`:39-252`) és `riportPartDiakok()` (`:254-284`).
@@ -905,17 +911,21 @@ Cseréld erre:
 
 ```php
                                     <div class="col-md-3">
-                                        <input type="tel" class="form-control" name="<?php echo "kiserok_mobil[$i]" ?>" id="kiserok_mobil[]" value="<?php echo (isset($kisero_data['kiserok'][$i]) ? $kisero_data['kiserok'][$i]['mobil'] : ''); ?>">
+                                        <input type="tel" class="form-control" name="<?php echo "kiserok_mobil[$i]" ?>" id="<?php echo "kiserok_mobil[$i]" ?>" value="<?php echo (isset($kisero_data['kiserok'][$i]) ? $kisero_data['kiserok'][$i]['mobil'] : ''); ?>">
                                     </div>
 
                                     <div class="col-md-3">
-                                        <input type="email" class="form-control" name="<?php echo "kiserok_email[$i]" ?>" id="kiserok_email[]" value="<?php echo (isset($kisero_data['kiserok'][$i]) ? $kisero_data['kiserok'][$i]['email'] : ''); ?>">
+                                        <input type="email" class="form-control" name="<?php echo "kiserok_email[$i]" ?>" id="<?php echo "kiserok_email[$i]" ?>" value="<?php echo (isset($kisero_data['kiserok'][$i]) ? $kisero_data['kiserok'][$i]['email'] : ''); ?>">
                                     </div>
 
                                     <div class="col-md-3">
-                                        <input type="text" class="form-control" name="<?php echo "kiserok_allergia[$i]" ?>" id="kiserok_allergia[]" value="<?php echo (isset($kisero_data['kiserok'][$i]) ? $kisero_data['kiserok'][$i]['allergia'] : ''); ?>">
+                                        <input type="text" class="form-control" name="<?php echo "kiserok_allergia[$i]" ?>" id="<?php echo "kiserok_allergia[$i]" ?>" value="<?php echo (isset($kisero_data['kiserok'][$i]) ? $kisero_data['kiserok'][$i]['allergia'] : ''); ?>">
                                     </div>
 ```
+
+> Az `id` is indexelt lesz (pre-flight 4. döntés): ma mind az 5 sor azonos
+> `id="kiserok_mobil[]"`-t kap, ami érvénytelen HTML. Ellenőrizve: semmilyen
+> CSS vagy JS nem hivatkozik ezekre az id-kre.
 
 - [ ] **Step 2: A gépkocsivezető-sor mezőinek átírása**
 
@@ -939,15 +949,15 @@ Cseréld erre:
 
 ```php
                                     <div class="col-md-3">
-                                        <input type="tel" class="form-control" name="<?php echo "gepkocsivezeto_mobil[$i]" ?>" id="gepkocsivezeto_mobil[]" value="<?php echo (isset($kisero_data['gepkocsivezetok'][$i]) ? $kisero_data['gepkocsivezetok'][$i]['mobil'] : ''); ?>">
+                                        <input type="tel" class="form-control" name="<?php echo "gepkocsivezeto_mobil[$i]" ?>" id="<?php echo "gepkocsivezeto_mobil[$i]" ?>" value="<?php echo (isset($kisero_data['gepkocsivezetok'][$i]) ? $kisero_data['gepkocsivezetok'][$i]['mobil'] : ''); ?>">
                                     </div>
 
                                     <div class="col-md-3">
-                                        <input type="email" class="form-control" name="<?php echo "gepkocsivezeto_email[$i]" ?>" id="gepkocsivezeto_email[]" value="<?php echo (isset($kisero_data['gepkocsivezetok'][$i]) ? $kisero_data['gepkocsivezetok'][$i]['email'] : ''); ?>">
+                                        <input type="email" class="form-control" name="<?php echo "gepkocsivezeto_email[$i]" ?>" id="<?php echo "gepkocsivezeto_email[$i]" ?>" value="<?php echo (isset($kisero_data['gepkocsivezetok'][$i]) ? $kisero_data['gepkocsivezetok'][$i]['email'] : ''); ?>">
                                     </div>
 
                                     <div class="col-md-3">
-                                        <input type="text" class="form-control" name="<?php echo "gepkocsivezeto_allergia[$i]" ?>" id="gepkocsivezeto_allergia[]" value="<?php echo (isset($kisero_data['gepkocsivezetok'][$i]) ? $kisero_data['gepkocsivezetok'][$i]['allergia'] : ''); ?>">
+                                        <input type="text" class="form-control" name="<?php echo "gepkocsivezeto_allergia[$i]" ?>" id="<?php echo "gepkocsivezeto_allergia[$i]" ?>" value="<?php echo (isset($kisero_data['gepkocsivezetok'][$i]) ? $kisero_data['gepkocsivezetok'][$i]['allergia'] : ''); ?>">
                                     </div>
 ```
 
@@ -1433,19 +1443,43 @@ git commit -m "fix: validate_extra szerepkör-forrás (profile.php) + testnevel�
 
 ---
 
-## Task 10: A6 — `:root` paletta + a hardkódolt színek cseréje
+## Task 10: A6 — külön paletta-fájl + a hardkódolt színek cseréje (wp-admin)
 
 **Files:**
-- Modify: `css/vespa-admin.css` (fájl eleje + 19 db `#e12d3b` + 2 db `#1d2327`)
+- Create: `css/vespa-palette.css` (az egyetlen `:root` blokk)
+- Modify: `css/vespa-admin.css` (19 db `#e12d3b` + 2 db `#1d2327` cseréje)
+- Modify: `includes/Admin/plugin.assets.php` (a paletta enqueue-olása a wp-adminban)
 
 **Interfaces:**
-- Produces: `--vespa-brand`, `--vespa-brand-dark`, `--vespa-dark`, `--vespa-bg`, `--vespa-bg-image` — a Task 11 és Task 12 használja.
+- Produces: `css/vespa-palette.css` a `--vespa-brand`, `--vespa-brand-dark`, `--vespa-dark`, `--vespa-bg`, `--vespa-bg-image` változókkal — a Task 11 (admin) és Task 12 (login) is ezt tölti be. Az arculatváltás így **egyetlen fájl** módosítása (a spec „egy blokkban cserélhető" célja).
 
-> **A LÉPÉSEK SORRENDJE KÖTÖTT.** Előbb a csere, utána a `:root` beszúrása.
-> Fordítva a `:root` definíciója is átíródna (`--vespa-brand: var(--vespa-brand);`)
-> → végtelen rekurzió, a szín eltűnne.
+> **Pre-flight 3. döntés:** a `:root` NEM a `vespa-admin.css`-be kerül, hanem külön
+> `vespa-palette.css`-be, mert a login oldal nem tölti be a `vespa-admin.css`-t
+> (`login.customiser.php:18`). Külön fájllal a paletta egy helyen él, és a wp-admin
+> és a login is ugyanazt tölti be.
 
-- [ ] **Step 1: A kiinduló állapot rögzítése**
+- [ ] **Step 1: A paletta-fájl létrehozása**
+
+Hozd létre a `css/vespa-palette.css` fájlt ezzel a tartalommal:
+
+```css
+/* =============================================
+   VESPA arculati paletta — EGYETLEN forrás
+   A márkaszín és a háttér itt, egy helyen cserélhető. A wp-admin
+   (css/vespa-admin.css) és a login (css/vespa-login.css) is ezeket a
+   változókat használja; ezt a fájlt mindkét felület betölti.
+   Ha megjön a tényleges arculati anyag, csak ezt a fájlt kell módosítani.
+   ============================================= */
+:root {
+  --vespa-brand: #e12d3b;         /* a meglévő márkapiros, változatlanul */
+  --vespa-brand-dark: #b02430;    /* ~20%-kal sötétebb, hover/aktív állapothoz */
+  --vespa-dark: #1d2327;          /* a meglévő WP-menü sötét, változatlanul */
+  --vespa-bg: #f0f0f1;            /* a WP alap admin háttér */
+  --vespa-bg-image: linear-gradient(160deg, rgba(225, 45, 59, 0.04) 0%, rgba(225, 45, 59, 0) 55%);
+}
+```
+
+- [ ] **Step 2: A kiinduló állapot rögzítése**
 
 Run: `grep -c "e12d3b" css/vespa-admin.css`
 Expected: `19`
@@ -1455,7 +1489,7 @@ Expected: `2`
 
 > Ha az értékek eltérnek, **ne** futtasd a lenti `sed`-et — nézd meg `grep -n`-nel, mi változott.
 
-- [ ] **Step 2: A színek cseréje változó-hivatkozásra**
+- [ ] **Step 3: A színek cseréje változó-hivatkozásra**
 
 Run:
 ```bash
@@ -1465,8 +1499,9 @@ sed -i '' 's/#1d2327/var(--vespa-dark)/g' css/vespa-admin.css
 
 > A `!important`-os előfordulásokkal (`:69`, `:452`) is működik:
 > `color: var(--vespa-brand) !important;` érvényes CSS.
+> A `vespa-admin.css`-be **nem** kerül `:root` — a paletta a külön fájlban van.
 
-- [ ] **Step 3: A csere ellenőrzése**
+- [ ] **Step 4: A csere ellenőrzése**
 
 Run: `grep -c "e12d3b\|1d2327" css/vespa-admin.css`
 Expected: `0` — egyetlen hardkódolt érték sem maradt.
@@ -1477,58 +1512,53 @@ Expected: `19`
 Run: `grep -c "var(--vespa-dark)" css/vespa-admin.css`
 Expected: `2`
 
-- [ ] **Step 4: A `:root` paletta beszúrása a fájl elejére**
+Run: `grep -c ":root" css/vespa-admin.css`
+Expected: `0` — a `:root` a külön paletta-fájlban van, nem itt.
 
-Keresd meg a `css/vespa-admin.css` **első 4 sorát**:
+- [ ] **Step 5: A paletta enqueue-olása a wp-adminban**
 
-```css
-html,
-body * {
-  font-family: "Calibri", "Helvetica", "sans-serif";
-}
+A `includes/Admin/plugin.assets.php`-ben keresd meg (`:17-18`):
+
+```php
+        wp_enqueue_style('datetimepicker_css', VITAREX_VESPA_PLUGIN_URI . 'css/jquery.datetimepicker.min.css');
+        wp_enqueue_style('vespa_admin_css', VITAREX_VESPA_PLUGIN_URI . 'css/vespa-admin.css?v=' . time());
 ```
 
-És cseréld erre (a `:root` blokk **elé** kerül):
+Cseréld erre (a paletta **a `vespa-admin.css` előtt** töltődik, hogy a változók készen álljanak):
 
-```css
-/* =============================================
-   VESPA arculati paletta
-   A márkaszín és a háttér EGY helyen cserélhető. Ha megjön a tényleges
-   arculati anyag, csak ezt a blokkot kell módosítani.
-   ============================================= */
-:root {
-  --vespa-brand: #e12d3b;         /* a meglévő márkapiros, változatlanul */
-  --vespa-brand-dark: #b02430;    /* ~20%-kal sötétebb, hover/aktív állapothoz */
-  --vespa-dark: #1d2327;          /* a meglévő WP-menü sötét, változatlanul */
-  --vespa-bg: #f0f0f1;            /* a WP alap admin háttér */
-  --vespa-bg-image: linear-gradient(160deg, rgba(225, 45, 59, 0.04) 0%, rgba(225, 45, 59, 0) 55%);
-}
-
-html,
-body * {
-  font-family: "Calibri", "Helvetica", "sans-serif";
-}
+```php
+        wp_enqueue_style('datetimepicker_css', VITAREX_VESPA_PLUGIN_URI . 'css/jquery.datetimepicker.min.css');
+        wp_enqueue_style('vespa_palette_css', VITAREX_VESPA_PLUGIN_URI . 'css/vespa-palette.css?v=' . time());
+        wp_enqueue_style('vespa_admin_css', VITAREX_VESPA_PLUGIN_URI . 'css/vespa-admin.css?v=' . time());
 ```
 
-- [ ] **Step 5: Ellenőrzés — a `:root` a fájl elején van, és minden változó definiált**
+> A CSS `var()` a betöltési sorrendtől függetlenül feloldódik (a `:root`
+> változók globálisak), de a paletta előre sorolása egyértelművé teszi a szándékot.
 
-Run: `head -15 css/vespa-admin.css | grep -c "vespa-brand:\|vespa-brand-dark:\|vespa-dark:\|vespa-bg:\|vespa-bg-image:"`
+- [ ] **Step 6: Szintaxis-ellenőrzés**
+
+Run: `php -l includes/Admin/plugin.assets.php`
+Expected: `No syntax errors detected`
+
+- [ ] **Step 7: Ellenőrzés — a paletta-fájl és az enqueue a helyén van**
+
+Run: `head -12 css/vespa-palette.css | grep -c "vespa-brand:\|vespa-brand-dark:\|vespa-dark:\|vespa-bg:\|vespa-bg-image:"`
 Expected: `5`
 
-Run: `grep -n "var(--vespa-brand: " css/vespa-admin.css`
-Expected: **nincs találat** — ha van, a `sed` a `:root`-ot is átírta (rossz sorrend), állítsd vissza `git checkout css/vespa-admin.css` paranccsal és kezdd újra az 1. lépéstől.
+Run: `grep -c "vespa-palette.css" includes/Admin/plugin.assets.php`
+Expected: `1`
 
-- [ ] **Step 6: Vizuális regresszió-ellenőrzés (böngésző)**
+- [ ] **Step 8: Vizuális regresszió-ellenőrzés (böngésző)**
 
 Nyisd meg a wp-admin bármelyik VESPA oldalát (pl. Versenyek). A piros kiemelésnek **pontosan ugyanúgy** kell kinéznie, mint a változtatás előtt: az aktív menüpont háttere, a menü hover, a `.btn-primary`, a checkboxok, a táblázat-fejléc.
 
 Expected: nincs látható különbség (a `--vespa-brand` értéke azonos a korábbi hardkódolt színnel).
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add css/vespa-admin.css
-git commit -m "refactor: :root arculati paletta - a hardkódolt színek változóra cserélve"
+git add css/vespa-palette.css css/vespa-admin.css includes/Admin/plugin.assets.php
+git commit -m "refactor: külön vespa-palette.css - a hardkódolt színek változóra cserélve"
 ```
 
 ---
@@ -1706,14 +1736,41 @@ git commit -m "feat: FODISZ logó az admin menü tetején és a láblécben + VE
 ## Task 12: A6 — login képernyő (FODISZ logó + VESPA háttér)
 
 **Files:**
-- Modify: `css/vespa-login.css`
+- Modify: `includes/Admin/login.customiser.php` (a paletta enqueue-olása a login oldalon)
+- Modify: `css/vespa-login.css` (FODISZ logó + háttér, `:root` nélkül)
 
-> A `css/vespa-login.css` a `login_enqueue_scripts` hookon töltődik
-> (`includes/Admin/login.customiser.php:9`), és **nem** tölti be a
-> `vespa-admin.css`-t — ezért a `:root` paletta itt nem érhető el, a színeket
-> ebben a fájlban külön kell definiálni.
+**Interfaces:**
+- Consumes: `css/vespa-palette.css` (`--vespa-brand`, `--vespa-brand-dark`) — Task 10.
 
-- [ ] **Step 1: A login paletta, a FODISZ logó és a háttér hozzáadása**
+> **Pre-flight 3. döntés:** a login oldal `css/vespa-palette.css`-t is betölti,
+> ezért a `vespa-login.css`-ben **NINCS** `:root` — ugyanazokat a változókat
+> használja, mint a wp-admin. A paletta egyetlen forrásból él.
+
+- [ ] **Step 1: A paletta enqueue-olása a login oldalon**
+
+A `includes/Admin/login.customiser.php`-ben keresd meg a `load_login_stylesheet()` metódust:
+
+```php
+    public function load_login_stylesheet(){
+        wp_enqueue_style('custom-login', VITAREX_VESPA_PLUGIN_URI . '/css/vespa-login.css');   
+    }
+```
+
+Cseréld erre (a paletta **a login CSS előtt** töltődik):
+
+```php
+    public function load_login_stylesheet(){
+        wp_enqueue_style('vespa-palette', VITAREX_VESPA_PLUGIN_URI . '/css/vespa-palette.css');
+        wp_enqueue_style('custom-login', VITAREX_VESPA_PLUGIN_URI . '/css/vespa-login.css');   
+    }
+```
+
+- [ ] **Step 2: Szintaxis-ellenőrzés**
+
+Run: `php -l includes/Admin/login.customiser.php`
+Expected: `No syntax errors detected`
+
+- [ ] **Step 3: A login FODISZ logó és a háttér hozzáadása**
 
 Fűzd a `css/vespa-login.css` **végére**:
 
@@ -1721,15 +1778,9 @@ Fűzd a `css/vespa-login.css` **végére**:
 
 /* =============================================
    VESPA arculat — login képernyő
-   A login oldal NEM tölti be a vespa-admin.css-t, ezért a paletta itt külön
-   definiált. Az értékek szándékosan egyeznek a css/vespa-admin.css :root
-   blokkjával — ha ott változik, itt is frissítendő.
+   A paletta a css/vespa-palette.css-ből jön (a login.customiser.php tölti be),
+   ezért itt NINCS :root — a var(--vespa-*) változók onnan oldódnak fel.
    ============================================= */
-:root {
-	--vespa-brand: #e12d3b;
-	--vespa-brand-dark: #b02430;
-}
-
 body.login {
 	background-color: #f0f0f1;
 	background-image:
@@ -1776,7 +1827,7 @@ body.login {
 }
 ```
 
-- [ ] **Step 2: Ellenőrzés — a fájl hivatkozásai helyesek**
+- [ ] **Step 4: Ellenőrzés — a fájl hivatkozásai helyesek, és nincs duplikált `:root`**
 
 Run: `grep -c "FODISZ_fekvo_logo_color.jpg" css/vespa-login.css`
 Expected: `1`
@@ -1784,18 +1835,21 @@ Expected: `1`
 Run: `grep -c "vespa_logo.png" css/vespa-login.css`
 Expected: `2` — a meglévő VESPA logó (a `.login h1 a` két `background-image` sora) érintetlen maradt.
 
-- [ ] **Step 3: Vizuális ellenőrzés (böngésző)**
+Run: `grep -c ":root" css/vespa-login.css`
+Expected: `0` — a paletta a `vespa-palette.css`-ből jön, itt nincs újradefiniálva.
+
+- [ ] **Step 5: Vizuális ellenőrzés (böngésző)**
 
 1. Jelentkezz ki, és nyisd meg a `wp-login.php`-t.
 2. A VESPA logó a helyén, alatta a FODISZ logó, a háttér márkaszínű, lágy.
 3. A bejelentkező doboz olvasható, a „Bejelentkezés" gomb piros.
 4. **A bejelentkezés működik** — a stílus nem takar el semmit.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add css/vespa-login.css
-git commit -m "feat: login képernyő - FODISZ logó és VESPA háttér"
+git add includes/Admin/login.customiser.php css/vespa-login.css
+git commit -m "feat: login képernyő - FODISZ logó, VESPA háttér, közös paletta"
 ```
 
 ---
@@ -1900,10 +1954,11 @@ Testnevelőként, egy nyitott verseny nevezési felületén:
 | 3.2 VESPA háttér (admin, login) | Task 11, Task 12 |
 | 3.3 fájlméret | Task 11 (Step 6 vizuális ellenőrzés); ha lassulást okoz, külön átméretezés |
 
-**Eltérések a spec-től (a terv a helyes változatot követi, indoklással a fenti „Két korrekció" szakaszban):**
+**Eltérések a spec-től (a terv a helyes változatot követi, indoklással a fenti „Korrekciók" és „Pre-flight döntések" szakaszban):**
 1. `#e12d3b` — 19 előfordulás (a spec 5-öt írt). Task 10 mindet cseréli.
-2. A kísérő `name` attribútumok indexelése (Task 6) **új, a specben nem szereplő lépés** — enélkül a Task 7 hibaüzenetei nem jelennének meg a mezőkön.
+2. A kísérő `name` attribútumok indexelése (Task 6) **új, a specben nem szereplő lépés** — enélkül a Task 7 hibaüzenetei nem jelennének meg a mezőkön. Az `id`-k is indexeltek lesznek (pre-flight 4.).
 3. A telefon mentője a **tankerület (`...3`) mintáját** követi, nem az iskoláét — az iskola mintája (`testnevelok_letrehozas_modositasa` cap) kizárná a testnevelőt a saját profiljából. A spec ezt nem részletezte.
+4. **A paletta külön `css/vespa-palette.css`-be kerül** (Task 10), amit a wp-admin és a login is betölt (pre-flight 3.). A spec „egy blokkban cserélhető" célját a terv korábbi, duplikáló változata nem teljesítette volna; ez igen.
 
 **Konzisztencia:**
 - `VespaContestType::ORSZAGOS|REGIONALIS|MEGYEI` — definiálva Task 1, használva Task 3, 4, 5. A `SZABADIDOS` definiálva, de ebben a csomagban szándékosan nincs használva (a 4-es típus kimarad a riportból).

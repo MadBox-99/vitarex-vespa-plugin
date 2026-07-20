@@ -393,15 +393,15 @@
                                     </div>
 
                                     <div class="col-md-3">
-                                        <input type="text" class="form-control" name="kiserok_mobil[]" id="kiserok_mobil[]" value="<?php echo (isset($kisero_data['kiserok'][$i]) ? $kisero_data['kiserok'][$i]['mobil'] : ''); ?>">
+                                        <input type="tel" class="form-control" name="<?php echo "kiserok_mobil[$i]" ?>" id="<?php echo "kiserok_mobil[$i]" ?>" value="<?php echo (isset($kisero_data['kiserok'][$i]) ? $kisero_data['kiserok'][$i]['mobil'] : ''); ?>">
                                     </div>
 
                                     <div class="col-md-3">
-                                        <input type="text" class="form-control" name="kiserok_email[]" id="kiserok_email[]" value="<?php echo (isset($kisero_data['kiserok'][$i]) ? $kisero_data['kiserok'][$i]['email'] : ''); ?>">
+                                        <input type="email" class="form-control" name="<?php echo "kiserok_email[$i]" ?>" id="<?php echo "kiserok_email[$i]" ?>" value="<?php echo (isset($kisero_data['kiserok'][$i]) ? $kisero_data['kiserok'][$i]['email'] : ''); ?>">
                                     </div>
 
                                     <div class="col-md-3">
-                                        <input type="text" class="form-control" name="kiserok_allergia[]" id="kiserok_allergia[]" value="<?php echo (isset($kisero_data['kiserok'][$i]) ? $kisero_data['kiserok'][$i]['allergia'] : ''); ?>">
+                                        <input type="text" class="form-control" name="<?php echo "kiserok_allergia[$i]" ?>" id="<?php echo "kiserok_allergia[$i]" ?>" value="<?php echo (isset($kisero_data['kiserok'][$i]) ? $kisero_data['kiserok'][$i]['allergia'] : ''); ?>">
                                     </div>
                                 </div>
                             <?php endfor; ?>
@@ -426,15 +426,15 @@
                                     </div>
 
                                     <div class="col-md-3">
-                                        <input type="text" class="form-control" name="gepkocsivezeto_mobil[]" id="gepkocsivezeto_mobil[]" value="<?php echo (isset($kisero_data['gepkocsivezetok'][$i]) ? $kisero_data['gepkocsivezetok'][$i]['mobil'] : ''); ?>">
+                                        <input type="tel" class="form-control" name="<?php echo "gepkocsivezeto_mobil[$i]" ?>" id="<?php echo "gepkocsivezeto_mobil[$i]" ?>" value="<?php echo (isset($kisero_data['gepkocsivezetok'][$i]) ? $kisero_data['gepkocsivezetok'][$i]['mobil'] : ''); ?>">
                                     </div>
 
                                     <div class="col-md-3">
-                                        <input type="text" class="form-control" name="gepkocsivezeto_email[]" id="gepkocsivezeto_email[]" value="<?php echo (isset($kisero_data['gepkocsivezetok'][$i]) ? $kisero_data['gepkocsivezetok'][$i]['email'] : ''); ?>">
+                                        <input type="email" class="form-control" name="<?php echo "gepkocsivezeto_email[$i]" ?>" id="<?php echo "gepkocsivezeto_email[$i]" ?>" value="<?php echo (isset($kisero_data['gepkocsivezetok'][$i]) ? $kisero_data['gepkocsivezetok'][$i]['email'] : ''); ?>">
                                     </div>
 
                                     <div class="col-md-3">
-                                        <input type="text" class="form-control" name="gepkocsivezeto_allergia[]" id="gepkocsivezeto_allergia[]" value="<?php echo (isset($kisero_data['gepkocsivezetok'][$i]) ? $kisero_data['gepkocsivezetok'][$i]['allergia'] : ''); ?>">
+                                        <input type="text" class="form-control" name="<?php echo "gepkocsivezeto_allergia[$i]" ?>" id="<?php echo "gepkocsivezeto_allergia[$i]" ?>" value="<?php echo (isset($kisero_data['gepkocsivezetok'][$i]) ? $kisero_data['gepkocsivezetok'][$i]['allergia'] : ''); ?>">
                                     </div>
                                 </div>
                             <?php endfor; ?>

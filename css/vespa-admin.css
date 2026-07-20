@@ -43,8 +43,9 @@ h4.modal-title {
   width: 50px;
 }
 
-#wp-admin-bar-wp-logo,
-#wpfooter {
+/* A WP saját logója rejtve marad; a lábléc viszont a FODISZ logót hordozza,
+   ezért újra láthatóvá tesszük (lásd includes/Admin/plugin.assets.php). */
+#wp-admin-bar-wp-logo {
   display: none;
 }
 
@@ -66,7 +67,7 @@ h4.modal-title {
 }
 
 .color-red {
-  color: #e12d3b !important;
+  color: var(--vespa-brand) !important;
 }
 
 .color-green {
@@ -111,7 +112,7 @@ select.form-control {
 .mvk-tabs a:hover,
 .mvk-tabs a.active {
   text-decoration: none;
-  background-color: #e12d3b;
+  background-color: var(--vespa-brand);
   color: #fff;
 }
 
@@ -167,7 +168,7 @@ select.form-control {
 #adminmenu .wp-menu-arrow div,
 #adminmenu li.current a.menu-top,
 #adminmenu li.wp-has-current-submenu a.wp-has-current-submenu {
-  background: #e12d3b;
+  background: var(--vespa-brand);
   color: #fff;
 }
 
@@ -175,41 +176,41 @@ select.form-control {
 #adminmenu .wp-submenu a:hover,
 #adminmenu a:hover,
 #adminmenu li.menu-top > a:focus {
-  color: #e12d3b;
+  color: var(--vespa-brand);
 }
 
 #adminmenu li a:focus div.wp-menu-image::before,
 #adminmenu li.opensub div.wp-menu-image::before,
 #adminmenu li:hover div.wp-menu-image::before {
-  color: #e12d3b;
+  color: var(--vespa-brand);
 }
 
 #adminmenu li.menu-top:hover,
 #adminmenu li.opensub > a.menu-top,
 #adminmenu li > a.menu-top:focus {
   position: relative;
-  background-color: #1d2327;
-  color: #e12d3b;
+  background-color: var(--vespa-dark);
+  color: var(--vespa-brand);
 }
 
 .wrap .btn-primary {
-  background-color: #e12d3b;
-  border-color: #e12d3b;
+  background-color: var(--vespa-brand);
+  border-color: var(--vespa-brand);
 }
 
 .wrap .btn-primary:hover {
-  background-color: #e12d3b;
-  border-color: #e12d3b;
+  background-color: var(--vespa-brand);
+  border-color: var(--vespa-brand);
 }
 
 .wrap .btn-cancel {
   background-color: #ffffff;
-  border-color: #e12d3b;
-  color: #e12d3b;
+  border-color: var(--vespa-brand);
+  color: var(--vespa-brand);
 }
 
 .wrap .btn-cancel:hover {
-  background-color: #e12d3b;
+  background-color: var(--vespa-brand);
   color: #ffffff;
 }
 
@@ -238,7 +239,7 @@ select.form-control {
 }
 
 .redstar {
-  color: #e12d3b;
+  color: var(--vespa-brand);
 }
 
 .user-rich-editing-wrap,
@@ -325,7 +326,7 @@ label {
 }
 
 .chlist-label:hover {
-  color: #e12d3b;
+  color: var(--vespa-brand);
 }
 
 label.hl {
@@ -342,8 +343,8 @@ input[type="checkbox"]:checked::before {
   margin: -0.2875rem 0 0 -0.35rem;
   height: 1.3125rem;
   width: 1.3125rem;
-  background: #e12d3b;
-  border: #e12d3b 1px solid;
+  background: var(--vespa-brand);
+  border: var(--vespa-brand) 1px solid;
   content: " ";
 }
 
@@ -422,7 +423,7 @@ input[type="checkbox"]::before {
 }
 
 .tbl-header {
-  background: #1d2327;
+  background: var(--vespa-dark);
   color: #fff;
   font-weight: bold;
 }
@@ -449,7 +450,7 @@ input[type="checkbox"]::before {
 .w3-red,
 .w3-hover-red:hover {
   color: #fff !important;
-  background-color: #e12d3b !important;
+  background-color: var(--vespa-brand) !important;
 }
 
 .w3-black,
@@ -602,7 +603,7 @@ input[type="checkbox"]::before {
 .loader {
   border: 8px solid #f3f3f3;
   /* Light grey */
-  border-top: 8px solid #e12d3b;
+  border-top: 8px solid var(--vespa-brand);
   /* Blue */
   border-radius: 50%;
   width: 60px;
@@ -652,4 +653,62 @@ input[type="checkbox"]::before {
     height: 16px;
     border-radius: 3px;
     border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+/* =============================================
+   VESPA arculat — FODISZ logó és háttér
+   ============================================= */
+
+/* FODISZ logó az admin menü tetején. Tiszta CSS, PHP hook nélkül. */
+#adminmenuwrap::before {
+  content: "";
+  display: block;
+  height: 56px;
+  margin: 0;
+  background-color: var(--vespa-dark);
+  background-image: url('../images/FODISZ_fekvo_logo_color.jpg');
+  background-size: 120px auto;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+/* Összecsukott menünél (WP .folded, ill. a szűk képernyős auto-fold)
+   a fekvő logó nem férne ki -> elrejtjük. */
+.folded #adminmenuwrap::before,
+.auto-fold #adminmenuwrap::before {
+  display: none;
+}
+
+@media screen and (max-width: 960px) {
+  #adminmenuwrap::before {
+    display: none;
+  }
+}
+
+/* Visszafogott VESPA háttér. SZÁNDÉKOSAN alig érzékelhető: a tartalom
+   táblázat, űrlap és riport - egy erős minta olvashatatlanná tenné. */
+#wpcontent,
+#wpbody-content {
+  background-color: var(--vespa-bg);
+  background-image: var(--vespa-bg-image);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Lábléc a FODISZ logóval. */
+#wpfooter {
+  display: block;
+  padding: 10px 20px;
+  color: #646970;
+}
+
+#wpfooter .vespa-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#wpfooter .vespa-footer img {
+  height: 24px;
+  width: auto;
 }

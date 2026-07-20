@@ -1,0 +1,14 @@
+/* =============================================
+   VESPA arculati paletta — EGYETLEN forrás
+   A márkaszín és a háttér itt, egy helyen cserélhető. A wp-admin
+   (css/vespa-admin.css) és a login (css/vespa-login.css) is ezeket a
+   változókat használja; ezt a fájlt mindkét felület betölti.
+   Ha megjön a tényleges arculati anyag, csak ezt a fájlt kell módosítani.
+   ============================================= */
+:root {
+  --vespa-brand: #e12d3b;         /* a meglévő márkapiros, változatlanul */
+  --vespa-brand-dark: #b02430;    /* ~20%-kal sötétebb, hover/aktív állapothoz */
+  --vespa-dark: #1d2327;          /* a meglévő WP-menü sötét, változatlanul */
+  --vespa-bg: #f0f0f1;            /* a WP alap admin háttér */
+  --vespa-bg-image: linear-gradient(160deg, rgba(225, 45, 59, 0.04) 0%, rgba(225, 45, 59, 0) 55%);
+}

@@ -1,5 +1,21 @@
 <?php
 
+/**
+ * A vespa_contest_types tábla azonosítói.
+ *
+ * A pluginban ezek az értékek ~40 helyen magic numberként szerepelnek; ez az
+ * osztály egyelőre CSAK a szezon riportban (includes/Export/download_riports.php)
+ * van használatban. A többi előfordulás átírása szándékosan nem része ennek a
+ * csomagnak.
+ */
+class VespaContestType
+{
+	const ORSZAGOS   = 1;
+	const REGIONALIS = 2;
+	const MEGYEI     = 3;
+	const SZABADIDOS = 4;
+}
+
 class VespaContest
 {
 	public $record;

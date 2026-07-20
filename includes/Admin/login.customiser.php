@@ -15,7 +15,8 @@ Class VESPA_LoginCustomiser extends Singleton
     }
 
     public function load_login_stylesheet(){
-        wp_enqueue_style('custom-login', VITAREX_VESPA_PLUGIN_URI . '/css/vespa-login.css');   
+        wp_enqueue_style('vespa-palette', VITAREX_VESPA_PLUGIN_URI . '/css/vespa-palette.css');
+        wp_enqueue_style('custom-login', VITAREX_VESPA_PLUGIN_URI . '/css/vespa-login.css');
     }
 
     public function redirect_to_admin(){
