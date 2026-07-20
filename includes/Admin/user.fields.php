@@ -402,14 +402,23 @@ function vespa_save_extra_user_profile_fields4( $user_id ) {
     add_action( 'edit_user_profile', 'vespa_extra_user_profile_fields_scripts' );
     add_action( 'user_new_form', 'vespa_extra_user_profile_fields_scripts' );
 
-    function vespa_extra_user_profile_fields_scripts( $user ) { 
-        
+    function vespa_extra_user_profile_fields_scripts( $user ) {
+
+        // A saját profil oldalon (profile.php) nincs #role legördülő, ezért a
+        // szerepkört a szerkesztett userből olvassuk ki. Enélkül a handleFields()
+        // undefined szerepkörrel az else-ágra futna, és kiürítené a rejtett
+        // #school_id / #phone mezőket -> a user nem tudná menteni a saját profilját.
+        $server_role = '';
+        if ( is_object( $user ) && ! empty( $user->roles ) ) {
+            $server_role = $user->roles[0];
+        }
     ?>
         <script>
             const schoolRoles = ['testnevelo', 'sportolo', 'iskolaigazgato', 'tanulo']
             const stateRoles = ['megyei_vezeto', 'megyei_versenyigazgato']
             const district = ['tankeruleti_igazgato']
             const phoneRoles = ['testnevelo']
+            const serverRole = <?php echo json_encode( $server_role ); ?>;
             document.addEventListener('DOMContentLoaded', function() {
                 jQuery('#role').on('change', function() {
                     handleFields()
@@ -418,7 +427,10 @@ function vespa_save_extra_user_profile_fields4( $user_id ) {
             }, false);
 
             function handleFields(){
-                const role = jQuery('#role').val()
+                // #role a user-new/user-edit oldalon van; a saját profilon (profile.php)
+                // nincs, ilyenkor a szerver által átadott szerepkört használjuk.
+                const roleField = jQuery('#role')
+                const role = roleField.length ? roleField.val() : serverRole
 
                 // A telefon blokk a szerepkör-ágaktól függetlenül kezelhető:
                 // csak a testnevelőnél jelenik meg.
