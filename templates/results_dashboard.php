@@ -90,7 +90,6 @@ foreach ($sportok as $kulcs => $sport) : {
 <script>
   function selectCell(tab_id, contest_id) {
     let cell = "cell_" + tab_id + "-" + contest_id;
-    // console.log("Cella kiválasztás: ", cell);
     jQuery("#eredmenytablazat_" + tab_id).html("");
     var labelLista = document.getElementById("versenytablazat_" + tab_id).getElementsByClassName("versenylabel");
     for (let label of labelLista) {
@@ -102,7 +101,10 @@ foreach ($sportok as $kulcs => $sport) : {
     rendezes(tab_id, contest_id, "helyezes", "asc");
   }
 
-  function rendezes(tab_id, contest_id, rendezes_mezo, rendezes_irany) {
+  // Közös eredmény-betöltő: begyűjti az aktuális szűrő-értékeket a válaszban
+  // renderelt szűrő-sorból (első betöltéskor a sor még nincs kint -> üres értékek).
+  function vespaEredmenyBetolt(tab_id, contest_id, rendezes_mezo, rendezes_irany) {
+    let kont = "#eredmenytablazat_" + tab_id + " ";
     jQuery("#loader_" + tab_id).toggle();
     jQuery.ajax({
       type: "POST",
@@ -113,7 +115,13 @@ foreach ($sportok as $kulcs => $sport) : {
         contest_id: contest_id,
         tab_id: tab_id,
         rendezes_mezo: rendezes_mezo,
-        rendezes_irany: rendezes_irany
+        rendezes_irany: rendezes_irany,
+        sport_event_id: jQuery(kont + ".vespa-szuro-versenyszam").val() || "",
+        athlete_name: jQuery(kont + ".vespa-szuro-nev").val() || "",
+        van_eredmeny: jQuery(kont + ".vespa-szuro-eredmeny-letezik").val() || "",
+        helyezes_tol: jQuery(kont + ".vespa-szuro-helyezes-tol").val() || "",
+        helyezes_ig: jQuery(kont + ".vespa-szuro-helyezes-ig").val() || "",
+        eredmeny_kereses: jQuery(kont + ".vespa-szuro-eredmeny").val() || ""
       },
       success: function(resp) {
         if (resp.success) {
@@ -124,5 +132,30 @@ foreach ($sportok as $kulcs => $sport) : {
         jQuery("#loader_" + tab_id).toggle();
       }
     });
+  }
+
+  // Oszlopfejléc-rendezés: megőrzi az aktuális szűrőket.
+  function rendezes(tab_id, contest_id, rendezes_mezo, rendezes_irany) {
+    vespaEredmenyBetolt(tab_id, contest_id, rendezes_mezo, rendezes_irany);
+  }
+
+  // "Szűrés" gomb / versenyszám-váltás: megőrzi az aktuális rendezést.
+  function vespaSzures(tab_id, contest_id) {
+    let kont = "#eredmenytablazat_" + tab_id + " ";
+    let mezo = jQuery(kont + ".vespa-szuro-rendezes-mezo").val() || "helyezes";
+    let irany = jQuery(kont + ".vespa-szuro-rendezes-irany").val() || "asc";
+    vespaEredmenyBetolt(tab_id, contest_id, mezo, irany);
+  }
+
+  // "Szűrők törlése": kiüríti a mezőket, majd alap rendezéssel újratölt.
+  function vespaSzuroTorles(tab_id, contest_id) {
+    let kont = "#eredmenytablazat_" + tab_id + " ";
+    jQuery(kont + ".vespa-szuro-versenyszam").val("");
+    jQuery(kont + ".vespa-szuro-nev").val("");
+    jQuery(kont + ".vespa-szuro-eredmeny-letezik").val("");
+    jQuery(kont + ".vespa-szuro-helyezes-tol").val("");
+    jQuery(kont + ".vespa-szuro-helyezes-ig").val("");
+    jQuery(kont + ".vespa-szuro-eredmeny").val("");
+    vespaEredmenyBetolt(tab_id, contest_id, "helyezes", "asc");
   }
 </script>

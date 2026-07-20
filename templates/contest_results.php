@@ -303,6 +303,15 @@ if (isset($_POST["nevezes_visszavonas"])) {
                     </div>
 
                     <div class="col-md-12">
+                        <div class="vespa-racs-szuro" style="margin-bottom:8px;">
+                            <input type="text" id="racs_szuro_nev" class="form-control input-sm" style="display:inline-block;width:auto;" placeholder="Sportoló neve" autocomplete="off" oninput="vespaRacsSzuro()">
+                            <select id="racs_szuro_megjelent" class="form-control input-sm" style="display:inline-block;width:auto;" onchange="vespaRacsSzuro()">
+                                <option value="">Van-e eredmény: mind</option>
+                                <option value="1">Megjelent</option>
+                                <option value="0">Nem jelent meg</option>
+                            </select>
+                        </div>
+                        <div id="racs_nincs_talalat" style="display:none;margin:8px 0;">Nincs a keresésnek megfelelő sportoló.</div>
                         <form action="<?php echo "admin.php?page=contests&id=$id&raceId=$race->id&action=results" ?>" method="post">
 
                         <table class="table table-striped">
@@ -331,7 +340,7 @@ if (isset($_POST["nevezes_visszavonas"])) {
                                                         $place = '';
                                                         $time = '';
                                                     ?>
-                                                        <tr id="row-<?php echo $athlete->athlete_id; ?>">
+                                                        <tr id="row-<?php echo $athlete->athlete_id; ?>" data-athlete-row data-athlete-name="<?php echo esc_attr($athlete->athlete_name); ?>">
                                                             <?php if ($tovabbjutasos_verseny) : ?>
                                                                 <td><input type="checkbox" name="tovabbjutok[]" value="<?php echo $athlete->athlete_id; ?>" 
                                                                 <?php
@@ -704,3 +713,29 @@ if (isset($_POST["nevezes_visszavonas"])) {
     }).mount('#app')
 </script>
 <script src="https://unpkg.com/write-excel-file@1.x/bundle/write-excel-file.min.js"></script>
+<script>
+    // A2 rács-szűrő: név + megjelent szerint mutat/rejt sportoló-sorokat.
+    // A csoport-fejléc sorok érintetlenek maradnak. A "megjelent" állapotot a
+    // soron belüli, Vue által vezérelt checkboxból olvassuk (aktuális állapot).
+    function vespaRacsSzuro() {
+        var nevKereses = (document.getElementById('racs_szuro_nev').value || '').toLowerCase();
+        var megjelentSzuro = document.getElementById('racs_szuro_megjelent').value;
+        var sorok = document.querySelectorAll('#versenyszamok tr[data-athlete-row]');
+        var talalat = 0;
+        sorok.forEach(function (sor) {
+            var nev = (sor.getAttribute('data-athlete-name') || '').toLowerCase();
+            var nevOk = nevKereses === '' || nev.indexOf(nevKereses) !== -1;
+            var megjelentOk = true;
+            if (megjelentSzuro !== '') {
+                var cb = sor.querySelector('input[type=checkbox].result-field');
+                var megjelent = cb ? cb.checked : false;
+                megjelentOk = (megjelentSzuro === '1') ? megjelent : !megjelent;
+            }
+            var mutat = nevOk && megjelentOk;
+            sor.style.display = mutat ? '' : 'none';
+            if (mutat) talalat++;
+        });
+        var uzenet = document.getElementById('racs_nincs_talalat');
+        if (uzenet) uzenet.style.display = talalat === 0 ? '' : 'none';
+    }
+</script>

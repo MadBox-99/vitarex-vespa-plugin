@@ -779,6 +779,8 @@ function vespa_download_riport_tanev($type)
     $dateFrom = $_GET['dateFrom'];
     $dateTo = $_GET['dateTo'];
     $seriesId = $_GET['series'];
+    $sportId = isset($_GET['sport']) ? $_GET['sport'] : 0;
+    $sportEventId = isset($_GET['sportEventId']) ? $_GET['sportEventId'] : 0;
     $stateId = is_numeric($filter) ? (int)$filter : 0;
     $filterType = '';
     if($filter == 'all') $filterType = 'Összes verseny';
@@ -825,6 +827,7 @@ function vespa_download_riport_tanev($type)
             LEFT JOIN vespa_athletes as va ON va.school_id=vi.institution_id
             LEFT JOIN vespa_athlete_entries as vae ON va.athlete_id=vae.athlete_id
             LEFT JOIN vespa_contests as vc ON vae.contest_id=vc.contest_id
+            LEFT JOIN vespa_constest_events as vce ON vae.contest_event_id=vce.id
             WHERE 1";
  
     if('tanev_diakolimpia_diakok' == $type){
@@ -850,6 +853,14 @@ function vespa_download_riport_tanev($type)
     if($schoolDistrictId > 0) {
          $sql .= " AND vi.school_district_id=%d";
          $params[] = $schoolDistrictId;
+    }
+    if (is_numeric($sportId) && $sportId > 0) {
+        $sql .= " AND vce.sport_id=%d";
+        $params[] = intval($sportId);
+    }
+    if (is_numeric($sportEventId) && $sportEventId > 0) {
+        $sql .= " AND vce.event_id=%d";
+        $params[] = intval($sportEventId);
     }
     $sql .= " GROUP BY vi.institution_id;";
     $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
@@ -920,6 +931,8 @@ function vespa_download_riport_legnepszerubb_sportagak()
     $schoolDistrictId = $_GET['schoolDistrict'];
     $gender = $_GET['gender'];
     $disabilityGroupId = $_GET['disabilityGroupId'];
+    $sportId = isset($_GET['sport']) ? $_GET['sport'] : 0;
+    $sportEventId = isset($_GET['sportEventId']) ? $_GET['sportEventId'] : 0;
     $filterType = '';
     if($filter == 'all') $filterType = 'Összes verseny';
     else if ($filter == 'country') $filterType = "Legnépszerűbb országos sportágak";
@@ -988,7 +1001,16 @@ function vespa_download_riport_legnepszerubb_sportagak()
         $sql .= " AND va.gender=%s";
         $params[] = $gender;
     }
-    
+
+    if (is_numeric($sportId) && $sportId > 0) {
+        $sql .= " AND vce.sport_id=%d";
+        $params[] = intval($sportId);
+    }
+    if (is_numeric($sportEventId) && $sportEventId > 0) {
+        $sql .= " AND vce.event_id=%d";
+        $params[] = intval($sportEventId);
+    }
+
     $sql .= " GROUP BY contest_event_id";
 
     $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
