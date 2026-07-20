@@ -24,3 +24,53 @@
 #backtoblog {
 	display: none;;
 }
+
+/* =============================================
+   VESPA arculat — login képernyő
+   A paletta a css/vespa-palette.css-ből jön (a login.customiser.php tölti be),
+   ezért itt NINCS :root — a var(--vespa-*) változók onnan oldódnak fel.
+   ============================================= */
+body.login {
+	background-color: #f0f0f1;
+	background-image:
+		radial-gradient(circle at 15% 12%, rgba(225, 45, 59, 0.16) 0%, rgba(225, 45, 59, 0) 42%),
+		radial-gradient(circle at 85% 88%, rgba(176, 36, 48, 0.14) 0%, rgba(176, 36, 48, 0) 46%),
+		linear-gradient(150deg, #ffffff 0%, #f2f3f5 100%);
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	background-size: cover;
+}
+
+/* FODISZ logó a VESPA logó alatt. */
+.login h1 {
+	margin-bottom: 12px;
+}
+
+.login h1::after {
+	content: "";
+	display: block;
+	width: 200px;
+	height: 40px;
+	margin: 0 auto 16px;
+	background-image: url('../images/FODISZ_fekvo_logo_color.jpg');
+	background-size: contain;
+	background-position: center center;
+	background-repeat: no-repeat;
+}
+
+/* A bejelentkező doboz a mintás háttéren is olvasható maradjon. */
+.login form {
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+	border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.login .button-primary {
+	background: var(--vespa-brand);
+	border-color: var(--vespa-brand);
+}
+
+.login .button-primary:hover,
+.login .button-primary:focus {
+	background: var(--vespa-brand-dark);
+	border-color: var(--vespa-brand-dark);
+}
