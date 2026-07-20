@@ -295,13 +295,12 @@ function search_contests(WP_REST_Request $request )
         return [
             'id_verseny' => $contest->contest_id,
             'nev' => $contest->contest_name,
-            'tipus' => $contest->contest_type, //$tipus[$contest->contest_type],
+            'tipus' => $contest->contest_type,
             'kezdes' => $contest->start_at,
             'vege' => $contest->end_at,
             'lebonyolitas' => $lebonyolitas[$contest->contest_subtypes],
             'helyszin' => $contest->place_name,
             'cim' => $contest->place_address,
-            // 'megye_id' => $contest->state_id,
             'megye_nev' => $contest->state_name,
             'versenyek' => array_map(function ($event) {
                 return [
