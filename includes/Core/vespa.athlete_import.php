@@ -132,4 +132,105 @@ class VESPA_Athlete_Importer
         ));
         return (int) $count > 0;
     }
+
+    /**
+     * Soronkénti elbírálás, DB-ÍRÁS NÉLKÜL. A jó, a duplikált és a hibás sorokat
+     * három csoportba sorolja. A jó és a hibás állapot kizáró: egy hibás sor nem
+     * kerül a valid-ba, akkor sem, ha egyébként duplikátum lenne.
+     *
+     * @return array{valid: array, duplicate: array, error: array, total: int}
+     */
+    public static function validate(array $rows, $school_id)
+    {
+        $result = array('valid' => array(), 'duplicate' => array(), 'error' => array(), 'total' => 0);
+        $line = 1; // a fejléc az 1. sor; az első adatsor a 2.
+
+        foreach ($rows as $row) {
+            $line++;
+            $result['total']++;
+
+            // A sor 0..15 indexűre normalizálása (hiányzó cellák üres stringgé).
+            $r = array();
+            for ($i = 0; $i <= self::COL_ACTIVE; $i++) {
+                $r[$i] = isset($row[$i]) ? trim((string) $row[$i]) : '';
+            }
+
+            $errors = array();
+
+            // Kötelező: név
+            if ($r[self::COL_NAME] === '') {
+                $errors[] = 'A sportoló neve kötelező.';
+            }
+
+            // Kötelező: születési dátum (YYYY-MM-DD)
+            if (!self::is_valid_date($r[self::COL_BIRTH_DATE])) {
+                $errors[] = 'A születési dátum hiányzik vagy nem érvényes (YYYY-MM-DD).';
+            }
+
+            // Kötelező: nem
+            $gender = self::normalize_gender($r[self::COL_GENDER]);
+            if ($gender === null) {
+                $errors[] = 'A nem hiányzik vagy nem érvényes (Nő / Férfi).';
+            }
+
+            // Kötelező: fogyatékosság típusa (léteznie kell)
+            $disability_id = null;
+            if ($r[self::COL_DISABILITY] === '') {
+                $errors[] = 'A fogyatékosság típusa kötelező.';
+            } else {
+                $disability_id = self::lookup_disability_id($r[self::COL_DISABILITY]);
+                if ($disability_id === null) {
+                    $errors[] = 'A fogyatékosság típusa nem szerepel az adatbázisban (' . $r[self::COL_DISABILITY] . ').';
+                }
+            }
+
+            // Opcionális, de ha kitöltve: e-mail formátum
+            if ($r[self::COL_EMAIL] !== '' && !vespa_validate_email($r[self::COL_EMAIL])) {
+                $errors[] = 'Az e-mail cím formátuma érvénytelen.';
+            }
+
+            // Opcionális, de ha kitöltve: telefon formátum
+            if ($r[self::COL_PHONE] !== '' && !vespa_validate_phone($r[self::COL_PHONE])) {
+                $errors[] = 'A telefonszám formátuma érvénytelen.';
+            }
+
+            // Opcionális, de ha kitöltve: nyilvántartásba vétel dátuma
+            if ($r[self::COL_REGISTERED] !== '' && !self::is_valid_date($r[self::COL_REGISTERED])) {
+                $errors[] = 'A nyilvántartásba vétel dátuma nem érvényes (YYYY-MM-DD).';
+            }
+
+            if (!empty($errors)) {
+                $result['error'][] = array('row' => $line, 'messages' => $errors);
+                continue;
+            }
+
+            // Duplikátum-ellenőrzés (csak hibátlan sorra).
+            if (self::is_duplicate($r[self::COL_NAME], $r[self::COL_BIRTH_PLACE], $r[self::COL_BIRTH_DATE], $r[self::COL_MOTHERS_NAME])) {
+                $result['duplicate'][] = array('row' => $line, 'name' => $r[self::COL_NAME]);
+                continue;
+            }
+
+            // Beszúrásra kész, sanitizált sor (school_id/modified_* a commitban).
+            $result['valid'][] = array(
+                'athlete_name'    => sanitize_text_field($r[self::COL_NAME]),
+                'birth_place'     => sanitize_text_field($r[self::COL_BIRTH_PLACE]),
+                'birth_date'      => $r[self::COL_BIRTH_DATE],
+                'mothers_name'    => sanitize_text_field($r[self::COL_MOTHERS_NAME]),
+                'phone'           => sanitize_text_field($r[self::COL_PHONE]),
+                'email'           => sanitize_text_field($r[self::COL_EMAIL]),
+                'home_zipcode'    => sanitize_text_field($r[self::COL_ZIP]),
+                'home_city'       => sanitize_text_field($r[self::COL_CITY]),
+                'home_address'    => sanitize_text_field($r[self::COL_ADDRESS]),
+                'nationality'     => sanitize_text_field($r[self::COL_NATIONALITY]),
+                'personal_id'     => sanitize_text_field($r[self::COL_PERSONAL_ID]),
+                'gender'          => $gender,
+                'disability_type' => $disability_id,
+                'registered_at'   => $r[self::COL_REGISTERED] !== '' ? $r[self::COL_REGISTERED] : null,
+                'note'            => sanitize_text_field($r[self::COL_NOTE]),
+                'active'          => self::normalize_active($r[self::COL_ACTIVE]),
+            );
+        }
+
+        return $result;
+    }
 }
