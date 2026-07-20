@@ -1,8 +1,12 @@
 <?php
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 add_action('init', 'download_csv');
 function download_csv()
 {
-    if (isset($_GET['vespa_athletes_csv_sample']) && is_user_logged_in()) {
+    if (isset($_GET['vespa_athletes_csv_sample']) && current_user_can(VESPA_Roles::sportolok_letrehozasa_modositasa)) {
 
         $filename = "vespa_athletes.csv";
         $lines = array();
@@ -73,5 +77,31 @@ function download_csv()
         echo implode("\n", $lines);        
         exit;
     }
+}
+
+add_action('init', 'vespa_athletes_xlsx_sample');
+function vespa_athletes_xlsx_sample()
+{
+    if (!isset($_GET['vespa_athletes_xlsx_sample']) || !current_user_can(VESPA_Roles::sportolok_letrehozasa_modositasa)) {
+        return;
+    }
+
+    require_once VITAREX_VESPA_PLUGIN_DIR . '/lib/vendor/autoload.php';
+
+    $header = array('Sportoló neve', 'Születési hely', 'Születési dátum', 'Anyja neve', 'Telefonszám', 'Email', 'Irányítószám', 'Település', 'Lakcím', 'Állampolgárság', 'Igazolványszám', 'Nem', 'Fogyatékosság típusa', 'Nyilvántartásba vétele', 'Megjegyzés', 'Aktív');
+    $sample = array('Sportoló 1', 'Budapest', '2000-05-01', 'Sportoló 1 anyja neve', '+3630123456', 'valaki@pelda.hu', '2194', 'Tura', 'Verseny utca, 12.', 'Magyar', '935486HK', 'Férfi', 'Vak', '2014-11-09', 'Kék a szeme', '1');
+
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->fromArray($header, null, 'A1');
+    $sheet->fromArray($sample, null, 'A2');
+
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="vespa_athletes.xlsx"');
+    header('Cache-Control: max-age=0');
+
+    $writer = new Xlsx($spreadsheet);
+    $writer->save('php://output');
+    exit;
 }
 ?>
