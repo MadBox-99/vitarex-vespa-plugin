@@ -15,6 +15,7 @@ class VESPA_Assets extends Singleton
         wp_enqueue_style('woobs_fontawesome', '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css');
         wp_enqueue_style('datatables_css', '//cdn.datatables.net/1.11.0/css/jquery.dataTables.min.css');
         wp_enqueue_style('datetimepicker_css', VITAREX_VESPA_PLUGIN_URI . 'css/jquery.datetimepicker.min.css');
+        wp_enqueue_style('vespa_palette_css', VITAREX_VESPA_PLUGIN_URI . 'css/vespa-palette.css?v=' . time());
         wp_enqueue_style('vespa_admin_css', VITAREX_VESPA_PLUGIN_URI . 'css/vespa-admin.css?v=' . time());
 
         wp_enqueue_script('jquery-ui-datepicker');
