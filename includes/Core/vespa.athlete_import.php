@@ -99,6 +99,21 @@ class VESPA_Athlete_Importer
             if ($joined === '') {
                 continue;
             }
+
+            // Excel dátum-cellák sorszámként érkeznek (formatData=false). A két
+            // dátumoszlopban a numerikus értéket Y-m-d stringgé alakítjuk, hogy a
+            // felhasználó Excelben dátumként is kitölthesse. A CSV/szöveges cella
+            // (már string) érintetlen marad, azt a validate() ellenőrzi.
+            foreach (array(self::COL_BIRTH_DATE, self::COL_REGISTERED) as $dc) {
+                if (isset($row[$dc]) && is_numeric($row[$dc]) && (float) $row[$dc] > 0) {
+                    try {
+                        $row[$dc] = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float) $row[$dc])->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        // Marad nyersen; a validate() elbuktatja.
+                    }
+                }
+            }
+
             $rows[] = $row;
         }
 
