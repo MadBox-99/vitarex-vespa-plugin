@@ -5,6 +5,20 @@ class VESPA_Assets extends Singleton
     public function __construct()
     {
         add_action('admin_enqueue_scripts', array($this, 'addAdminScriptsStyles'));
+        add_filter('admin_footer_text', array($this, 'adminFooterText'));
+        add_filter('update_footer', '__return_empty_string', 11);
+    }
+
+    /**
+     * FODISZ logó + VESPA verzió a wp-admin láblécében.
+     * A #wpfooter rejtését a css/vespa-admin.css oldja fel.
+     */
+    public function adminFooterText($text)
+    {
+        return '<span class="vespa-footer">'
+            . '<img src="' . esc_url(VITAREX_VESPA_PLUGIN_URI . 'images/FODISZ_fekvo_logo_color.jpg') . '" alt="FODISZ">'
+            . '<span>VESPA ' . esc_html(VITAREX_VESPA_VERSION) . '</span>'
+            . '</span>';
     }
 
     public function addAdminScriptsStyles()

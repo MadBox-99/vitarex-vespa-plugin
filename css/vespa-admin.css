@@ -43,8 +43,9 @@ h4.modal-title {
   width: 50px;
 }
 
-#wp-admin-bar-wp-logo,
-#wpfooter {
+/* A WP saját logója rejtve marad; a lábléc viszont a FODISZ logót hordozza,
+   ezért újra láthatóvá tesszük (lásd includes/Admin/plugin.assets.php). */
+#wp-admin-bar-wp-logo {
   display: none;
 }
 
@@ -652,4 +653,62 @@ input[type="checkbox"]::before {
     height: 16px;
     border-radius: 3px;
     border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+/* =============================================
+   VESPA arculat — FODISZ logó és háttér
+   ============================================= */
+
+/* FODISZ logó az admin menü tetején. Tiszta CSS, PHP hook nélkül. */
+#adminmenuwrap::before {
+  content: "";
+  display: block;
+  height: 56px;
+  margin: 0;
+  background-color: var(--vespa-dark);
+  background-image: url('../images/FODISZ_fekvo_logo_color.jpg');
+  background-size: 120px auto;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+/* Összecsukott menünél (WP .folded, ill. a szűk képernyős auto-fold)
+   a fekvő logó nem férne ki -> elrejtjük. */
+.folded #adminmenuwrap::before,
+.auto-fold #adminmenuwrap::before {
+  display: none;
+}
+
+@media screen and (max-width: 960px) {
+  #adminmenuwrap::before {
+    display: none;
+  }
+}
+
+/* Visszafogott VESPA háttér. SZÁNDÉKOSAN alig érzékelhető: a tartalom
+   táblázat, űrlap és riport - egy erős minta olvashatatlanná tenné. */
+#wpcontent,
+#wpbody-content {
+  background-color: var(--vespa-bg);
+  background-image: var(--vespa-bg-image);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Lábléc a FODISZ logóval. */
+#wpfooter {
+  display: block;
+  padding: 10px 20px;
+  color: #646970;
+}
+
+#wpfooter .vespa-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#wpfooter .vespa-footer img {
+  height: 24px;
+  width: auto;
 }
