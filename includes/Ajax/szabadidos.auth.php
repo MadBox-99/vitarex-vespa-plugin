@@ -104,3 +104,75 @@ function vespa_szabadidos_register()
 
     wp_send_json_success(array('message' => 'Elküldtük a megerősítő e-mailt. Kérjük, erősítsd meg a fiókodat a levélben található linkkel.'));
 }
+
+/**
+ * Megerősítő link kezelése: a token egyeztetése a uid-hoz.
+ */
+add_action('init', 'vespa_szabadidos_confirm', 20);
+
+function vespa_szabadidos_confirm()
+{
+    if (!isset($_GET['vespa_szabadidos_confirm']) || !isset($_GET['uid'])) {
+        return;
+    }
+    $token = sanitize_text_field(wp_unslash($_GET['vespa_szabadidos_confirm']));
+    $uid   = intval($_GET['uid']);
+    if ($uid <= 0 || $token === '') {
+        return;
+    }
+
+    $tarolt = get_user_meta($uid, 'vespa_szabadidos_confirm_token', true);
+    if (!empty($tarolt) && hash_equals($tarolt, $token) && vespa_szabadidos_is_participant($uid)) {
+        update_user_meta($uid, 'vespa_szabadidos_confirmed', '1');
+        delete_user_meta($uid, 'vespa_szabadidos_confirm_token');
+        wp_safe_redirect(add_query_arg('vespa_szabadidos_confirmed', '1', home_url('/')));
+        exit;
+    }
+
+    wp_safe_redirect(add_query_arg('vespa_szabadidos_confirmed', '0', home_url('/')));
+    exit;
+}
+
+/**
+ * Meg nem erősített külső fiók nem léphet be.
+ */
+add_filter('authenticate', 'vespa_szabadidos_block_unconfirmed', 30, 3);
+
+function vespa_szabadidos_block_unconfirmed($user, $username, $password)
+{
+    if ($user instanceof WP_User && in_array(VESPA_Roles::SZABADIDOS_RESZTVEVO, (array) $user->roles, true)) {
+        if (get_user_meta($user->ID, 'vespa_szabadidos_confirmed', true) !== '1') {
+            return new WP_Error('vespa_szabadidos_unconfirmed', 'Előbb erősítsd meg a fiókodat az e-mailben kapott linkkel.');
+        }
+    }
+    return $user;
+}
+
+/**
+ * Front-end belépés (nopriv AJAX).
+ */
+add_action('wp_ajax_nopriv_vespa_szabadidos_login', 'vespa_szabadidos_login');
+
+function vespa_szabadidos_login()
+{
+    check_ajax_referer('vespa_szabadidos', 'nonce');
+
+    $email  = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
+    $jelszo = isset($_POST['password']) ? (string) $_POST['password'] : '';
+
+    if (!$email || $jelszo === '') {
+        wp_send_json_error(array('message' => 'Add meg az e-mail címet és a jelszót.'));
+    }
+
+    $user = wp_signon(array(
+        'user_login'    => $email,
+        'user_password' => $jelszo,
+        'remember'      => true,
+    ), is_ssl());
+
+    if (is_wp_error($user)) {
+        wp_send_json_error(array('message' => esc_html($user->get_error_message())));
+    }
+
+    wp_send_json_success(array('message' => 'Sikeres belépés.'));
+}
