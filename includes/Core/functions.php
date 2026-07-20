@@ -38,6 +38,52 @@ function vitarex_log_function_call($description = null, $full_stack_log = false)
 // VESPA segédfüggvények
 // =============================================
 
+/**
+ * E-mail cím formátum-ellenőrzése.
+ *
+ * Üres értékre false-t ad. Az "üres-e" és a "jó formátumú-e" kérdést a hívó
+ * külön kezeli (a kísérőnél az üres sor legális, a testnevelő telefonjánál nem).
+ */
+function vespa_validate_email($value)
+{
+    if (!is_string($value) || trim($value) === '') {
+        return false;
+    }
+
+    return (bool) is_email(trim($value));
+}
+
+/**
+ * Telefonszám formátum-ellenőrzése.
+ *
+ * SZÁNDÉKOSAN MEGENGEDŐ: a cél a nyilvánvaló szemét ("asdf", "12") kiszűrése,
+ * nem a formátum-rendészet. Egy szigorú magyar minta valós, helyes számokat
+ * utasítana el (külföldi kísérő, mellék stb.).
+ *
+ * Átmegy:  +36 30 123 4567 | 06-30/123-4567 | 0630 1234567 | +43 664 1234567
+ * Elbukik: "asdf" | "12" | "telefon: kérdezd Marit"
+ */
+function vespa_validate_phone($value)
+{
+    if (!is_string($value) || trim($value) === '') {
+        return false;
+    }
+
+    // Az elválasztók (szóköz, kötőjel, zárójel, pont, perjel) eltávolítása.
+    $cleaned = preg_replace('/[\s\-\(\)\.\/]/', '', trim($value));
+
+    // Vezető + megengedett, utána csak számjegy.
+    if (!preg_match('/^\+?[0-9]+$/', $cleaned)) {
+        return false;
+    }
+
+    // A számjegyek darabszáma: 7..15 (a 15 az E.164 felső korlátja,
+    // a 7 megenged egy rövid vezetékes számot körzet nélkül).
+    $digits = strlen(preg_replace('/[^0-9]/', '', $cleaned));
+
+    return $digits >= 7 && $digits <= 15;
+}
+
 function vespa_get_contest_athlete_filter($filter, $contest = null)
 {
     if (
