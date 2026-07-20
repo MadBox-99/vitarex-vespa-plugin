@@ -149,7 +149,6 @@ function vespa_download_medical_approval($contest_id)
 
     $html .= '<hr style="margin-bottom:20px;">';
 
-    //------------------------
     $sql_list = "SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id
                                     FROM vespa_constest_events as e
                                     LEFT JOIN vespa_sports as p ON p.sport_id = e.sport_id
@@ -189,20 +188,6 @@ function vespa_download_medical_approval($contest_id)
             $html .= '  </td>';
             $html .= '</tr> ';
 
-            //$filters = 'a.school_id=' . $school_id . ' AND a.active=1 AND a.disability_type IN (' . $race->disability_groups . ') ' ;
-            //$filters .= " AND DATE(birth_date) >= DATE('" . $race->dfrom . "') ";
-            //$filters .= " AND DATE(birth_date) <= DATE('" . $race->dto . "') ";
-            /*
-    if( strtolower($race->gender) != 'fiú lány' ){
-        if( strtolower($race->gender) == 'fiú' ){
-            $filters .= " AND gender='férfi'";
-        }
-        else {
-            $filters .= " AND gender='nő'";
-        }
-    }
-*/
-
             $ind = 0;
             $html .= '<tr>';
             foreach ($athletes as $athlete) {
@@ -231,9 +216,6 @@ function vespa_download_medical_approval($contest_id)
             $html .= '</table>';
         }
     }
-
-
-    //------------------------
 
     $html .= '<p>A nevezési lapon felsorolt diákok sportolásra alkalmias egészségi állapotban vannak, versenyen részt vehetnek.</p>';
 
@@ -277,7 +259,6 @@ function vespa_download_listing($contest_id, $isBase64 = false, $saveFile = fals
 
     error_reporting(E_ERROR | E_PARSE);
 
-
     require VITAREX_VESPA_PLUGIN_DIR  . '/lib/vendor/autoload.php';
 
     // get data for contest
@@ -290,7 +271,6 @@ function vespa_download_listing($contest_id, $isBase64 = false, $saveFile = fals
 
     $age_groups = $wpdb->get_results($wpdb->prepare("SELECT * FROM vespa_contest_agegroups WHERE contest_id=%d ORDER BY agegroup_id ASC", $contest_id));
 
-    // ---------------------------------------
     $upload_dir   = wp_upload_dir();
     $path = $upload_dir['basedir'] . '/listings';
 
@@ -370,12 +350,10 @@ function vespa_download_listing($contest_id, $isBase64 = false, $saveFile = fals
     $html .= '</td>';
     $html .= '</tr>';
 
-
     $html .= '<tr>';
     $html .= '<td class="label bp">Lebonyolítás:</td>';
     $html .= '<td class="bp">' . $subtype->contest_subtype_name . ' / ' . $series->series_name . '</td>';
     $html .= '</tr>';
-
 
     // nevezési határidő + fix nevezési blokk
     $html .= '<tr>';
@@ -383,20 +361,13 @@ function vespa_download_listing($contest_id, $isBase64 = false, $saveFile = fals
     $html .= '<td class="bp2 border-title" align="center">' . vespa_get_date_str($record->school_entry_end_at) . '</td>';
     $html .= '</tr>';
 
-    // if ($record->custom_enter_text != null && !empty($record->custom_enter_text)) {
-    //     $html .= '<tr>';
-    //     $html .= '<td class="label bp bt">Nevezés:</td>';
-    //     $html .= '<td class="bp bt" align="center"><strong>' . $record->custom_enter_text . '</strong><br>';
-    //     $html .= '</tr>';
-    // }
-
     // versenyszámok
 
-        $list = $wpdb->get_results($wpdb->prepare("SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id
-        FROM vespa_constest_events as e
-        LEFT JOIN vespa_sports as p ON p.sport_id = e.sport_id
-        LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id
-        WHERE e.contest_id=%d",$record->contest_id ));
+    $list = $wpdb->get_results($wpdb->prepare("SELECT e.*, p.sport_name, s.sport_event_name, p.sport_id
+    FROM vespa_constest_events as e
+    LEFT JOIN vespa_sports as p ON p.sport_id = e.sport_id
+    LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id
+    WHERE e.contest_id=%d",$record->contest_id ));
 
     
     $html .= '<tr>';
@@ -411,24 +382,12 @@ function vespa_download_listing($contest_id, $isBase64 = false, $saveFile = fals
     }
     $html .= '</td>';
     $html .= '</tr>';
-    /*
-            <td><?php echo $race->sport_name; ?></td>
-            <td><?php echo $race->sport_event_name; ?></td>        
-*/
+   
     $html .= '</table>';
 
     $html .= stripslashes($record->listing_text);
 
-    // minden más sportág függő (az összes template-t be kell húzni ha lenne mit)
-    // template id alapján húzzuk be
-    // load_template( VITAREX_VESPA_PLUGIN_DIR . '/templates/' . $tplname);
     $sport_id = $list[0]->sport_id;
-    //$sport_id = 9;
-
-    // if (file_exists(VITAREX_VESPA_PLUGIN_DIR . '/pdf_tpls/tpl_' . $sport_id . '.php')) {
-    //     require VITAREX_VESPA_PLUGIN_DIR . '/pdf_tpls/tpl_' . $sport_id . '.php';
-    // }
-
 
     if($isBase64){
         return base64_encode($mpdf->Output('', 'S'));
@@ -504,16 +463,6 @@ function vespa_download_logistic($contest_id)
             'bold'  => true,
     ));
     
-
-
-    /*
-        $sql = "SELECT ce.*, vi.ins_name, vi.ins_zipcode, vi.ins_city, vi.ins_address, vs.state_name 
-                FROM vespa_contests_escorts as ce 
-                JOIN vespa_institutions as vi ON (vi.institution_id=ce.school_id)
-                JOIN vespa_states as vs ON (vs.state_id=vi.ins_state) 
-                WHERE contest_id=$contest_id 
-                ORDER BY ins_name ASC";
-*/
     $sql = "SELECT vi.ins_name, vi.ins_zipcode, vi.ins_city, vi.ins_address, vs.state_name, vi.institution_id as school_id 
                 FROM vespa_athlete_entries as ae 
                 JOIN vespa_athletes as a ON (a.athlete_id=ae.athlete_id)                
@@ -526,10 +475,8 @@ function vespa_download_logistic($contest_id)
 
     $list = $wpdb->get_results($wpdb->prepare($sql, $contest_id, $contest_id));
     
-
     $escortList = $wpdb->get_results($wpdb->prepare("SELECT * FROM vespa_contests_escorts WHERE contest_id=%d", $contest_id));
     
-
     $ind = 6;
     foreach ($list as $item) {
         $escortItem = '';
@@ -607,8 +554,7 @@ function vespa_download_logistic($contest_id)
         $ind++;
 
         $usersTable = $wpdb->prefix . 'users';
-        // tanulók felsorolása
-        // Név  Nem Születési idõ   Sérülés specifikum  Bõvebb sérülés specifikum   Egyéb információ
+
         $diak_sql = "SELECT a.*, vg.disability_group_name, u.display_name as felhasznalo, u.user_email
                 FROM vespa_athletes as a 
                 JOIN vespa_athlete_entries as ae ON (ae.athlete_id=a.athlete_id) 
@@ -623,48 +569,44 @@ function vespa_download_logistic($contest_id)
 
         if (!empty($diak_list)) {
 
+        $spreadsheet->setActiveSheetIndex(0)
+            ->setCellValue('A' . $ind, 'Név')
+            ->setCellValue('B' . $ind, 'Nem')
+            ->setCellValue('C' . $ind, 'Születési idő')
+            ->setCellValue('D' . $ind, 'Sérülés specifikum')
+            ->setCellValue('E' . $ind, 'Bővebb sérülés specifikum')
+            ->setCellValue('F' . $ind, 'Nevező testnevelő')
+            ->setCellValue('G' . $ind, 'Nevező email címe')
+            ->setCellValue('H' . $ind, 'Egyéb információ');
+        $ind++;
 
-            $spreadsheet->setActiveSheetIndex(0)
-                ->setCellValue('A' . $ind, 'Név')
-                ->setCellValue('B' . $ind, 'Nem')
-                ->setCellValue('C' . $ind, 'Születési idő')
-                ->setCellValue('D' . $ind, 'Sérülés specifikum')
-                ->setCellValue('E' . $ind, 'Bővebb sérülés specifikum')
-                ->setCellValue('F' . $ind, 'Nevező testnevelő')
-                ->setCellValue('G' . $ind, 'Nevező email címe')
-                ->setCellValue('H' . $ind, 'Egyéb információ');
-            $ind++;
-
-            foreach ($diak_list as $diak) {
-                if ('férfi' == $diak->gender) {
-                    $ferfi++;
-                    $total_ferfi++;
-                } else {
-                    $no++;
-                    $total_no++;
-                }
-
-                $spreadsheet->setActiveSheetIndex(0)
-                    ->setCellValue('A' . $ind, $diak->athlete_name)
-                    ->setCellValue('B' . $ind, $diak->gender)
-                    ->setCellValue('C' . $ind, $diak->birth_date)
-                    ->setCellValue('D' . $ind, $diak->disability_group_name)
-                    ->setCellValue('E' . $ind, $diak->gender)
-                    ->setCellValue('F' . $ind, $diak->felhasznalo ?? 'Ismeretlen felhasználó')
-                    ->setCellValue('G' . $ind, $diak->user_email)
-                    ->setCellValue('H' . $ind, $diak->note);
-                $ind++;
+        foreach ($diak_list as $diak) {
+            if ('férfi' == $diak->gender) {
+                $ferfi++;
+                $total_ferfi++;
+            } else {
+                $no++;
+                $total_no++;
             }
 
             $spreadsheet->setActiveSheetIndex(0)
-                ->setCellValue('B' . $lszind, ($ferfi + $no))
-                ->setCellValue('C' . $lszind, $ferfi)
-                ->setCellValue('D' . $lszind, $no);
+                ->setCellValue('A' . $ind, $diak->athlete_name)
+                ->setCellValue('B' . $ind, $diak->gender)
+                ->setCellValue('C' . $ind, $diak->birth_date)
+                ->setCellValue('D' . $ind, $diak->disability_group_name)
+                ->setCellValue('E' . $ind, $diak->gender)
+                ->setCellValue('F' . $ind, $diak->felhasznalo ?? 'Ismeretlen felhasználó')
+                ->setCellValue('G' . $ind, $diak->user_email)
+                ->setCellValue('H' . $ind, $diak->note);
+            $ind++;
         }
 
+        $spreadsheet->setActiveSheetIndex(0)
+            ->setCellValue('B' . $lszind, ($ferfi + $no))
+            ->setCellValue('C' . $lszind, $ferfi)
+            ->setCellValue('D' . $lszind, $no);
+        }
 
-        // kísérők felsorolása
-        // Kisérõ neve: Telefon:    Email:  Allergia:
         if ($dataValid && !empty($data['kiserok'])) {
 
             $spreadsheet->setActiveSheetIndex(0)
@@ -803,12 +745,12 @@ function vespa_download_emails($contest_id)
     $usersTable = $wpdb->prefix . 'users';
     $usersMetaTable = $wpdb->prefix . 'usermeta';
     $sql = "SELECT wpu.user_email, wpu.display_name, vi.institution_id, vi.ins_name FROM vespa_athlete_entries as ae 
-                JOIN $usersTable as wpu ON (wpu.ID=ae.user_id)
-                JOIN $usersMetaTable as wpm ON (wpu.ID=wpm.user_id)
-                JOIN vespa_institutions as vi ON (vi.institution_id=wpm.meta_value)
-                WHERE ae.contest_id=%d AND wpm.meta_key='school_id'
-                GROUP BY ae.user_id
-                ORDER BY vi.ins_name ASC";
+            JOIN $usersTable as wpu ON (wpu.ID=ae.user_id)
+            JOIN $usersMetaTable as wpm ON (wpu.ID=wpm.user_id)
+            JOIN vespa_institutions as vi ON (vi.institution_id=wpm.meta_value)
+            WHERE ae.contest_id=%d AND wpm.meta_key='school_id'
+            GROUP BY ae.user_id
+            ORDER BY vi.ins_name ASC";
 
     $users = $wpdb->get_results($wpdb->prepare($sql, $contest_id));
     
@@ -894,17 +836,17 @@ function vespa_download_emails($contest_id)
 // --------------------------------------------------
 function vespa_sum_arrays($a, $b)
 {
-    $a['diak']['letszam']              += is_numeric($b['diak']['letszam']) ? $b['diak']['letszam'] : 0;
-    $a['diak']['fiu']                  += is_numeric($b['diak']['fiu']) ? $b['diak']['fiu'] : 0;
-    $a['diak']['lany']                 += is_numeric($b['diak']['lany']) ? $b['diak']['lany'] : 0;
+    $a['diak']['letszam'] += is_numeric($b['diak']['letszam']) ? $b['diak']['letszam'] : 0;
+    $a['diak']['fiu'] += is_numeric($b['diak']['fiu']) ? $b['diak']['fiu'] : 0;
+    $a['diak']['lany'] += is_numeric($b['diak']['lany']) ? $b['diak']['lany'] : 0;
 
-    $a['kisero']['letszam']            += is_numeric($b['kisero']['letszam']) ? $b['kisero']['letszam'] : 0;
-    $a['kisero']['ferfi']              += is_numeric($b['kisero']['ferfi']) ? $b['kisero']['ferfi'] : 0;
-    $a['kisero']['no']                 += is_numeric($b['kisero']['no']) ? $b['kisero']['no'] : 0;
-    $a['kisero']['hazas']              += is_numeric($b['kisero']['hazas']) ? $b['kisero']['hazas'] : 0;
+    $a['kisero']['letszam'] += is_numeric($b['kisero']['letszam']) ? $b['kisero']['letszam'] : 0;
+    $a['kisero']['ferfi'] += is_numeric($b['kisero']['ferfi']) ? $b['kisero']['ferfi'] : 0;
+    $a['kisero']['no'] += is_numeric($b['kisero']['no']) ? $b['kisero']['no'] : 0;
+    $a['kisero']['hazas'] += is_numeric($b['kisero']['hazas']) ? $b['kisero']['hazas'] : 0;
 
-    $a['etkezes']['diak']['letszam']   += is_numeric($b['etkezes']['diak']['letszam']) ? $b['etkezes']['diak']['letszam']: 0;
-    $a['etkezes']['diak']['reggeli']   += is_numeric($b['etkezes']['diak']['reggeli']) ? $b['etkezes']['diak']['reggeli'] : 0;
+    $a['etkezes']['diak']['letszam']+= is_numeric($b['etkezes']['diak']['letszam']) ? $b['etkezes']['diak']['letszam']: 0;
+    $a['etkezes']['diak']['reggeli'] += is_numeric($b['etkezes']['diak']['reggeli']) ? $b['etkezes']['diak']['reggeli'] : 0;
     $a['etkezes']['diak']['ebed']      += is_numeric($b['etkezes']['diak']['ebed']) ? $b['etkezes']['diak']['ebed'] : 0;
     $a['etkezes']['diak']['vacsora']   += is_numeric($b['etkezes']['diak']['vacsora']) ? $b['etkezes']['diak']['vacsora'] : 0;
     $a['etkezes']['diak']['uti']       += is_numeric($b['etkezes']['diak']['uti']) ? $b['etkezes']['diak']['uti'] : 0;
