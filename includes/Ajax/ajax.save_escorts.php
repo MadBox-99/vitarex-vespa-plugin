@@ -86,13 +86,24 @@
         		&& ! empty( $_POST['kiserok_email'][$key] )
         		&& ! empty( $_POST['kiserok_allergia'][$key] )
         	){
+        		// A $has_escort hibás formátumnál is true marad: a lenti
+        		// "Legalább egy kísérőt" hiba empty($errors_kiserok)-ra van kötve,
+        		// így a formátum-hibát nem írná felül egy félrevezető üzenet.
         		$has_escort = true;
 
+        		if( ! vespa_validate_email( $_POST['kiserok_email'][$key] ) ){
+        			$errors_kiserok['"kiserok_email['.$key.']"'] = 'Érvénytelen e-mail cím';
+        		}
+
+        		if( ! vespa_validate_phone( $_POST['kiserok_mobil'][$key] ) ){
+        			$errors_kiserok['"kiserok_mobil['.$key.']"'] = 'Érvénytelen telefonszám';
+        		}
+
         		$data['kiserok'][] = array(
-					'nev' => $_POST['kiserok_nev'][$key],
-					'mobil' => $_POST['kiserok_mobil'][$key],
-					'email' => $_POST['kiserok_email'][$key],
-					'allergia' => $_POST['kiserok_allergia'][$key],
+					'nev' => sanitize_text_field( $_POST['kiserok_nev'][$key] ),
+					'mobil' => sanitize_text_field( $_POST['kiserok_mobil'][$key] ),
+					'email' => sanitize_text_field( $_POST['kiserok_email'][$key] ),
+					'allergia' => sanitize_text_field( $_POST['kiserok_allergia'][$key] ),
         		);
         	}
 					else if(! empty($knev) 
@@ -111,11 +122,19 @@
         	){
         		$has_driver = true;
 
+        		if( ! vespa_validate_email( $_POST['gepkocsivezeto_email'][$key] ) ){
+        			$errors_gkvezetok['"gepkocsivezeto_email['.$key.']"'] = 'Érvénytelen e-mail cím';
+        		}
+
+        		if( ! vespa_validate_phone( $_POST['gepkocsivezeto_mobil'][$key] ) ){
+        			$errors_gkvezetok['"gepkocsivezeto_mobil['.$key.']"'] = 'Érvénytelen telefonszám';
+        		}
+
         		$data['gepkocsivezetok'][] = array(
-					'nev' => $_POST['gepkocsivezeto_nev'][$key],
-					'mobil' => $_POST['gepkocsivezeto_mobil'][$key],
-					'email' => $_POST['gepkocsivezeto_email'][$key],
-					'allergia' => $_POST['gepkocsivezeto_allergia'][$key],
+					'nev' => sanitize_text_field( $_POST['gepkocsivezeto_nev'][$key] ),
+					'mobil' => sanitize_text_field( $_POST['gepkocsivezeto_mobil'][$key] ),
+					'email' => sanitize_text_field( $_POST['gepkocsivezeto_email'][$key] ),
+					'allergia' => sanitize_text_field( $_POST['gepkocsivezeto_allergia'][$key] ),
         		);
         	}
 					else if(! empty($knev) 
