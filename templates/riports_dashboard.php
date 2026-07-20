@@ -31,6 +31,7 @@ $int = $wpdb->get_results("SELECT * FROM vespa_institutions");
 $dis = $wpdb->get_results("SELECT * FROM vespa_disability_groups");
 $series = $wpdb->get_results("SELECT * FROM vespa_series");
 $sports = $wpdb->get_results("SELECT * FROM vespa_sports WHERE is_deleted=0");
+$sport_events = $wpdb->get_results("SELECT * FROM vespa_sport_events WHERE is_deleted=0");
 ?>
 
 <div id="app">
@@ -137,6 +138,16 @@ $sports = $wpdb->get_results("SELECT * FROM vespa_sports WHERE is_deleted=0");
                 </select>
             </div>
         </div>
+        <div class="col-md-4" v-if="showedInputs.sportEvent">
+            <div class="form-group">
+                <label>Versenyszám</label>
+                <select name="sportEvent" id="sportEvent" class="form-control input-sm" v-model="selectedRiportData.sportEvent" :disabled="!selectedRiportData.sport">
+                        <option v-for="item in getSportEventList" :value="item.sport_event_id">
+                            {{item.sport_event_name}}
+                        </option>
+                </select>
+            </div>
+        </div>
         <div class="col-md-4" v-if="showedInputs.interval">
             <div class="form-group">
                     <div class="col-md-4">
@@ -195,21 +206,23 @@ $sports = $wpdb->get_results("SELECT * FROM vespa_sports WHERE is_deleted=0");
         },
         data(){
             return {
-                defaultShowState: {filter: 0, state: 0, schoolDistrict: 0, institution: 0, disabilityGroup: 0, gender: 0, interval: 0, series: 0, sport: 0, year: 0},
+                defaultShowState: {filter: 0, state: 0, schoolDistrict: 0, institution: 0, disabilityGroup: 0, gender: 0, interval: 0, series: 0, sport: 0, sportEvent: 0, year: 0},
                 defaultRiportState: {
                     filter: 'all',
-                    schoolDistrict: 0, 
-                    institutionId: 0, 
+                    schoolDistrict: 0,
+                    institutionId: 0,
                     disabilityGroupId: 0,
                     series: 0,
                     dateFrom: new Date( new Date().getFullYear(), 0, 2).toISOString().substr(0, 10),
                     dateTo: new Date( new Date().getFullYear(), 11, 32).toISOString().substr(0, 10),
                     gender: 'összes',
                     sport: 0,
+                    sportEvent: 0,
                     year: 0
                 },
                 series: <?php echo json_encode($series) ?>,
                 sports: <?php echo json_encode($sports) ?>,
+                sportEvents: <?php echo json_encode($sport_events) ?>,
                 baseUrl: "<?php echo home_url('/'); ?>",
                 gender: <?php echo json_encode($gender); ?>
             }
@@ -224,13 +237,15 @@ $sports = $wpdb->get_results("SELECT * FROM vespa_sports WHERE is_deleted=0");
                 const baseUrl = `${this.baseUrl}?download_riports=${this.selectedRiportType}&filter=${this.selectedRiportData.filter}`
                 switch (this.selectedRiportType) {
                     case 'verseny_versenyszam':
+                        return `${baseUrl}&dateFrom=${this.selectedRiportData.dateFrom}&dateTo=${this.selectedRiportData.dateTo}`
                     case 'legnepszerubb_sportag':
-                        return `${baseUrl}&dateFrom=${this.selectedRiportData.dateFrom}&dateTo=${this.selectedRiportData.dateTo}`          
+                        return `${baseUrl}&dateFrom=${this.selectedRiportData.dateFrom}&dateTo=${this.selectedRiportData.dateTo}&sport=${this.selectedRiportData.sport}&sportEventId=${this.selectedRiportData.sportEvent}`
                     case 'verseny_diak':
-                    case 'iskola_sportoltatott_diakok':
                         return `${baseUrl}&dateFrom=${this.selectedRiportData.dateFrom}&dateTo=${this.selectedRiportData.dateTo}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}&disabilityGroupId=${this.selectedRiportData.disabilityGroupId}&gender=${this.selectedRiportData.gender}`
+                    case 'iskola_sportoltatott_diakok':
+                        return `${baseUrl}&dateFrom=${this.selectedRiportData.dateFrom}&dateTo=${this.selectedRiportData.dateTo}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}&disabilityGroupId=${this.selectedRiportData.disabilityGroupId}&gender=${this.selectedRiportData.gender}&sport=${this.selectedRiportData.sport}&sportEventId=${this.selectedRiportData.sportEvent}`
                     case 'tanev_diakolimpia_diakok':
-                        return `${baseUrl}&series=${this.selectedRiportData.series}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}&disabilityGroupId=${this.selectedRiportData.disabilityGroupId}&gender=${this.selectedRiportData.gender}`        
+                        return `${baseUrl}&series=${this.selectedRiportData.series}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}&disabilityGroupId=${this.selectedRiportData.disabilityGroupId}&gender=${this.selectedRiportData.gender}&sport=${this.selectedRiportData.sport}&sportEventId=${this.selectedRiportData.sportEvent}`
                     case 'szezon_riport':
                         return `${baseUrl}&series=${this.selectedRiportData.series}&year=${this.selectedRiportData.year}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}&disabilityGroupId=${this.selectedRiportData.disabilityGroupId}&gender=${this.selectedRiportData.gender}`
                     case 'tanev_diakolimpia_versenyszam':
@@ -264,6 +279,11 @@ $sports = $wpdb->get_results("SELECT * FROM vespa_sports WHERE is_deleted=0");
             getSportList() {
                 return [{sport_id: 0, sport_name: 'Összes'}, ...this.sports]
             },
+            getSportEventList() {
+                const all = [{sport_event_id: 0, sport_event_name: 'Összes versenyszám'}]
+                if (!this.selectedRiportData.sport) return all
+                return [...all, ...this.sportEvents.filter(e => e.sport_id == this.selectedRiportData.sport)]
+            },
             getYearList() {
                 const currentYear = new Date().getFullYear()
                 const years = [0]
@@ -284,13 +304,13 @@ $sports = $wpdb->get_results("SELECT * FROM vespa_sports WHERE is_deleted=0");
                         this.showedInputs = {...this.defaultShowState, filter: 1, interval: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1}
                         break;
                     case 'legnepszerubb_sportag':
-                        this.showedInputs = {...this.defaultShowState, filter: 1, interval: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1, sport: 1}
+                        this.showedInputs = {...this.defaultShowState, filter: 1, interval: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1, sport: 1, sportEvent: 1}
                         break;
                     case 'iskola_sportoltatott_diakok':
-                        this.showedInputs = {...this.defaultShowState, filter: 1, interval: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1, sport: 1}
+                        this.showedInputs = {...this.defaultShowState, filter: 1, interval: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1, sport: 1, sportEvent: 1}
                         break;
                     case 'tanev_diakolimpia_diakok':
-                        this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1, sport: 1}
+                        this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1, sport: 1, sportEvent: 1}
                         break;
                     case 'szezon_riport':
                         this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, year: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1}
@@ -307,6 +327,9 @@ $sports = $wpdb->get_results("SELECT * FROM vespa_sports WHERE is_deleted=0");
                     default:
                         break;
                 }
+            },
+            'selectedRiportData.sport'() {
+                this.selectedRiportData.sportEvent = 0
             }
         },
     }).mount('#app')
