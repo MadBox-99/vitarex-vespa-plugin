@@ -351,26 +351,50 @@ function vespa_save_extra_user_profile_fields4( $user_id ) {
     add_action( 'user_profile_update_errors', 'validate_extra' );
     function validate_extra(&$errors, $update = null, &$user  = null)
     {
-        if(($_POST['role'] == VESPA_Roles::MEGYEI_VEZETO || 
-            $_POST['role'] == VESPA_Roles::MEGYEI_VERSENYIGAZGATO) &&
+        // A szerepkör forrása NEM lehet pusztán a $_POST['role']: a role legördülő
+        // csak a user-new.php-n és a user-edit.php-n létezik. Saját profil
+        // mentésekor (profile.php) nincs a POST-ban, ilyenkor a ténylegesen
+        // szerkesztett userből olvassuk ki.
+        // FIGYELEM: a $user itt stdClass (az edit_user() építi a POST-ból),
+        // NEM WP_User -- nincs rajta ->roles tömb, ezért kell a get_userdata().
+        $role = '';
+        if (isset($_POST['role']) && $_POST['role'] !== '') {
+            $role = $_POST['role'];                      // user-new.php / user-edit.php
+        } elseif (!empty($user->ID)) {
+            $u = get_userdata($user->ID);                // profile.php (saját profil)
+            if ($u && !empty($u->roles)) {
+                $role = $u->roles[0];
+            }
+        }
+
+        if(($role == VESPA_Roles::MEGYEI_VEZETO ||
+            $role == VESPA_Roles::MEGYEI_VERSENYIGAZGATO) &&
             !(isset($_POST['state_id']) && is_numeric($_POST['state_id'])))
         {
             $errors->add('state', "<strong>Hiba</strong>: Megye megadása kötelező.");
         }
 
-        if(($_POST['role'] == VESPA_Roles::TESTNEVELO || 
-            $_POST['role'] == VESPA_Roles::TANULO || 
-            $_POST['role'] == VESPA_Roles::ISKOLAIGAZGATO || 
-            $_POST['role'] == VESPA_Roles::SPORTOLO) &&
+        if(($role == VESPA_Roles::TESTNEVELO ||
+            $role == VESPA_Roles::TANULO ||
+            $role == VESPA_Roles::ISKOLAIGAZGATO ||
+            $role == VESPA_Roles::SPORTOLO) &&
             !(isset($_POST['school_id']) && is_numeric($_POST['school_id'])))
         {
             $errors->add('school', "<strong>Hiba</strong>: Iskola megadása kötelező.");
         }
 
-        if(($_POST['role'] == VESPA_Roles::TANKERULETI_IGAZGATO) &&
+        if(($role == VESPA_Roles::TANKERULETI_IGAZGATO) &&
             !(isset($_POST['school_district_id']) && is_numeric($_POST['school_district_id'])))
         {
             $errors->add('district', "<strong>Hiba</strong>: Tankerület megadása kötelező.");
+        }
+
+        // A telefonszám csak a testnevelőnek kötelező. A meglévő, telefon nélküli
+        // testnevelők érintetlenek maradnak: a kényszer csak mentéskor lép életbe.
+        if($role == VESPA_Roles::TESTNEVELO &&
+            !(isset($_POST['phone']) && vespa_validate_phone($_POST['phone'])))
+        {
+            $errors->add('phone', "<strong>Hiba</strong>: Telefonszám megadása kötelező, érvényes formátumban.");
         }
     }
 
@@ -385,6 +409,7 @@ function vespa_save_extra_user_profile_fields4( $user_id ) {
             const schoolRoles = ['testnevelo', 'sportolo', 'iskolaigazgato', 'tanulo']
             const stateRoles = ['megyei_vezeto', 'megyei_versenyigazgato']
             const district = ['tankeruleti_igazgato']
+            const phoneRoles = ['testnevelo']
             document.addEventListener('DOMContentLoaded', function() {
                 jQuery('#role').on('change', function() {
                     handleFields()
@@ -394,6 +419,16 @@ function vespa_save_extra_user_profile_fields4( $user_id ) {
 
             function handleFields(){
                 const role = jQuery('#role').val()
+
+                // A telefon blokk a szerepkör-ágaktól függetlenül kezelhető:
+                // csak a testnevelőnél jelenik meg.
+                if(phoneRoles.includes(role)){
+                    jQuery('#phone_row').show()
+                } else {
+                    jQuery('#phone_row').hide()
+                    jQuery('#phone').val('')
+                }
+
                 if(schoolRoles.includes(role)){
                     jQuery('#school').show()
                     jQuery('#state').hide()
