@@ -1,5 +1,7 @@
 <?php
 
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
 /**
  * Sportoló tömeges import motor (xlsx/CSV).
  *
@@ -68,5 +70,66 @@ class VESPA_Athlete_Importer
         }
         $d = DateTime::createFromFormat('Y-m-d', $s);
         return $d instanceof DateTime && $d->format('Y-m-d') === $s;
+    }
+
+    /**
+     * A fájl beolvasása soronkénti, 0-alapú indexű tömbbé (a fejléc sort
+     * kihagyva). Az IOFactory az xlsx-et és a CSV-t is felismeri.
+     *
+     * @throws \Exception ha a fájl nem olvasható / nem támogatott formátum.
+     */
+    public static function parse($file_path)
+    {
+        require_once VITAREX_VESPA_PLUGIN_DIR . '/lib/vendor/autoload.php';
+
+        $spreadsheet = IOFactory::load($file_path);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = array();
+        $first = true;
+        foreach ($sheet->toArray(null, true, false, false) as $row) {
+            if ($first) {
+                $first = false; // fejléc kihagyása
+                continue;
+            }
+            // Teljesen üres sor kihagyása (a táblázatok végén gyakori).
+            $joined = trim(implode('', array_map(function ($c) {
+                return (string) $c;
+            }, $row)));
+            if ($joined === '') {
+                continue;
+            }
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
+    /**
+     * A fogyatékossági csoport neve -> id. Nincs találat -> null (a hívó ezt
+     * hibaként kezeli; NINCS szentinel-id-1 hack).
+     */
+    public static function lookup_disability_id($name)
+    {
+        global $wpdb;
+        $id = $wpdb->get_var($wpdb->prepare(
+            "SELECT disability_group_id FROM vespa_disability_groups WHERE disability_group_name=%s",
+            trim((string) $name)
+        ));
+        return $id === null ? null : (int) $id;
+    }
+
+    /**
+     * Van-e már ilyen ÉLŐ (is_deleted=0) sportoló (4 mezős egyezés).
+     */
+    public static function is_duplicate($name, $birth_place, $birth_date, $mothers_name)
+    {
+        global $wpdb;
+        $count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM vespa_athletes
+             WHERE is_deleted=0 AND athlete_name=%s AND birth_place=%s AND birth_date=%s AND mothers_name=%s",
+            trim((string) $name), trim((string) $birth_place), trim((string) $birth_date), trim((string) $mothers_name)
+        ));
+        return (int) $count > 0;
     }
 }
