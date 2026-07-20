@@ -10,7 +10,7 @@ add_action('init', 'vespa_szabadidos_install', 5);
 function vespa_szabadidos_install()
 {
     $telepitett = get_option('vespa_szabadidos_db_version');
-    if ($telepitett === '1') {
+    if ($telepitett === '2') {
         return;
     }
 
@@ -40,7 +40,7 @@ function vespa_szabadidos_install()
   contest_event_id bigint(20) unsigned NOT NULL,
   entry_date datetime NOT NULL,
   PRIMARY KEY  (entry_id),
-  KEY participant_id (participant_id),
+  UNIQUE KEY uniq_reszt_esemeny (participant_id, contest_event_id),
   KEY contest_event_id (contest_event_id)
 ) $charset_collate;";
 
@@ -55,5 +55,5 @@ function vespa_szabadidos_install()
     dbDelta($sql_entries);
     dbDelta($sql_open);
 
-    update_option('vespa_szabadidos_db_version', '1');
+    update_option('vespa_szabadidos_db_version', '2');
 }

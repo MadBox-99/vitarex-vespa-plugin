@@ -7,6 +7,16 @@ function vespa_szabadidos_register()
 {
     check_ajax_referer('vespa_szabadidos', 'nonce');
 
+    // Egyszerű per-IP dobbantó a publikus visszaélés (regisztráció-bombázás) ellen.
+    // Nem cél a teljes védelem; az óránkénti kísérletszámot korlátozza hálózatonként.
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : 'ismeretlen';
+    $dobbanto_kulcs = 'vespa_szab_reg_' . md5($ip);
+    $probak = (int) get_transient($dobbanto_kulcs);
+    if ($probak >= 5) {
+        wp_send_json_error(array('message' => 'Túl sok regisztrációs kísérlet erről a hálózatról. Kérjük, próbáld később.'));
+    }
+    set_transient($dobbanto_kulcs, $probak + 1, HOUR_IN_SECONDS);
+
     $nev      = isset($_POST['full_name']) ? sanitize_text_field(wp_unslash($_POST['full_name'])) : '';
     $szul     = isset($_POST['birth_date']) ? sanitize_text_field($_POST['birth_date']) : '';
     $nem_raw  = isset($_POST['gender']) ? sanitize_text_field($_POST['gender']) : '';

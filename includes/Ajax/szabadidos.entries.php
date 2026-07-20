@@ -67,12 +67,17 @@ function vespa_szabadidos_signup()
         }
     }
 
-    $wpdb->insert('vespa_external_entries', array(
+    $beszurva = $wpdb->insert('vespa_external_entries', array(
         'participant_id'   => $resztvevo->participant_id,
         'contest_id'       => $contest_id,
         'contest_event_id' => $event_id,
         'entry_date'       => current_time('mysql'),
     ));
+
+    if ($beszurva === false) {
+        // Az egyedi index elkaphat egy versenyfutási dupla nevezést.
+        wp_send_json_error(array('message' => 'A nevezés nem sikerült. Lehet, hogy erre a versenyszámra már neveztél.'));
+    }
 
     wp_send_json_success(array('message' => 'Sikeres nevezés.'));
 }
