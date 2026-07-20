@@ -154,13 +154,26 @@ function vespa_download_riport_szezon_riport()
         $params[] = $year;
     }
 
-$sql .= " GROUP BY va.athlete_id";
+// (diák, versenytípus) páronként egy sor. Így a típus szerinti vödrök
+// determinisztikusak; a több típuson induló diák minden érintett vödörbe
+// beleszámít. Az "össz" és a nemek szerinti bontás ezért athlete_id szerint
+// egyedivé tesz (lásd lent).
+$sql .= " GROUP BY va.athlete_id, vc.contest_type";
 
 $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
 
+    // A GROUP BY (athlete_id, contest_type) miatt a több típuson induló diák
+    // több sorban szerepel. Az "össz" és a nemek szerinti bontás EGYEDI diákot
+    // számol; a típusonkénti vödrök viszont a tényleges részvételt mutatják,
+    // ezért azok összege TÖBB lehet, mint az összesen.
+    $egyediDiakok = array();
+    foreach ($data as $row) {
+        $egyediDiakok[$row->athlete_id] = $row;
+    }
+
     $ferfi = 0;
     $no = 0;
-    foreach ($data as $row) {
+    foreach ($egyediDiakok as $row) {
         if($row->gender == 'férfi') $ferfi++;
         else if($row->gender == 'nő') $no++;
     }
@@ -175,7 +188,7 @@ $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
     $ind++;
     $sheet
         ->setCellValue('A' . $ind, 'Fogyatékkal élő diák össz:')
-        ->setCellValue('C' . $ind, count($data))
+        ->setCellValue('C' . $ind, count($egyediDiakok))
         ->setCellValue('E' . $ind, $ferfi)
         ->setCellValue('F' . $ind, $no);
     $ind += 2;
@@ -188,16 +201,15 @@ $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
     $ind++;
 
     riportPartDiakok($sheet, $ind, $data, function ($fn){
-        return $fn->contest_type == 1;
+        return $fn->contest_type == VespaContestType::ORSZAGOS;
     }, 'országos');
     riportPartDiakok($sheet, $ind, $data, function ($fn){
-        return $fn->contest_type == 2;
+        return $fn->contest_type == VespaContestType::REGIONALIS;
     }, 'regionális');
     riportPartDiakok($sheet, $ind, $data, function ($fn){
-        return $fn->contest_type == 3;
+        return $fn->contest_type == VespaContestType::MEGYEI;
     }, 'megyei');
 
-    $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
     $iskArr = array();
     foreach ($data as $row) {
         array_push($iskArr, $row->institution_id);
@@ -213,7 +225,7 @@ $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
 
     $iskArr = array();
     foreach ($data as $row) {
-        if($row->contest_type == 1) array_push($iskArr, $row->institution_id);
+        if($row->contest_type == VespaContestType::ORSZAGOS) array_push($iskArr, $row->institution_id);
     }
     $sheet
         ->setCellValue('A' . $ind, 'Diákolimpian részvett:')
@@ -227,7 +239,7 @@ $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
 
     $iskArr = array();
     foreach ($data as $row) {
-        if($row->contest_type == 2) array_push($iskArr, $row->institution_id);
+        if($row->contest_type == VespaContestType::REGIONALIS) array_push($iskArr, $row->institution_id);
     }
     $sheet
         ->setCellValue('A' . $ind, 'Diákolimpian részvett:')
@@ -241,7 +253,7 @@ $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
 
     $iskArr = array();
     foreach ($data as $row) {
-        if($row->contest_type == 3) array_push($iskArr, $row->institution_id);
+        if($row->contest_type == VespaContestType::MEGYEI) array_push($iskArr, $row->institution_id);
     }
     $sheet
         ->setCellValue('A' . $ind, 'Diákolimpian részvett:')
@@ -253,7 +265,11 @@ $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
         ->setCellValue('C' . $ind, count(array_unique($iskArr)));
     $ind += 2;
 
-    $sqlContests = str_replace('GROUP BY va.athlete_id', 'GROUP BY vc.contest_id', $sql);
+    // FIGYELEM: a keresett szövegnek PONTOSAN egyeznie kell a fenti GROUP BY-jal.
+    // Ha nem talál egyezést, a str_replace némán az eredeti $sql-t adja vissza,
+    // a versenyszámlálás a diák szerinti GROUP BY-jal fut, és HIBAÜZENET NÉLKÜL
+    // rossz értéket ad.
+    $sqlContests = str_replace('GROUP BY va.athlete_id, vc.contest_type', 'GROUP BY vc.contest_id', $sql);
     $data = $wpdb->get_results($wpdb->prepare($sqlContests, ...$params));
     $sheet
         ->setCellValue('B' . $ind, 'Összesen')
@@ -265,13 +281,13 @@ $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
         ->setCellValue('A' . $ind, 'Diákolimpia versenyek száma:')
         ->setCellValue('B' . $ind, count($data))
         ->setCellValue('C' . $ind, count(array_filter($data, function ($fn) {
-            return $fn->contest_type == 1;
+            return $fn->contest_type == VespaContestType::ORSZAGOS;
         })))
         ->setCellValue('E' . $ind, count(array_filter($data, function ($fn) {
-            return $fn->contest_type == 2;
+            return $fn->contest_type == VespaContestType::REGIONALIS;
         })))
         ->setCellValue('F' . $ind, count(array_filter($data, function ($fn) {
-            return $fn->contest_type == 3;
+            return $fn->contest_type == VespaContestType::MEGYEI;
         })));
     $ind += 2;
 
