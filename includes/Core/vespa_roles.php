@@ -33,12 +33,14 @@ class VESPA_Roles extends Singleton
     const MEGYEI_VEZETO               = "megyei_vezeto";
     const TANKERULETI_IGAZGATO        = "tankeruleti_igazgato";
     const ADMINISZTRATOR              = "adminisztrator";
-    
+    const SZABADIDOS_RESZTVEVO        = "szabadidos_resztvevo";
+
     private $custom_roles_array = [
         [VESPA_Roles::TANULO, "Tanuló"], [VESPA_Roles::SPORTOLO, "Sportoló"], [VESPA_Roles::TESTNEVELO, "Testnevelő"], [VESPA_Roles::ISKOLAIGAZGATO, "Iskolaigazgató"],
         [VESPA_Roles::FELETTES_SZERV, "Felettes szerv"], [VESPA_Roles::DIAK_SPORTIGAZGATO, "Diák sportigazgató"], [VESPA_Roles::FOVESZ_FODISZ_SPORTIGAZGATO, "FOVESZ/FODISZ sportigazgató"],
         [VESPA_Roles::MEGYEI_VERSENYIGAZGATO, "Versenyigazgató"], [VESPA_Roles::MEGYEI_VEZETO, "Megyei vezető"],
         [VESPA_Roles::TANKERULETI_IGAZGATO, "Tankerületi igazgató"]
+        , [VESPA_Roles::SZABADIDOS_RESZTVEVO, "Szabadidős résztvevő"]
     ];
 
     //caps
@@ -196,8 +198,9 @@ class VESPA_Roles extends Singleton
                         VESPA_Roles::riportalas => true,
                         VESPA_Roles::versenyek_megtekintese        => true
                     ),
-                    VESPA_Roles::ADMINISZTRATOR     => array(                       
+                    VESPA_Roles::ADMINISZTRATOR     => array(
                     ),
+                    VESPA_Roles::SZABADIDOS_RESZTVEVO => array(),
                     'wpadmin' => array(
                         VESPA_Roles::sportolok_listazasa => true,
                         VESPA_Roles::intezmenyek_listazasa => true,
