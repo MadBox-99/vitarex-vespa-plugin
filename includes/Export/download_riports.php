@@ -194,6 +194,10 @@ $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
     $ind += 2;
 
     $sheet
+        ->setCellValue('A' . $ind, 'Megjegyzés: aki több versenytípuson is indult, minden érintett bontásban szerepel, ezért a bontások összege több lehet, mint a fenti összesen.');
+    $ind++;
+
+    $sheet
         ->setCellValue('B' . $ind, 'Fogyatékossági csoport')
         ->setCellValue('C' . $ind, 'Létszám')
         ->setCellValue('E' . $ind, 'Fiú')
@@ -233,7 +237,7 @@ $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
         ->setCellValue('C' . $ind, 'Létszám');
     $ind++;
     $sheet
-        ->setCellValue('A' . $ind, 'Iskolák száma megye mind:')
+        ->setCellValue('A' . $ind, 'Iskolák száma országos:')
         ->setCellValue('C' . $ind, count(array_unique($iskArr)));
     $ind += 2;
 
@@ -247,7 +251,7 @@ $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
         ->setCellValue('C' . $ind, 'Létszám');
     $ind++;
     $sheet
-        ->setCellValue('A' . $ind, 'Iskolák száma megye mind:')
+        ->setCellValue('A' . $ind, 'Iskolák száma regionális:')
         ->setCellValue('C' . $ind, count(array_unique($iskArr)));
     $ind += 2;
 
@@ -261,7 +265,7 @@ $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
         ->setCellValue('C' . $ind, 'Létszám');
     $ind++;
     $sheet
-        ->setCellValue('A' . $ind, 'Iskolák száma megye mind:')
+        ->setCellValue('A' . $ind, 'Iskolák száma megyei:')
         ->setCellValue('C' . $ind, count(array_unique($iskArr)));
     $ind += 2;
 
@@ -303,23 +307,23 @@ $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
 }
 
 function riportPartDiakok($sheet, &$ind, $dataArr, $filter, $typeLabel){
-    $megyei = array_filter($dataArr, $filter);
+    $rows = array_filter($dataArr, $filter);
     $sheet
         ->setCellValue('A' . $ind, "Fogyatékossági csoport bontás $typeLabel:")
         ->setCellValue('B' . $ind, $typeLabel)
-        ->setCellValue('C' . $ind, count($megyei))
-        ->setCellValue('E' . $ind, count(array_filter($megyei, function ($fn) {
+        ->setCellValue('C' . $ind, count($rows))
+        ->setCellValue('E' . $ind, count(array_filter($rows, function ($fn) {
             return $fn->gender == 'férfi';
         })))
-        ->setCellValue('F' . $ind,count(array_filter($megyei, function ($fn) {
+        ->setCellValue('F' . $ind,count(array_filter($rows, function ($fn) {
             return $fn->gender == 'nő';
         })));
     $ind += 1;
-    $megyeiDis = array();
-    foreach ($megyei as $row) {
-        $megyeiDis[$row->disability_group_name][] = $row;
+    $rowsDis = array();
+    foreach ($rows as $row) {
+        $rowsDis[$row->disability_group_name][] = $row;
     }
-    foreach ($megyeiDis as $group => $arr){
+    foreach ($rowsDis as $group => $arr){
         $sheet
         ->setCellValue('B' . $ind, $group)
         ->setCellValue('C' . $ind, count($arr))
