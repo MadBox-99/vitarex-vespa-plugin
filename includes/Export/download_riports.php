@@ -48,25 +48,30 @@ function vespa_download_riport_szezon_riport()
     $sheet       = $spreadsheet->getActiveSheet();
     $ind = 1;
 
-    $filter = $_GET['filter'];
-    $seriesId = $_GET['series'];
-    $schoolDistrict = $_GET['schoolDistrict'];
-    $gender = $_GET['gender'];
-    $disabilityGroupId = $_GET['disabilityGroupId'];
+    // Minden paraméter isset-védett: a hiányzó GET paraméter PHP warningot
+    // írna a válaszba, ami a binárisan írt XLSX-et is elronthatja.
+    $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+    $seriesId = isset($_GET['series']) ? $_GET['series'] : 0;
+    $schoolDistrict = isset($_GET['schoolDistrict']) ? $_GET['schoolDistrict'] : 0;
+    $gender = isset($_GET['gender']) ? $_GET['gender'] : '';
+    $disabilityGroupId = isset($_GET['disabilityGroupId']) ? $_GET['disabilityGroupId'] : 0;
+    $institutionId = isset($_GET['institutionId']) ? $_GET['institutionId'] : 0;
     $year = isset($_GET['year']) ? $_GET['year'] : 0;
     $filterType = '';
 
-    // if($filter == 'all') $filterType = 'Összes verseny';
-    // else if ($filter == 'country') $filterType = "Csak országos versenyek";
-    // else if (is_numeric($filter) && $filter > 0) {
-    //     $st = $wpdb->get_row("SELECT * FROM vespa_states WHERE state_id=$filter");
-    //     $filterType = "Megyei versenyek - $st->state_name";
-    // }
-    // else if (is_numeric($schoolDistrict) && $schoolDistrict > 0) {
-    //     $sd = $wpdb->get_row("SELECT * FROM vespa_school_districts WHERE school_district_id=$schoolDistrict");
-    //     $filterType = "Tankerületi versenyek - $sd->school_district_name";
-    // }
-    // else die;
+    // A szűrés leírása az XLSX fejlécébe. Az ágak sorrendje kötött: a 0
+    // ("Összes megye") ellenőrzése a > 0 ág UTÁN áll.
+    // A $stateRow változónév szándékos: a lenti tanév-blokk a $st-t használja.
+    if ($filter === 'country') {
+        $filterType = 'Csak országos versenyek';
+    } elseif (is_numeric($filter) && $filter > 0) {
+        $stateRow = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_states WHERE state_id=%d", intval($filter)));
+        $filterType = 'Megyei versenyek - ' . ($stateRow ? $stateRow->state_name : $filter);
+    } elseif (is_numeric($filter) && intval($filter) === 0) {
+        $filterType = 'Összes megyei verseny';
+    } else {
+        $filterType = 'Összes verseny (országos + regionális + megyei)';
+    }
 
     if(is_numeric($seriesId) && $seriesId > 0){
         $st = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_series WHERE series_id=%d",$seriesId));
@@ -76,6 +81,10 @@ function vespa_download_riport_szezon_riport()
         if (is_numeric($year) && $year > 0) {
             $sheet->setCellValue('C' . $ind, "Naptári év: $year");
         }
+        $ind++;
+        $sheet
+            ->setCellValue('A' . $ind, 'Szűrés')
+            ->setCellValue('B' . $ind, $filterType);
         $ind += 2;
     }
     else die;
@@ -92,16 +101,42 @@ function vespa_download_riport_szezon_riport()
 
     $params = [$seriesId];
 
-    if ($filter == 'country') {
-        $sql .= " AND vc.contest_type=1";
-    } elseif (is_numeric($filter) && $filter > 0) { 
-        $sql .= " AND vc.contest_type=3 AND vc.state_id=%d";
-        $params[] = $filter;
+    // Mind a NÉGY ág kötelező. Korábban az 'all' és a 0 ("Összes megye") ág
+    // hiányzott, ezért ezekben az esetekben SEMMILYEN contest_type feltétel nem
+    // került a lekérdezésbe -> a szabadidős (4) versenyek is beleszámítottak, és
+    // az "Összes megye" ugyanazt adta, mint az "Összes".
+    // Az ágak sorrendje kötött: a 0 ellenőrzése a > 0 ág UTÁN áll.
+    if ($filter === 'country') {
+        $sql .= " AND vc.contest_type = %d";
+        $params[] = VespaContestType::ORSZAGOS;
+    } elseif (is_numeric($filter) && $filter > 0) {
+        $sql .= " AND vc.contest_type = %d AND vc.state_id = %d";
+        $params[] = VespaContestType::MEGYEI;
+        $params[] = intval($filter);
+    } elseif (is_numeric($filter) && intval($filter) === 0) {
+        // "Összes megye"
+        $sql .= " AND vc.contest_type = %d";
+        $params[] = VespaContestType::MEGYEI;
+    } else {
+        // 'all' — a riport pontosan ezt a három vödröt jeleníti meg,
+        // a szabadidős (4) szándékosan kimarad.
+        $sql .= " AND vc.contest_type IN (%d,%d,%d)";
+        $params[] = VespaContestType::ORSZAGOS;
+        $params[] = VespaContestType::REGIONALIS;
+        $params[] = VespaContestType::MEGYEI;
     }
 
     if (is_numeric($schoolDistrict) && $schoolDistrict > 0) {
         $sql .= " AND vi.school_district_id=%d";
         $params[] = $schoolDistrict;
+    }
+
+    // Az intézmény-választást a felület eddig is elküldte
+    // (templates/riports_dashboard.php:235) és a mezőt is megjelenítette,
+    // de a backend soha nem olvasta ki -> némán hatástalan volt.
+    if (is_numeric($institutionId) && $institutionId > 0) {
+        $sql .= " AND vi.institution_id = %d";
+        $params[] = intval($institutionId);
     }
 
     if (is_numeric($disabilityGroupId) && $disabilityGroupId > 0) { 
