@@ -32,13 +32,26 @@ Class VESPA_LoginCustomiser extends Singleton
             return false;
         }
 
-        if( !is_admin() ){
-            if( is_user_logged_in() )
-                wp_redirect( admin_url() );
-            else
-                wp_redirect( wp_login_url() );
-            die();
+        $resztvevo = vespa_szabadidos_is_participant();
+
+        $dontes = vespa_frontend_access_decide(
+            is_admin(),
+            is_user_logged_in(),
+            $resztvevo,
+            is_singular() ? get_queried_object_id() : 0,
+            vespa_frontend_access_public_page_ids()
+        );
+
+        if( $dontes === 'pass' ){
+            return;
         }
+
+        if( $dontes === 'admin' ){
+            wp_redirect( admin_url() );
+        } else {
+            wp_redirect( wp_login_url() );
+        }
+        die();
     }    
 
 }

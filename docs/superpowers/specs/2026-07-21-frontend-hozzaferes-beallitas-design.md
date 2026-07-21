@@ -107,8 +107,11 @@ oldal időközben megszűnt, `home_url('/')`-re esik vissza.
 
 **A landing page-nek publikusnak kell lennie.** Ha mentéskor a kiválasztott
 szabadidős landing page nincs bepipálva a publikus listában, a mentés hibát ad
-és nem megy végbe. Ez a kombináció garantáltan újratermelné a végtelen hurkot,
-ezért nem engedjük létrejönni.
+és nem megy végbe. Nem a hurok miatt: a résztvevő-átengedés (lásd a döntési
+logika 4. lépését) attól függetlenül hurokmentes. A valódi ok, hogy a landing
+page egyben a regisztrációs oldal, és aki még nem regisztrált, az anonim
+látogató — rá az átengedés nem vonatkozik. Nem publikus oldal esetén tehát
+soha senki nem tudna regisztrálni.
 
 További esetek:
 

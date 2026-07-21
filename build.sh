@@ -93,6 +93,9 @@ rsync -a \
     --exclude='.gitignore' \
     --exclude='.DS_Store' \
     --exclude='docs/' \
+    --exclude='.superpowers/' \
+    --exclude='tests/' \
+    --exclude='Vespa fejlesztés*.md' \
     --exclude='database/' \
     --exclude='tmp/' \
     --exclude='fodisz_vespa.sql' \
