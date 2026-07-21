@@ -3,13 +3,27 @@ global $wpdb;
 $admin_nonce = wp_create_nonce('vespa_szabadidos_admin');
 
 $versenyek = $wpdb->get_results($wpdb->prepare(
-    "SELECT vc.contest_id, vc.contest_name,
+    "SELECT vc.contest_id, vc.contest_name, vc.start_at, vc.end_at,
             (SELECT COUNT(*) FROM vespa_szabadidos_open_contests o WHERE o.contest_id=vc.contest_id) AS nyitva
      FROM vespa_contests AS vc
      WHERE vc.contest_type=%d
      ORDER BY vc.start_at DESC",
     4
 ));
+
+// A front-end oldal `end_at >= most` feltétellel szűr, ezért a lejárt és a
+// végdátum nélküli verseny akkor sem jelenik meg a résztvevőnél, ha itt meg
+// van nyitva. Ezt jelezzük, különben a zöld pipa félrevezet.
+$most = current_time('mysql');
+
+// Zárványként, nem függvényként: a sablon többszöri betöltése esetén a
+// függvénydefiníció "Cannot redeclare" fatális hibát adna.
+$ures_datum = function ($ertek) {
+    return empty($ertek) || $ertek === '0000-00-00 00:00:00';
+};
+$datum = function ($ertek) use ($ures_datum) {
+    return $ures_datum($ertek) ? '—' : mysql2date('Y.m.d. H:i', $ertek);
+};
 ?>
 <div class="wrap" data-admin-nonce="<?php echo esc_attr($admin_nonce); ?>">
     <h1>Szabadidős külső nevezés</h1>
@@ -19,11 +33,42 @@ $versenyek = $wpdb->get_results($wpdb->prepare(
         <p>Nincs szabadidős (type-4) verseny.</p>
     <?php else : ?>
         <table class="widefat">
-            <thead><tr><th>Verseny</th><th>Külső regisztráció</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>Verseny</th>
+                    <th style="width:170px;">Kezdet</th>
+                    <th style="width:170px;">Vége</th>
+                    <th style="width:150px;">Külső regisztráció</th>
+                </tr>
+            </thead>
             <tbody>
             <?php foreach ($versenyek as $v) : ?>
+                <?php
+                $nincs_vege = $ures_datum($v->end_at);
+                $lejart     = !$nincs_vege && $v->end_at < $most;
+                $rejtve     = $nincs_vege || $lejart;
+                ?>
                 <tr>
-                    <td><?php echo esc_html($v->contest_name); ?></td>
+                    <td>
+                        <?php echo esc_html($v->contest_name); ?>
+                        <?php if ($rejtve && intval($v->nyitva) > 0) : ?>
+                            <br>
+                            <span style="color:#b32d2e; font-weight:600;">
+                                <?php if ($nincs_vege) : ?>
+                                    Nincs végdátuma — a résztvevők nem látják
+                                <?php else : ?>
+                                    Lejárt — a résztvevők nem látják
+                                <?php endif; ?>
+                            </span>
+                        <?php elseif ($rejtve) : ?>
+                            <br>
+                            <span style="color:#8c8f94;">
+                                <?php echo $nincs_vege ? 'Nincs végdátuma' : 'Lejárt'; ?>
+                            </span>
+                        <?php endif; ?>
+                    </td>
+                    <td><?php echo esc_html($datum($v->start_at)); ?></td>
+                    <td><?php echo esc_html($datum($v->end_at)); ?></td>
                     <td>
                         <label>
                             <input type="checkbox" class="vespa-szabadidos-toggle"
@@ -36,6 +81,11 @@ $versenyek = $wpdb->get_results($wpdb->prepare(
             <?php endforeach; ?>
             </tbody>
         </table>
+        <p class="description">
+            A résztvevők csak azokat a megnyitott versenyeket látják, amelyeknek a
+            vége a jövőben van. A lejárt vagy végdátum nélküli verseny akkor sem
+            jelenik meg nekik, ha itt be van pipálva.
+        </p>
     <?php endif; ?>
 
     <h2>Külső nevezők</h2>
