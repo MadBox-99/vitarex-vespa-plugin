@@ -15,7 +15,8 @@ function vespa_szabadidos_block_admin()
         return;
     }
     if (is_user_logged_in() && vespa_szabadidos_is_participant()) {
-        wp_safe_redirect(home_url('/'));
+        // A beállított nevezési oldalra küldjük, nem vakon a kezdőlapra.
+        wp_safe_redirect(vespa_frontend_access_landing_url());
         exit;
     }
 }
