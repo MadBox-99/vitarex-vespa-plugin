@@ -40,10 +40,13 @@ class VESPA_Assets extends Singleton
         wp_enqueue_script('datatables_js', '//cdn.datatables.net/1.11.0/js/jquery.dataTables.min.js', ['jquery'], '1.0', true);
         wp_enqueue_script('datetimepicker_js', VITAREX_VESPA_PLUGIN_URI . 'js/jquery.datetimepicker.full.min.js', ['jquery'], '1.0', true);
 
-        wp_enqueue_script('tinymcejs', 'https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js', [], '1.0', true);
+        // A szövegszerkesztőt a WordPress beépített TinyMCE-je adja (wp_editor()
+        // a contest_editor.php-ben). Külön CDN-es TinyMCE-t NEM töltünk be: az
+        // felülírná a window.tinymce.baseURL-t, amitől a WP saját szerkesztője
+        // a rossz útvonalról kérné a témáját és összeomlana a post.php-n.
 
         wp_enqueue_script('vespa_ajax_form_js', VITAREX_VESPA_PLUGIN_URI . 'js/vespa-ajax-form.js?v=' . time(), [], '1.0', true);
-        wp_enqueue_script('vespa_admin_js', VITAREX_VESPA_PLUGIN_URI . 'js/vespa-admin.js?v=' . time(), ['jquery', 'datatables_js', 'vespa_ajax_form_js', 'tinymcejs'], '1.0', true);
+        wp_enqueue_script('vespa_admin_js', VITAREX_VESPA_PLUGIN_URI . 'js/vespa-admin.js?v=' . time(), ['jquery', 'datatables_js', 'vespa_ajax_form_js'], '1.0', true);
 
         wp_enqueue_style('bootstrap_min_css', VITAREX_VESPA_PLUGIN_URI . 'css/bootstrap.min.css?v=2');
     }

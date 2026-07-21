@@ -243,7 +243,21 @@ if (is_numeric($id) && $id > 0) {
         <div class="col-md-12">
             <h3>Kiírás - extra szöveg</h3>
 
-            <textarea name="listing_text" id="listing_text" class="editor form-control" rows="10"><?php echo isset($record->listing_text) ? wp_kses_post(stripslashes($record->listing_text)) : ''; ?></textarea>
+            <?php
+            wp_editor(
+                isset($record->listing_text) ? wp_kses_post(stripslashes($record->listing_text)) : '',
+                'listing_text',
+                array(
+                    'textarea_name' => 'listing_text',
+                    'textarea_rows' => 10,
+                    'media_buttons' => false,
+                    'tinymce'       => array(
+                        'toolbar1' => 'formatselect,bold,italic,underline,strikethrough,bullist,numlist,outdent,indent,alignleft,aligncenter,alignright,link,unlink,charmap,removeformat,undo,redo',
+                        'toolbar2' => '',
+                    ),
+                )
+            );
+            ?>
 
         </div>
 

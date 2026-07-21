@@ -159,20 +159,9 @@ function vespa_datatables_hu() {
 var vespa_tables = {};
 
 jQuery(document).ready(function () {
-  tinymce.init({
-    selector: "textarea.editor",
-    menubar: false,
-    language: "hu_HU",
-    plugins:
-      "anchor autolink charmap link lists media searchreplace table visualblocks wordcount",
-    toolbar:
-      "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat",
-    setup: function (editor) {
-      editor.on("change", function () {
-        editor.save();
-      });
-    },
-  });
+  // A szövegszerkesztőt a WordPress wp_editor() példányosítja (contest_editor.php).
+  // Itt nem indítunk saját TinyMCE-t: a korábbi CDN-es init minden admin oldalon
+  // lefutott, és eltörte a WP beépített szerkesztőjét a post.php-n.
 
   if (jQuery("#sport_id").length > 0) {
     jQuery("#sport_id").trigger("change");
