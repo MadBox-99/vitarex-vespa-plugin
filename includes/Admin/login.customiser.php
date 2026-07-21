@@ -32,8 +32,7 @@ Class VESPA_LoginCustomiser extends Singleton
             return false;
         }
 
-        $resztvevo = function_exists('vespa_szabadidos_is_participant')
-            && vespa_szabadidos_is_participant();
+        $resztvevo = vespa_szabadidos_is_participant();
 
         $dontes = vespa_frontend_access_decide(
             is_admin(),
