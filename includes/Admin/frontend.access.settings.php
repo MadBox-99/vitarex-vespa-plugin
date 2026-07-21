@@ -42,12 +42,13 @@ function vespa_frontend_access_save()
         ? intval($_POST['szabadidos_landing_page_id'])
         : 0;
 
-    // Hurokvédelem: ha a kezdőoldal nem publikus, a résztvevő oda érkezne,
-    // onnan viszont a redirect továbbdobná — vagyis pont azt a hurkot
-    // állítanánk vissza, amit ez a funkció megszüntet. Nem engedjük elmenteni.
+    // A regisztrációs oldalt anonim látogató nyitja meg, akire a szabadidős
+    // átengedés még nem vonatkozik, hiszen épp most szeretne fiókot létrehozni.
+    // Ha a kezdőoldal nincs publikusnak jelölve, a redirect elviszi onnan, és
+    // soha senki nem tud regisztrálni. Ezért nem engedjük elmenteni.
     if ($landing > 0 && !in_array($landing, $publikus, true)) {
         wp_send_json_error(array('errors' => array(
-            'szabadidos_landing_page_id' => 'Ezt az oldalt publikusnak is be kell pipálnod, különben a résztvevők átirányítási hurokba kerülnének.',
+            'szabadidos_landing_page_id' => 'Ezt az oldalt publikusnak is be kell pipálnod, különben az új jelentkezők nem érik el a regisztrációs oldalt.',
         )));
     }
 
