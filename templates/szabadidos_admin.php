@@ -92,11 +92,11 @@ $datum = function ($ertek) use ($ures_datum) {
     <?php
     $valasztott = isset($_GET['contest_id']) ? intval($_GET['contest_id']) : 0;
     $nyitott_versenyek = $wpdb->get_results($wpdb->prepare(
-        "SELECT vc.contest_id, vc.contest_name
+        "SELECT vc.contest_id, vc.contest_name, vc.start_at, vc.end_at
          FROM vespa_szabadidos_open_contests AS o
          INNER JOIN vespa_contests AS vc ON vc.contest_id=o.contest_id
          WHERE vc.contest_type=%d
-         ORDER BY vc.contest_name",
+         ORDER BY vc.start_at DESC",
         4
     ));
     ?>
@@ -106,8 +106,21 @@ $datum = function ($ertek) use ($ures_datum) {
             <select name="contest_id" onchange="this.form.submit()">
                 <option value="0">— válassz —</option>
                 <?php foreach ($nyitott_versenyek as $nv) : ?>
+                    <?php
+                    // Az azonos nevű versenyek csak a dátumukban különböznek, ezért
+                    // a név mellé kiírjuk azt is — enélkül nem megkülönböztethetők.
+                    $nv_nincs_vege = $ures_datum($nv->end_at);
+                    $nv_lejart     = !$nv_nincs_vege && $nv->end_at < $most;
+
+                    $cimke = $nv->contest_name . ' — ' . $datum($nv->start_at);
+                    if ($nv_nincs_vege) {
+                        $cimke .= ' (nincs végdátuma, a résztvevők nem látják)';
+                    } elseif ($nv_lejart) {
+                        $cimke .= ' (lejárt, a résztvevők nem látják)';
+                    }
+                    ?>
                     <option value="<?php echo esc_attr($nv->contest_id); ?>" <?php selected($valasztott, intval($nv->contest_id)); ?>>
-                        <?php echo esc_html($nv->contest_name); ?>
+                        <?php echo esc_html($cimke); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
