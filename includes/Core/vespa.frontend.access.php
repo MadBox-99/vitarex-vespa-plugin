@@ -92,12 +92,31 @@ function vespa_frontend_access_landing_url()
 
     if ($id > 0 && get_post_status($id) === 'publish') {
         $link = get_permalink($id);
-        if ($link) {
+        // A wp_safe_redirect() idegen hoszt esetén csendben admin_url()-re esik
+        // vissza. Szabadidős résztvevőnél ez újraindítaná az izolációt, és
+        // visszahozná a hurkot, ezért csak azonos hosztú linket adunk vissza.
+        if ($link && vespa_frontend_access_same_host($link)) {
             return $link;
         }
     }
 
     return home_url('/');
+}
+
+/**
+ * Igaz, ha az URL a saját oldalunk hosztjára mutat.
+ * Relatív URL-t sajátnak tekintünk.
+ */
+function vespa_frontend_access_same_host($url)
+{
+    $url_host  = wp_parse_url($url, PHP_URL_HOST);
+    $home_host = wp_parse_url(home_url('/'), PHP_URL_HOST);
+
+    if (empty($url_host)) {
+        return true;
+    }
+
+    return strtolower($url_host) === strtolower($home_host);
 }
 
 /**
