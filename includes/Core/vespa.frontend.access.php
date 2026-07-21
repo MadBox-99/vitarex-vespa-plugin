@@ -38,3 +38,87 @@ function vespa_frontend_access_decide($is_admin_area, $is_logged_in, $is_partici
 
     return $is_logged_in ? 'admin' : 'login';
 }
+
+/** A beállítás option neve. */
+function vespa_frontend_access_option_name()
+{
+    return 'vespa_frontend_access';
+}
+
+/**
+ * A mentett beállítások, mindig teljes és normalizált szerkezetben.
+ */
+function vespa_frontend_access_get_settings()
+{
+    $mentett = get_option(vespa_frontend_access_option_name(), array());
+    if (!is_array($mentett)) {
+        $mentett = array();
+    }
+
+    $oldalak = array();
+    if (isset($mentett['public_page_ids']) && is_array($mentett['public_page_ids'])) {
+        foreach ($mentett['public_page_ids'] as $id) {
+            $oldalak[] = intval($id);
+        }
+    }
+
+    return array(
+        'public_page_ids'            => $oldalak,
+        'szabadidos_landing_page_id' => isset($mentett['szabadidos_landing_page_id'])
+            ? intval($mentett['szabadidos_landing_page_id'])
+            : 0,
+    );
+}
+
+/**
+ * A publikusan elérhetőnek jelölt oldal-ID-k.
+ */
+function vespa_frontend_access_public_page_ids()
+{
+    $beallitasok = vespa_frontend_access_get_settings();
+    return $beallitasok['public_page_ids'];
+}
+
+/**
+ * A szabadidős résztvevő kezdőoldalának URL-je.
+ *
+ * Ha nincs beállítva, vagy az oldalt időközben törölték/piszkozatba tették,
+ * csendben a kezdőlapra esik vissza.
+ */
+function vespa_frontend_access_landing_url()
+{
+    $beallitasok = vespa_frontend_access_get_settings();
+    $id = $beallitasok['szabadidos_landing_page_id'];
+
+    if ($id > 0 && get_post_status($id) === 'publish') {
+        $link = get_permalink($id);
+        if ($link) {
+            return $link;
+        }
+    }
+
+    return home_url('/');
+}
+
+/**
+ * Csak létező, publikált oldalak ID-jeit engedi át, duplikátum nélkül.
+ */
+function vespa_frontend_access_sanitize_page_ids($ids)
+{
+    $eredmeny = array();
+
+    foreach ((array) $ids as $id) {
+        $id = intval($id);
+        if ($id <= 0) {
+            continue;
+        }
+        if (get_post_type($id) !== 'page' || get_post_status($id) !== 'publish') {
+            continue;
+        }
+        if (!in_array($id, $eredmeny, true)) {
+            $eredmeny[] = $id;
+        }
+    }
+
+    return $eredmeny;
+}
