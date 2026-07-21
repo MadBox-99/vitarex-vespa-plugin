@@ -3,51 +3,108 @@ global $wpdb;
 $nonce = wp_create_nonce('vespa_szabadidos');
 $bejelentkezve = is_user_logged_in();
 $kulso = $bejelentkezve && vespa_szabadidos_is_participant();
+
+// Ismétlődő Tailwind osztálykészletek. A 'tw-' prefix a preflight kikapcsolása
+// miatt kell (lásd vespa.szabadidos.frontend.php), hogy ne ütközzünk a témával.
+$k_kartya   = 'tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-p-6 tw-shadow-sm';
+$k_cim      = 'tw-mb-4 tw-text-xl tw-font-semibold tw-text-slate-900';
+$k_mezo     = 'tw-block tw-mb-4';
+$k_cimke    = 'tw-block tw-mb-1 tw-text-sm tw-font-medium tw-text-slate-700';
+$k_input    = 'tw-w-full tw-rounded-lg tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-py-2 tw-text-slate-900 tw-shadow-sm focus:tw-border-sky-500 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-sky-200';
+$k_gomb     = 'tw-inline-flex tw-items-center tw-justify-center tw-rounded-lg tw-bg-sky-600 tw-px-5 tw-py-2.5 tw-text-sm tw-font-medium tw-text-white tw-shadow-sm hover:tw-bg-sky-700 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-sky-300 tw-transition tw-cursor-pointer';
+$k_gomb_alt = 'tw-inline-flex tw-items-center tw-justify-center tw-rounded-lg tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-py-1.5 tw-text-xs tw-font-medium tw-text-slate-700 hover:tw-bg-slate-50 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-slate-200 tw-transition tw-cursor-pointer';
+$k_link     = 'tw-text-sm tw-text-sky-700 tw-underline hover:tw-text-sky-900';
+$k_uzenet   = 'tw-mt-3 tw-text-sm tw-font-medium tw-text-slate-700';
 ?>
-<div class="vespa-szabadidos" data-nonce="<?php echo esc_attr($nonce); ?>">
+<div class="vespa-szabadidos tw-mx-auto tw-max-w-2xl tw-space-y-6 tw-text-slate-800" data-nonce="<?php echo esc_attr($nonce); ?>">
 
 <?php if (!$bejelentkezve) : ?>
 
     <?php if (isset($_GET['vespa_szabadidos_confirmed'])) : ?>
         <?php if ($_GET['vespa_szabadidos_confirmed'] === '1') : ?>
-            <p class="vespa-szabadidos-uzenet ok">A fiókod megerősítve. Most már beléphetsz.</p>
+            <p class="vespa-szabadidos-uzenet ok tw-rounded-lg tw-border tw-border-emerald-200 tw-bg-emerald-50 tw-px-4 tw-py-3 tw-text-sm tw-font-medium tw-text-emerald-800">A fiókod megerősítve. Most már beléphetsz.</p>
         <?php else : ?>
-            <p class="vespa-szabadidos-uzenet hiba">Érvénytelen vagy lejárt megerősítő link.</p>
+            <p class="vespa-szabadidos-uzenet hiba tw-rounded-lg tw-border tw-border-red-200 tw-bg-red-50 tw-px-4 tw-py-3 tw-text-sm tw-font-medium tw-text-red-800">Érvénytelen vagy lejárt megerősítő link.</p>
         <?php endif; ?>
     <?php endif; ?>
 
-    <h2>Belépés</h2>
-    <form id="vespa-szabadidos-login">
-        <label>E-mail <input type="email" name="email" required></label>
-        <label>Jelszó <input type="password" name="password" required></label>
-        <button type="submit">Belépés</button>
-        <a href="<?php echo esc_url(wp_lostpassword_url()); ?>">Elfelejtett jelszó</a>
-    </form>
-    <div class="vespa-szabadidos-login-uzenet"></div>
+    <section class="<?php echo esc_attr($k_kartya); ?>">
+        <h2 class="<?php echo esc_attr($k_cim); ?>">Belépés</h2>
+        <form id="vespa-szabadidos-login">
+            <label class="<?php echo esc_attr($k_mezo); ?>">
+                <span class="<?php echo esc_attr($k_cimke); ?>">E-mail</span>
+                <input type="email" name="email" required class="<?php echo esc_attr($k_input); ?>">
+            </label>
+            <label class="<?php echo esc_attr($k_mezo); ?>">
+                <span class="<?php echo esc_attr($k_cimke); ?>">Jelszó</span>
+                <input type="password" name="password" required class="<?php echo esc_attr($k_input); ?>">
+            </label>
+            <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-4">
+                <button type="submit" class="<?php echo esc_attr($k_gomb); ?>">Belépés</button>
+                <a href="<?php echo esc_url(wp_lostpassword_url()); ?>" class="<?php echo esc_attr($k_link); ?>">Elfelejtett jelszó</a>
+            </div>
+        </form>
+        <div class="vespa-szabadidos-login-uzenet <?php echo esc_attr($k_uzenet); ?>"></div>
+    </section>
 
-    <h2>Regisztráció</h2>
-    <form id="vespa-szabadidos-register">
-        <label>Teljes név <input type="text" name="full_name" required></label>
-        <label>Születési dátum <input type="date" name="birth_date" required></label>
-        <label>Nem
-            <select name="gender" required>
-                <option value="">—</option>
-                <option value="férfi">férfi</option>
-                <option value="nő">nő</option>
-            </select>
-        </label>
-        <label>E-mail <input type="email" name="email" required></label>
-        <label>Telefonszám <input type="text" name="phone" required></label>
-        <label>Jelszó <input type="password" name="password" required></label>
-        <label>Jelszó újra <input type="password" name="password2" required></label>
-        <label><input type="checkbox" name="consent" value="1" required> Elfogadom az adatkezelési tájékoztatót</label>
-        <button type="submit">Regisztráció</button>
-    </form>
-    <div class="vespa-szabadidos-register-uzenet"></div>
+    <section class="<?php echo esc_attr($k_kartya); ?>">
+        <h2 class="<?php echo esc_attr($k_cim); ?>">Regisztráció</h2>
+        <form id="vespa-szabadidos-register">
+            <label class="<?php echo esc_attr($k_mezo); ?>">
+                <span class="<?php echo esc_attr($k_cimke); ?>">Teljes név</span>
+                <input type="text" name="full_name" required class="<?php echo esc_attr($k_input); ?>">
+            </label>
+
+            <div class="tw-grid tw-gap-4 sm:tw-grid-cols-2">
+                <label class="<?php echo esc_attr($k_mezo); ?>">
+                    <span class="<?php echo esc_attr($k_cimke); ?>">Születési dátum</span>
+                    <input type="date" name="birth_date" required class="<?php echo esc_attr($k_input); ?>">
+                </label>
+                <label class="<?php echo esc_attr($k_mezo); ?>">
+                    <span class="<?php echo esc_attr($k_cimke); ?>">Nem</span>
+                    <select name="gender" required class="<?php echo esc_attr($k_input); ?>">
+                        <option value="">—</option>
+                        <option value="férfi">férfi</option>
+                        <option value="nő">nő</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="tw-grid tw-gap-4 sm:tw-grid-cols-2">
+                <label class="<?php echo esc_attr($k_mezo); ?>">
+                    <span class="<?php echo esc_attr($k_cimke); ?>">E-mail</span>
+                    <input type="email" name="email" required class="<?php echo esc_attr($k_input); ?>">
+                </label>
+                <label class="<?php echo esc_attr($k_mezo); ?>">
+                    <span class="<?php echo esc_attr($k_cimke); ?>">Telefonszám</span>
+                    <input type="text" name="phone" required class="<?php echo esc_attr($k_input); ?>">
+                </label>
+            </div>
+
+            <div class="tw-grid tw-gap-4 sm:tw-grid-cols-2">
+                <label class="<?php echo esc_attr($k_mezo); ?>">
+                    <span class="<?php echo esc_attr($k_cimke); ?>">Jelszó</span>
+                    <input type="password" name="password" required class="<?php echo esc_attr($k_input); ?>">
+                </label>
+                <label class="<?php echo esc_attr($k_mezo); ?>">
+                    <span class="<?php echo esc_attr($k_cimke); ?>">Jelszó újra</span>
+                    <input type="password" name="password2" required class="<?php echo esc_attr($k_input); ?>">
+                </label>
+            </div>
+
+            <label class="tw-mb-5 tw-flex tw-items-start tw-gap-2 tw-text-sm tw-text-slate-700">
+                <input type="checkbox" name="consent" value="1" required class="tw-mt-0.5 tw-h-4 tw-w-4 tw-rounded tw-border-slate-300 tw-text-sky-600 focus:tw-ring-2 focus:tw-ring-sky-200">
+                <span>Elfogadom az adatkezelési tájékoztatót</span>
+            </label>
+
+            <button type="submit" class="<?php echo esc_attr($k_gomb); ?>">Regisztráció</button>
+        </form>
+        <div class="vespa-szabadidos-register-uzenet <?php echo esc_attr($k_uzenet); ?>"></div>
+    </section>
 
 <?php elseif (!$kulso) : ?>
 
-    <p class="vespa-szabadidos-uzenet">Ez a felület a szabadidős külső résztvevőké. A jelenlegi fiókod nem külső résztvevő.</p>
+    <p class="vespa-szabadidos-uzenet tw-rounded-lg tw-border tw-border-amber-200 tw-bg-amber-50 tw-px-4 tw-py-3 tw-text-sm tw-font-medium tw-text-amber-900">Ez a felület a szabadidős külső résztvevőké. A jelenlegi fiókod nem külső résztvevő.</p>
 
 <?php else : ?>
 
@@ -84,62 +141,70 @@ $kulso = $bejelentkezve && vespa_szabadidos_is_participant();
     $sajat_event_idk = array_map(function ($s) { return intval($s->contest_event_id); }, $sajat);
     ?>
 
-    <h2>Üdv, <?php echo esc_html($resztvevo ? $resztvevo->full_name : ''); ?>!</h2>
-    <p><a href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>">Kilépés</a></p>
+    <div class="tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-3">
+        <h2 class="tw-text-xl tw-font-semibold tw-text-slate-900">Üdv, <?php echo esc_html($resztvevo ? $resztvevo->full_name : ''); ?>!</h2>
+        <a href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>" class="<?php echo esc_attr($k_link); ?>">Kilépés</a>
+    </div>
 
-    <h3>Megnyitott szabadidős versenyek</h3>
-    <?php if (empty($versenyek)) : ?>
-        <p>Jelenleg nincs elérhető szabadidős verseny.</p>
-    <?php else : ?>
-        <?php foreach ($versenyek as $v) : ?>
-            <div class="vespa-szabadidos-verseny">
-                <h4><?php echo esc_html($v->contest_name); ?></h4>
-                <?php
-                $esemenyek = $wpdb->get_results($wpdb->prepare(
-                    "SELECT vce.id AS contest_event_id, vse.sport_event_name, vs.sport_name
-                     FROM vespa_constest_events AS vce
-                     LEFT JOIN vespa_sport_events AS vse ON vse.sport_event_id=vce.event_id
-                     LEFT JOIN vespa_sports AS vs ON vs.sport_id=vce.sport_id
-                     WHERE vce.contest_id=%d
-                     ORDER BY vs.sport_name, vse.sport_event_name",
-                    $v->contest_id
-                ));
-                ?>
-                <?php if (empty($esemenyek)) : ?>
-                    <p>Ehhez a versenyhez még nincs versenyszám.</p>
-                <?php else : ?>
-                    <ul>
-                    <?php foreach ($esemenyek as $e) : ?>
-                        <li>
-                            <?php echo esc_html(trim(($e->sport_name ?: '') . ' – ' . ($e->sport_event_name ?: ''), ' –')); ?>
-                            <?php if (in_array(intval($e->contest_event_id), $sajat_event_idk, true)) : ?>
-                                <span class="vespa-szabadidos-nevezve">(nevezve)</span>
-                            <?php else : ?>
-                                <button type="button" class="vespa-szabadidos-nevez"
-                                        data-contest="<?php echo esc_attr($v->contest_id); ?>"
-                                        data-event="<?php echo esc_attr($e->contest_event_id); ?>">Nevezek</button>
-                            <?php endif; ?>
-                        </li>
-                    <?php endforeach; ?>
-                    </ul>
-                <?php endif; ?>
+    <section class="<?php echo esc_attr($k_kartya); ?>">
+        <h3 class="<?php echo esc_attr($k_cim); ?>">Megnyitott szabadidős versenyek</h3>
+        <?php if (empty($versenyek)) : ?>
+            <p class="tw-text-sm tw-text-slate-500">Jelenleg nincs elérhető szabadidős verseny.</p>
+        <?php else : ?>
+            <div class="tw-space-y-4">
+            <?php foreach ($versenyek as $v) : ?>
+                <div class="vespa-szabadidos-verseny tw-rounded-lg tw-border tw-border-slate-200 tw-p-4">
+                    <h4 class="tw-mb-3 tw-font-semibold tw-text-slate-900"><?php echo esc_html($v->contest_name); ?></h4>
+                    <?php
+                    $esemenyek = $wpdb->get_results($wpdb->prepare(
+                        "SELECT vce.id AS contest_event_id, vse.sport_event_name, vs.sport_name
+                         FROM vespa_constest_events AS vce
+                         LEFT JOIN vespa_sport_events AS vse ON vse.sport_event_id=vce.event_id
+                         LEFT JOIN vespa_sports AS vs ON vs.sport_id=vce.sport_id
+                         WHERE vce.contest_id=%d
+                         ORDER BY vs.sport_name, vse.sport_event_name",
+                        $v->contest_id
+                    ));
+                    ?>
+                    <?php if (empty($esemenyek)) : ?>
+                        <p class="tw-text-sm tw-text-slate-500">Ehhez a versenyhez még nincs versenyszám.</p>
+                    <?php else : ?>
+                        <ul class="tw-m-0 tw-list-none tw-space-y-2 tw-p-0">
+                        <?php foreach ($esemenyek as $e) : ?>
+                            <li class="tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-2 tw-border-b tw-border-slate-100 tw-pb-2 last:tw-border-0 last:tw-pb-0">
+                                <span class="tw-text-sm tw-text-slate-700"><?php echo esc_html(trim(($e->sport_name ?: '') . ' – ' . ($e->sport_event_name ?: ''), ' –')); ?></span>
+                                <?php if (in_array(intval($e->contest_event_id), $sajat_event_idk, true)) : ?>
+                                    <span class="vespa-szabadidos-nevezve tw-rounded-full tw-bg-emerald-50 tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-text-emerald-700">nevezve</span>
+                                <?php else : ?>
+                                    <button type="button" class="vespa-szabadidos-nevez <?php echo esc_attr($k_gomb_alt); ?>"
+                                            data-contest="<?php echo esc_attr($v->contest_id); ?>"
+                                            data-event="<?php echo esc_attr($e->contest_event_id); ?>">Nevezek</button>
+                                <?php endif; ?>
+                            </li>
+                        <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
             </div>
-        <?php endforeach; ?>
-    <?php endif; ?>
+        <?php endif; ?>
+    </section>
 
-    <h3>Nevezéseim</h3>
-    <?php if (empty($sajat)) : ?>
-        <p>Még nincs nevezésed.</p>
-    <?php else : ?>
-        <ul>
-        <?php foreach ($sajat as $s) : ?>
-            <li>
-                <?php echo esc_html($s->contest_name . ' — ' . trim(($s->sport_name ?: '') . ' ' . ($s->sport_event_name ?: ''))); ?>
-                <button type="button" class="vespa-szabadidos-visszavon" data-entry="<?php echo esc_attr($s->entry_id); ?>">Visszavonás</button>
-            </li>
-        <?php endforeach; ?>
-        </ul>
-    <?php endif; ?>
+    <section class="<?php echo esc_attr($k_kartya); ?>">
+        <h3 class="<?php echo esc_attr($k_cim); ?>">Nevezéseim</h3>
+        <?php if (empty($sajat)) : ?>
+            <p class="tw-text-sm tw-text-slate-500">Még nincs nevezésed.</p>
+        <?php else : ?>
+            <ul class="tw-m-0 tw-list-none tw-space-y-2 tw-p-0">
+            <?php foreach ($sajat as $s) : ?>
+                <li class="tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-2 tw-border-b tw-border-slate-100 tw-pb-2 last:tw-border-0 last:tw-pb-0">
+                    <span class="tw-text-sm tw-text-slate-700"><?php echo esc_html($s->contest_name . ' — ' . trim(($s->sport_name ?: '') . ' ' . ($s->sport_event_name ?: ''))); ?></span>
+                    <button type="button" class="vespa-szabadidos-visszavon <?php echo esc_attr($k_gomb_alt); ?>" data-entry="<?php echo esc_attr($s->entry_id); ?>">Visszavonás</button>
+                </li>
+            <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+    </section>
 
 <?php endif; ?>
 
