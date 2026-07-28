@@ -20,29 +20,41 @@ function vespa_szabadidos_export()
 
     require_once VITAREX_VESPA_PLUGIN_DIR . '/lib/vendor/autoload.php';
 
-    global $wpdb;
-    $nevezok = $wpdb->get_results($wpdb->prepare(
-        "SELECT p.full_name, p.birth_date, p.gender, p.email, p.phone, e.entry_date, vse.sport_event_name, vs.sport_name
-         FROM vespa_external_entries AS e
-         INNER JOIN vespa_external_participants AS p ON p.participant_id=e.participant_id
-         LEFT JOIN vespa_constest_events AS vce ON vce.id=e.contest_event_id
-         LEFT JOIN vespa_sport_events AS vse ON vse.sport_event_id=vce.event_id
-         LEFT JOIN vespa_sports AS vs ON vs.sport_id=vce.sport_id
-         WHERE e.contest_id=%d
-         ORDER BY p.full_name",
-        $contest_id
-    ));
+    $tabla = vespa_szabadidos_entry_table($contest_id);
+
+    $fejlec = array('Név', 'Születési dátum', 'Nem', 'E-mail', 'Telefon', 'Versenyszám', 'Nevezés dátuma');
+    foreach ($tabla['columns'] as $oszlop) {
+        $fejlec[] = $oszlop['label'] . ($oszlop['archived'] ? ' (archivált)' : '');
+    }
+    // A hiányzó adat jelzése csak akkor kap oszlopot, ha van egyáltalán mező.
+    if (!empty($tabla['columns'])) {
+        $fejlec[] = 'Hiányzó adat';
+    }
 
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
-    $sheet->fromArray(array('Név', 'Születési dátum', 'Nem', 'E-mail', 'Telefon', 'Versenyszám', 'Nevezés dátuma'), null, 'A1');
+    $sheet->fromArray($fejlec, null, 'A1');
 
     $sor = 2;
-    foreach ($nevezok as $n) {
-        $versenyszam = trim(($n->sport_name ?: '') . ' ' . ($n->sport_event_name ?: ''));
-        $sheet->fromArray(array(
-            $n->full_name, $n->birth_date, $n->gender, $n->email, $n->phone, $versenyszam, $n->entry_date
-        ), null, 'A' . $sor);
+    foreach ($tabla['rows'] as $adat) {
+        $n = $adat['nevezo'];
+        $ertekek = array(
+            $n->full_name,
+            $n->birth_date,
+            $n->gender,
+            $n->email,
+            $n->phone,
+            trim(($n->sport_name ?: '') . ' ' . ($n->sport_event_name ?: '')),
+            $n->entry_date,
+        );
+        foreach ($tabla['columns'] as $oszlop) {
+            $ertekek[] = $adat['answers'][$oszlop['field_id']];
+        }
+        if (!empty($tabla['columns'])) {
+            $ertekek[] = $adat['missing'] ? 'igen' : '';
+        }
+
+        $sheet->fromArray($ertekek, null, 'A' . $sor);
         $sor++;
     }
 

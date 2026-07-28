@@ -242,15 +242,6 @@ select.form-control {
   color: var(--vespa-brand);
 }
 
-.user-rich-editing-wrap,
-.user-admin-color-wrap,
-.user-comment-shortcuts-wrap,
-.show-admin-bar.user-admin-bar-front-wrap,
-.user-syntax-highlighting-wrap,
-#application-passwords-section {
-  display: none;
-}
-
 label {
   cursor: inherit !important;
 }

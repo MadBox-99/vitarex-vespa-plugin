@@ -144,3 +144,5 @@ fi
 
 echo "==> Emlékeztető: a megemelt verziót ($VERSION) commitold a vitarex-vespa-plugin.php-ben!"
 echo "==> Emlékeztető: új telepítésnél futtasd a database/changes.sql új migrációit az éles DB-n."
+git commit -m "$VERSION"
+git push

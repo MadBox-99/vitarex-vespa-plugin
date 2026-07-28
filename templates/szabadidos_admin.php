@@ -88,13 +88,16 @@ $datum = function ($ertek) use ($ures_datum) {
         </p>
     <?php endif; ?>
 
-    <h2>Külső nevezők</h2>
+    <h2>Verseny kiválasztása</h2>
     <?php
     $valasztott = isset($_GET['contest_id']) ? intval($_GET['contest_id']) : 0;
-    $nyitott_versenyek = $wpdb->get_results($wpdb->prepare(
-        "SELECT vc.contest_id, vc.contest_name, vc.start_at, vc.end_at
-         FROM vespa_szabadidos_open_contests AS o
-         INNER JOIN vespa_contests AS vc ON vc.contest_id=o.contest_id
+
+    // Az ÖSSZES type-4 verseny (nem csak a megnyitottak): a nevezési mezőket
+    // a megnyitás előtt kell tudni beállítani.
+    $valaszthato_versenyek = $wpdb->get_results($wpdb->prepare(
+        "SELECT vc.contest_id, vc.contest_name, vc.start_at, vc.end_at,
+                (SELECT COUNT(*) FROM vespa_szabadidos_open_contests o WHERE o.contest_id=vc.contest_id) AS nyitva
+         FROM vespa_contests AS vc
          WHERE vc.contest_type=%d
          ORDER BY vc.start_at DESC",
         4
@@ -105,7 +108,7 @@ $datum = function ($ertek) use ($ures_datum) {
         <label>Verseny:
             <select name="contest_id" onchange="this.form.submit()">
                 <option value="0">— válassz —</option>
-                <?php foreach ($nyitott_versenyek as $nv) : ?>
+                <?php foreach ($valaszthato_versenyek as $nv) : ?>
                     <?php
                     // Az azonos nevű versenyek csak a dátumukban különböznek, ezért
                     // a név mellé kiírjuk azt is — enélkül nem megkülönböztethetők.
@@ -113,7 +116,9 @@ $datum = function ($ertek) use ($ures_datum) {
                     $nv_lejart     = !$nv_nincs_vege && $nv->end_at < $most;
 
                     $cimke = $nv->contest_name . ' — ' . $datum($nv->start_at);
-                    if ($nv_nincs_vege) {
+                    if (intval($nv->nyitva) === 0) {
+                        $cimke .= ' (nincs megnyitva)';
+                    } elseif ($nv_nincs_vege) {
                         $cimke .= ' (nincs végdátuma, a résztvevők nem látják)';
                     } elseif ($nv_lejart) {
                         $cimke .= ' (lejárt, a résztvevők nem látják)';
@@ -128,37 +133,74 @@ $datum = function ($ertek) use ($ures_datum) {
     </form>
 
     <?php if ($valasztott > 0) : ?>
-        <?php
-        $nevezok = $wpdb->get_results($wpdb->prepare(
-            "SELECT p.full_name, p.birth_date, p.gender, p.email, p.phone, e.entry_date, vse.sport_event_name, vs.sport_name
-             FROM vespa_external_entries AS e
-             INNER JOIN vespa_external_participants AS p ON p.participant_id=e.participant_id
-             LEFT JOIN vespa_constest_events AS vce ON vce.id=e.contest_event_id
-             LEFT JOIN vespa_sport_events AS vse ON vse.sport_event_id=vce.event_id
-             LEFT JOIN vespa_sports AS vs ON vs.sport_id=vce.sport_id
-             WHERE e.contest_id=%d
-             ORDER BY p.full_name",
-            $valasztott
-        ));
-        ?>
+        <?php $mezo_lista = vespa_szabadidos_fields_payload($valasztott); ?>
+        <h2>Nevezési mezők</h2>
+        <p class="description">
+            Ezeket a mezőket a külső résztvevő a nevezéskor tölti ki, versenyenként
+            egyszer. Minden sor külön mentődik. A törölt mező archiválódik, ha már
+            érkezett rá válasz — a beérkezett adat nem vész el.
+        </p>
+        <div id="vespa-mezok"
+             data-contest="<?php echo esc_attr($valasztott); ?>"
+             data-types="<?php echo esc_attr(wp_json_encode(vespa_szabadidos_field_types())); ?>"
+             data-fields="<?php echo esc_attr(wp_json_encode($mezo_lista)); ?>">
+            <div class="vespa-mezo-lista"></div>
+            <p>
+                <button type="button" class="button button-secondary vespa-mezo-uj">+ Új mező</button>
+                <span class="vespa-mezo-globalis-uzenet" style="margin-left:10px;"></span>
+            </p>
+        </div>
+    <?php endif; ?>
+
+    <h2>Külső nevezők</h2>
+
+    <?php if ($valasztott > 0) : ?>
+        <?php $tabla = vespa_szabadidos_entry_table($valasztott); ?>
         <p>
             <a class="button" href="<?php echo esc_url(add_query_arg('vespa_szabadidos_export', $valasztott, home_url('/'))); ?>">XLSX export</a>
         </p>
-        <?php if (empty($nevezok)) : ?>
+        <?php if (empty($tabla['rows'])) : ?>
             <p>Erre a versenyre még nincs külső nevező.</p>
         <?php else : ?>
             <table class="widefat">
-                <thead><tr><th>Név</th><th>Szül. dátum</th><th>Nem</th><th>E-mail</th><th>Telefon</th><th>Versenyszám</th><th>Nevezés dátuma</th></tr></thead>
-                <tbody>
-                <?php foreach ($nevezok as $n) : ?>
+                <thead>
                     <tr>
-                        <td><?php echo esc_html($n->full_name); ?></td>
+                        <th>Név</th>
+                        <th>Szül. dátum</th>
+                        <th>Nem</th>
+                        <th>E-mail</th>
+                        <th>Telefon</th>
+                        <th>Versenyszám</th>
+                        <th>Nevezés dátuma</th>
+                        <?php foreach ($tabla['columns'] as $oszlop) : ?>
+                            <th>
+                                <?php echo esc_html($oszlop['label']); ?>
+                                <?php if ($oszlop['archived']) : ?>
+                                    <br><span style="color:#8c8f94; font-weight:400;">(archivált)</span>
+                                <?php endif; ?>
+                            </th>
+                        <?php endforeach; ?>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($tabla['rows'] as $sor) : ?>
+                    <?php $n = $sor['nevezo']; ?>
+                    <tr>
+                        <td>
+                            <?php echo esc_html($n->full_name); ?>
+                            <?php if ($sor['missing']) : ?>
+                                <br><span style="color:#b32d2e; font-weight:600;">hiányzó adat</span>
+                            <?php endif; ?>
+                        </td>
                         <td><?php echo esc_html($n->birth_date); ?></td>
                         <td><?php echo esc_html($n->gender); ?></td>
                         <td><?php echo esc_html($n->email); ?></td>
                         <td><?php echo esc_html($n->phone); ?></td>
                         <td><?php echo esc_html(trim(($n->sport_name ?: '') . ' ' . ($n->sport_event_name ?: ''))); ?></td>
                         <td><?php echo esc_html($n->entry_date); ?></td>
+                        <?php foreach ($tabla['columns'] as $oszlop) : ?>
+                            <td><?php echo esc_html($sor['answers'][$oszlop['field_id']]); ?></td>
+                        <?php endforeach; ?>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -187,5 +229,351 @@ $datum = function ($ertek) use ($ures_datum) {
                 .catch(function () { alert('Hálózati hiba.'); cb.checked = !cb.checked; });
         });
     });
+})();
+</script>
+
+<style>
+.vespa-mezo-sor { border:1px solid #c3c4c7; background:#fff; padding:12px; margin-bottom:10px; }
+.vespa-mezo-sor.archivalt { background:#f6f7f7; opacity:.75; }
+.vespa-mezo-sor label { display:inline-block; margin-right:12px; }
+.vespa-mezo-sor .vespa-mezo-cimke { width:100%; max-width:520px; }
+.vespa-mezo-sor .vespa-mezo-opciok { width:100%; max-width:520px; }
+.vespa-mezo-allapot { margin-left:10px; font-style:italic; color:#646970; }
+.vespa-mezo-allapot.hiba { color:#b32d2e; font-style:normal; font-weight:600; }
+.vespa-mezo-lab { margin-top:8px; }
+</style>
+<script>
+(function () {
+    var doboz = document.getElementById('vespa-mezok');
+    if (!doboz) return;
+
+    var burok = document.querySelector('.wrap[data-admin-nonce]');
+    var nonce = burok.getAttribute('data-admin-nonce');
+    var url = (typeof ajaxurl !== 'undefined') ? ajaxurl : '/wp-admin/admin-ajax.php';
+    var contestId = doboz.getAttribute('data-contest');
+    var tipusok = JSON.parse(doboz.getAttribute('data-types'));
+    var mezok = JSON.parse(doboz.getAttribute('data-fields'));
+    var lista = doboz.querySelector('.vespa-mezo-lista');
+    var globalisUzenet = doboz.querySelector('.vespa-mezo-globalis-uzenet');
+
+    function valasztosE(tipus) {
+        return tipus === 'egyvalasztos' || tipus === 'tobbvalasztos';
+    }
+
+    function kuld(action, adatok) {
+        var fd = new FormData();
+        fd.append('action', action);
+        fd.append('nonce', nonce);
+        fd.append('contest_id', contestId);
+        Object.keys(adatok).forEach(function (k) { fd.append(k, adatok[k]); });
+        return fetch(url, { method: 'POST', credentials: 'same-origin', body: fd })
+            .then(function (r) { return r.json(); });
+    }
+
+    // Egy sor felépítése. Minden szöveg value/textContent útján kerül be,
+    // sehol nincs innerHTML-interpoláció.
+    function sortEpit(mezo, index, aktivDb) {
+        var sor = document.createElement('div');
+        sor.className = 'vespa-mezo-sor' + (mezo.is_active ? '' : ' archivalt');
+
+        // A betöltéskori típus/opciók — ehhez képest mérjük, hogy a mentés
+        // kockázatos-e egy már megválaszolt mezőnél. A mezo objektumot a
+        // valtozas() a gépeléssel egy időben felülírja, ezért ezt itt, a sor
+        // felépítésekor kell elmenteni, mielőtt bármi módosítaná.
+        var eredetiTipus = mezo.field_type;
+        var eredetiOpciok = mezo.field_options || '';
+
+        var fej = document.createElement('p');
+
+        if (mezo.is_active && mezo.field_id > 0) {
+            var fel = document.createElement('button');
+            fel.type = 'button';
+            fel.className = 'button';
+            fel.textContent = '▲';
+            fel.disabled = (index === 0);
+            fel.addEventListener('click', function () { mozgat(mezo.field_id, 'up'); });
+            fej.appendChild(fel);
+
+            var le = document.createElement('button');
+            le.type = 'button';
+            le.className = 'button';
+            le.textContent = '▼';
+            le.disabled = (index === aktivDb - 1);
+            le.addEventListener('click', function () { mozgat(mezo.field_id, 'down'); });
+            fej.appendChild(le);
+            fej.appendChild(document.createTextNode(' '));
+        }
+
+        var cimke = document.createElement('input');
+        cimke.type = 'text';
+        cimke.className = 'vespa-mezo-cimke';
+        cimke.placeholder = 'A kérdés szövege, pl. Milyen kerékpárral érkezel?';
+        cimke.value = mezo.label || '';
+        cimke.disabled = !mezo.is_active;
+        fej.appendChild(cimke);
+        sor.appendChild(fej);
+
+        var tipusSor = document.createElement('p');
+
+        var tipusCimke = document.createElement('label');
+        tipusCimke.appendChild(document.createTextNode('Típus: '));
+        var tipus = document.createElement('select');
+        Object.keys(tipusok).forEach(function (kulcs) {
+            var opt = document.createElement('option');
+            opt.value = kulcs;
+            opt.textContent = tipusok[kulcs];
+            if (kulcs === mezo.field_type) opt.selected = true;
+            tipus.appendChild(opt);
+        });
+        tipus.disabled = !mezo.is_active;
+        tipusCimke.appendChild(tipus);
+        tipusSor.appendChild(tipusCimke);
+
+        var kotCimke = document.createElement('label');
+        var kot = document.createElement('input');
+        kot.type = 'checkbox';
+        kot.checked = mezo.is_required === 1;
+        kot.disabled = !mezo.is_active || mezo.field_type === 'nyilatkozat';
+        kotCimke.appendChild(kot);
+        kotCimke.appendChild(document.createTextNode(' Kötelező kitölteni'));
+        tipusSor.appendChild(kotCimke);
+        sor.appendChild(tipusSor);
+
+        var opciokSor = document.createElement('p');
+        var opciokCimke = document.createElement('label');
+        opciokCimke.style.display = 'block';
+        opciokCimke.appendChild(document.createTextNode('Válaszlehetőségek (soronként egy):'));
+        var opciok = document.createElement('textarea');
+        opciok.className = 'vespa-mezo-opciok';
+        opciok.rows = 4;
+        opciok.value = mezo.field_options || '';
+        opciok.disabled = !mezo.is_active;
+        opciokCimke.appendChild(document.createElement('br'));
+        opciokCimke.appendChild(opciok);
+        opciokSor.appendChild(opciokCimke);
+        opciokSor.style.display = valasztosE(mezo.field_type) ? '' : 'none';
+        sor.appendChild(opciokSor);
+
+        // A beviteli mezőkből visszaírunk az adatobjektumba, különben egy másik
+        // sor mentése után az újrarajzolás eldobná a még el nem küldött gépelést.
+        function valtozas() {
+            mezo.label = cimke.value;
+            mezo.field_type = tipus.value;
+            mezo.field_options = opciok.value;
+            mezo.is_required = kot.checked ? 1 : 0;
+            mezo.piszkos = true;
+            allapot('Nem mentett módosítás', false);
+        }
+
+        // A nyilatkozat mindig kötelező, a válaszlehetőség pedig csak a két
+        // választós típusnál értelmes — a felület ezt azonnal követi.
+        tipus.addEventListener('change', function () {
+            opciokSor.style.display = valasztosE(tipus.value) ? '' : 'none';
+            if (tipus.value === 'nyilatkozat') {
+                kot.checked = true;
+                kot.disabled = true;
+            } else {
+                kot.disabled = false;
+            }
+            valtozas();
+        });
+        cimke.addEventListener('input', valtozas);
+        opciok.addEventListener('input', valtozas);
+        kot.addEventListener('change', valtozas);
+
+        var lab = document.createElement('p');
+        lab.className = 'vespa-mezo-lab';
+
+        var allapotJel = document.createElement('span');
+        allapotJel.className = 'vespa-mezo-allapot';
+
+        function allapot(szoveg, hibaE) {
+            allapotJel.textContent = szoveg;
+            allapotJel.className = 'vespa-mezo-allapot' + (hibaE ? ' hiba' : '');
+        }
+
+        if (mezo.is_active) {
+            var ment = document.createElement('button');
+            ment.type = 'button';
+            ment.className = 'button button-primary';
+            ment.textContent = 'Mentés';
+            ment.addEventListener('click', function () {
+                // A típus vagy a válaszlehetőségek módosítása érvényteleníti a
+                // már beérkezett válaszokat — erre a spec szerint figyelmeztetni
+                // kell. A puszta címke-átírás ártalmatlan, nem kérdez rá.
+                var kockazatos = mezo.answer_count > 0
+                    && (tipus.value !== eredetiTipus || opciok.value !== eredetiOpciok);
+                if (kockazatos) {
+                    var figyelmezteto = 'Erre a mezőre már ' + mezo.answer_count + ' válasz érkezett. '
+                        + 'A típus vagy a válaszlehetőségek módosítása érvénytelenítheti a meglévő válaszokat. Mented?';
+                    if (!window.confirm(figyelmezteto)) return;
+                }
+
+                ment.disabled = true;
+                allapot('Mentés…', false);
+                kuld('vespa_szabadidos_field_save', {
+                    field_id: mezo.field_id,
+                    label: cimke.value,
+                    field_type: tipus.value,
+                    field_options: opciok.value,
+                    is_required: kot.checked ? '1' : '0'
+                }).then(function (resp) {
+                    ment.disabled = false;
+                    if (!resp.success) { allapot(resp.data.message, true); return; }
+                    frissitLista(resp.data.fields, mezo);
+                    uzen(resp.data.message);
+                }).catch(function () {
+                    ment.disabled = false;
+                    allapot('Hálózati hiba.', true);
+                });
+            });
+            lab.appendChild(ment);
+
+            var torol = document.createElement('button');
+            torol.type = 'button';
+            torol.className = 'button';
+            torol.style.marginLeft = '6px';
+            torol.textContent = 'Törlés';
+            torol.addEventListener('click', function () {
+                if (mezo.field_id === 0) { mezok.splice(index, 1); rajzol(); return; }
+                var kerdes = mezo.answer_count > 0
+                    ? 'Erre a mezőre már ' + mezo.answer_count + ' válasz érkezett. A mező archiválódik, a válaszok megmaradnak. Folytatod?'
+                    : 'Biztosan törlöd ezt a mezőt?';
+                if (!window.confirm(kerdes)) return;
+                kuld('vespa_szabadidos_field_delete', { field_id: mezo.field_id })
+                    .then(function (resp) {
+                        if (!resp.success) { allapot(resp.data.message, true); return; }
+                        frissitLista(resp.data.fields, null);
+                        uzen(resp.data.message);
+                    }).catch(function () { allapot('Hálózati hiba.', true); });
+            });
+            lab.appendChild(torol);
+        } else {
+            var jel = document.createElement('span');
+            jel.textContent = 'Archivált — ' + mezo.answer_count + ' válasz megmarad. ';
+            lab.appendChild(jel);
+
+            var vissza = document.createElement('button');
+            vissza.type = 'button';
+            vissza.className = 'button';
+            vissza.textContent = 'Visszakapcsolás';
+            vissza.addEventListener('click', function () {
+                kuld('vespa_szabadidos_field_restore', { field_id: mezo.field_id })
+                    .then(function (resp) {
+                        if (!resp.success) { allapot(resp.data.message, true); return; }
+                        frissitLista(resp.data.fields, null);
+                        uzen(resp.data.message);
+                    }).catch(function () { allapot('Hálózati hiba.', true); });
+            });
+            lab.appendChild(vissza);
+        }
+
+        lab.appendChild(allapotJel);
+        sor.appendChild(lab);
+
+        // Az újrarajzolás minden sort újraépít, ezért a piszkos-jelzést is
+        // innen kell újra kiírni — különben egy másik sor mentése után ez a
+        // sor mentettnek tűnik, holott a gépelése csak adatban él tovább.
+        if (mezo.piszkos) {
+            allapot('Nem mentett módosítás', false);
+        } else if (mezo.field_id === 0) {
+            allapot('Még nincs mentve', false);
+        }
+
+        return sor;
+    }
+
+    function mozgat(fieldId, irany) {
+        kuld('vespa_szabadidos_field_move', { field_id: fieldId, direction: irany })
+            .then(function (resp) {
+                if (!resp.success) { uzen(resp.data.message); return; }
+                frissitLista(resp.data.fields, null);
+            }).catch(function () { uzen('Hálózati hiba.'); });
+    }
+
+    function uzen(szoveg) {
+        globalisUzenet.textContent = szoveg || '';
+    }
+
+    // A szerver listája a mentett igazság. Ehhez hozzáfűzzük a még nem mentett
+    // piszkozatokat, és visszamásoljuk a mentett sorokra azokat a
+    // szerkesztéseket, amiket a felhasználó még nem küldött el.
+    // A mentettMezo kivétel: annak a szerver normalizált értéke a helyes
+    // (levágott címke, deduplikált lehetőségek, kikényszerített nyilatkozat).
+    function frissitLista(ujLista, mentettMezo) {
+        var szerkesztett = {};
+        mezok.forEach(function (m) {
+            if (m.field_id > 0 && m.piszkos && m !== mentettMezo) {
+                szerkesztett[m.field_id] = m;
+            }
+        });
+
+        ujLista.forEach(function (uj) {
+            var sz = szerkesztett[uj.field_id];
+            if (!sz) return;
+            uj.label         = sz.label;
+            uj.field_type    = sz.field_type;
+            uj.field_options = sz.field_options;
+            uj.is_required   = sz.is_required;
+            uj.piszkos       = true;
+        });
+
+        // A most mentett piszkozat már a szerver listájában van — nem szabad
+        // másodszor is hozzáfűzni.
+        var piszkozatok = mezok.filter(function (m) {
+            return m.field_id === 0 && m !== mentettMezo;
+        });
+
+        mezok = ujLista.concat(piszkozatok);
+        rajzol();
+    }
+
+    function rajzol() {
+        lista.textContent = '';
+        // A piszkozat (field_id === 0) sorok nem részei a szerver oldali
+        // sorrendnek, ezért a nyíl-határok számításából ki kell hagyni őket.
+        var aktivDb = mezok.filter(function (m) { return m.is_active === 1 && m.field_id !== 0; }).length;
+        mezok.forEach(function (mezo, index) {
+            lista.appendChild(sortEpit(mezo, index, aktivDb));
+        });
+        if (mezok.length === 0) {
+            var ures = document.createElement('p');
+            ures.textContent = 'Ehhez a versenyhez még nincs nevezési mező. A résztvevő ilyenkor a mai módon, egy kattintással nevez.';
+            lista.appendChild(ures);
+        }
+    }
+
+    doboz.querySelector('.vespa-mezo-uj').addEventListener('click', function () {
+        // Az új sor a listába kerül, de csak a Mentés gomb rögzíti — a többi
+        // sor félkész állapota így nem vész el.
+        mezok.push({
+            field_id: 0,
+            label: '',
+            field_type: 'egyvalasztos',
+            field_options: '',
+            is_required: 0,
+            ordernum: 0,
+            is_active: 1,
+            answer_count: 0
+        });
+        rajzol();
+        uzen('');
+    });
+
+    // A verseny-választó <select onchange="this.form.submit()"> figyelmeztetés
+    // nélkül navigálna el — ez itt az utolsó védelmi vonal, hogy egy elküldetlen
+    // módosítás (akár egy már mentett sor átírása, akár egy még el nem küldött
+    // piszkozat gépelése) ne vesszen el észrevétlenül. A valtozas() a piszkozat
+    // sorokon is beállítja a piszkos jelzőt, mihelyt az admin gépel, ezért az
+    // önmagában elég mindkét eset felismeréséhez.
+    window.addEventListener('beforeunload', function (ev) {
+        var vanNemMentett = mezok.some(function (m) { return m.piszkos; });
+        if (vanNemMentett) {
+            ev.preventDefault();
+            ev.returnValue = '';
+        }
+    });
+
+    rajzol();
 })();
 </script>
