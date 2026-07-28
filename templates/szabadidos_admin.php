@@ -346,6 +346,17 @@ $datum = function ($ertek) use ($ures_datum) {
         opciokSor.style.display = valasztosE(mezo.field_type) ? '' : 'none';
         sor.appendChild(opciokSor);
 
+        // A beviteli mezőkből visszaírunk az adatobjektumba, különben egy másik
+        // sor mentése után az újrarajzolás eldobná a még el nem küldött gépelést.
+        function valtozas() {
+            mezo.label = cimke.value;
+            mezo.field_type = tipus.value;
+            mezo.field_options = opciok.value;
+            mezo.is_required = kot.checked ? 1 : 0;
+            mezo.piszkos = true;
+            allapot('Nem mentett módosítás', false);
+        }
+
         // A nyilatkozat mindig kötelező, a válaszlehetőség pedig csak a két
         // választós típusnál értelmes — a felület ezt azonnal követi.
         tipus.addEventListener('change', function () {
@@ -356,11 +367,11 @@ $datum = function ($ertek) use ($ures_datum) {
             } else {
                 kot.disabled = false;
             }
-            allapot('Nem mentett módosítás', false);
+            valtozas();
         });
-        cimke.addEventListener('input', function () { allapot('Nem mentett módosítás', false); });
-        opciok.addEventListener('input', function () { allapot('Nem mentett módosítás', false); });
-        kot.addEventListener('change', function () { allapot('Nem mentett módosítás', false); });
+        cimke.addEventListener('input', valtozas);
+        opciok.addEventListener('input', valtozas);
+        kot.addEventListener('change', valtozas);
 
         var lab = document.createElement('p');
         lab.className = 'vespa-mezo-lab';
@@ -388,7 +399,7 @@ $datum = function ($ertek) use ($ures_datum) {
                     is_required: kot.checked ? '1' : '0'
                 }).then(function (resp) {
                     if (!resp.success) { allapot(resp.data.message, true); return; }
-                    frissitLista(resp.data.fields);
+                    frissitLista(resp.data.fields, mezo);
                     uzen(resp.data.message);
                 }).catch(function () { allapot('Hálózati hiba.', true); });
             });
@@ -408,7 +419,7 @@ $datum = function ($ertek) use ($ures_datum) {
                 kuld('vespa_szabadidos_field_delete', { field_id: mezo.field_id })
                     .then(function (resp) {
                         if (!resp.success) { allapot(resp.data.message, true); return; }
-                        frissitLista(resp.data.fields);
+                        frissitLista(resp.data.fields, null);
                         uzen(resp.data.message);
                     }).catch(function () { allapot('Hálózati hiba.', true); });
             });
@@ -426,7 +437,7 @@ $datum = function ($ertek) use ($ures_datum) {
                 kuld('vespa_szabadidos_field_restore', { field_id: mezo.field_id })
                     .then(function (resp) {
                         if (!resp.success) { allapot(resp.data.message, true); return; }
-                        frissitLista(resp.data.fields);
+                        frissitLista(resp.data.fields, null);
                         uzen(resp.data.message);
                     }).catch(function () { allapot('Hálózati hiba.', true); });
             });
@@ -447,7 +458,7 @@ $datum = function ($ertek) use ($ures_datum) {
         kuld('vespa_szabadidos_field_move', { field_id: fieldId, direction: irany })
             .then(function (resp) {
                 if (!resp.success) { uzen(resp.data.message); return; }
-                frissitLista(resp.data.fields);
+                frissitLista(resp.data.fields, null);
             }).catch(function () { uzen('Hálózati hiba.'); });
     }
 
@@ -455,12 +466,35 @@ $datum = function ($ertek) use ($ures_datum) {
         globalisUzenet.textContent = szoveg || '';
     }
 
-    // A szerver válasza sosem tartalmazza a még nem mentett (field_id === 0)
-    // piszkozat sort — ha közben más soron ment/töröl/visszaállít/mozgat
-    // történt, a piszkozat így sem vész el. A négy AJAX-sikerkezelő közös
-    // útja ez, hogy a megőrzés logikája egyetlen helyen legyen.
-    function frissitLista(ujLista) {
-        var piszkozatok = mezok.filter(function (m) { return m.field_id === 0; });
+    // A szerver listája a mentett igazság. Ehhez hozzáfűzzük a még nem mentett
+    // piszkozatokat, és visszamásoljuk a mentett sorokra azokat a
+    // szerkesztéseket, amiket a felhasználó még nem küldött el.
+    // A mentettMezo kivétel: annak a szerver normalizált értéke a helyes
+    // (levágott címke, deduplikált lehetőségek, kikényszerített nyilatkozat).
+    function frissitLista(ujLista, mentettMezo) {
+        var szerkesztett = {};
+        mezok.forEach(function (m) {
+            if (m.field_id > 0 && m.piszkos && m !== mentettMezo) {
+                szerkesztett[m.field_id] = m;
+            }
+        });
+
+        ujLista.forEach(function (uj) {
+            var sz = szerkesztett[uj.field_id];
+            if (!sz) return;
+            uj.label         = sz.label;
+            uj.field_type    = sz.field_type;
+            uj.field_options = sz.field_options;
+            uj.is_required   = sz.is_required;
+            uj.piszkos       = true;
+        });
+
+        // A most mentett piszkozat már a szerver listájában van — nem szabad
+        // másodszor is hozzáfűzni.
+        var piszkozatok = mezok.filter(function (m) {
+            return m.field_id === 0 && m !== mentettMezo;
+        });
+
         mezok = ujLista.concat(piszkozatok);
         rajzol();
     }
