@@ -153,7 +153,15 @@ $k_uzenet   = 'tw-mt-3 tw-text-sm tw-font-medium tw-text-slate-700';
         <?php else : ?>
             <div class="tw-space-y-4">
             <?php foreach ($versenyek as $v) : ?>
-                <div class="vespa-szabadidos-verseny tw-rounded-lg tw-border tw-border-slate-200 tw-p-4">
+                <?php
+                $verseny_mezok = vespa_szabadidos_get_fields($v->contest_id);
+                $mar_valaszolt = $resztvevo
+                    ? vespa_szabadidos_has_answers($resztvevo->participant_id, $v->contest_id)
+                    : false;
+                $urlap_kell = !empty($verseny_mezok) && !$mar_valaszolt;
+                ?>
+                <div class="vespa-szabadidos-verseny tw-rounded-lg tw-border tw-border-slate-200 tw-p-4"
+                     data-contest="<?php echo esc_attr($v->contest_id); ?>">
                     <h4 class="tw-mb-3 tw-font-semibold tw-text-slate-900"><?php echo esc_html($v->contest_name); ?></h4>
                     <?php
                     $esemenyek = $wpdb->get_results($wpdb->prepare(
@@ -178,11 +186,82 @@ $k_uzenet   = 'tw-mt-3 tw-text-sm tw-font-medium tw-text-slate-700';
                                 <?php else : ?>
                                     <button type="button" class="vespa-szabadidos-nevez <?php echo esc_attr($k_gomb_alt); ?>"
                                             data-contest="<?php echo esc_attr($v->contest_id); ?>"
-                                            data-event="<?php echo esc_attr($e->contest_event_id); ?>">Nevezek</button>
+                                            data-event="<?php echo esc_attr($e->contest_event_id); ?>"
+                                            data-urlap="<?php echo $urlap_kell ? '1' : '0'; ?>">Nevezek</button>
                                 <?php endif; ?>
                             </li>
                         <?php endforeach; ?>
                         </ul>
+                    <?php endif; ?>
+
+                    <?php if ($urlap_kell) : ?>
+                        <form class="vespa-szabadidos-urlap tw-mt-4 tw-hidden tw-rounded-lg tw-border tw-border-sky-200 tw-bg-sky-50 tw-p-4">
+                            <p class="tw-mb-3 tw-text-sm tw-font-medium tw-text-slate-800">
+                                A nevezéshez töltsd ki az alábbiakat. Ezeket versenyenként csak egyszer kérjük.
+                            </p>
+                            <?php foreach ($verseny_mezok as $mezo) : ?>
+                                <?php $opciok = vespa_szabadidos_parse_options($mezo->field_options); ?>
+                                <div class="vespa-szabadidos-mezo tw-mb-4" data-field="<?php echo esc_attr($mezo->field_id); ?>">
+                                    <?php if ($mezo->field_type !== 'nyilatkozat') : ?>
+                                        <span class="<?php echo esc_attr($k_cimke); ?>">
+                                            <?php echo esc_html($mezo->label); ?><?php echo intval($mezo->is_required) === 1 ? ' *' : ''; ?>
+                                        </span>
+                                    <?php endif; ?>
+
+                                    <?php if ($mezo->field_type === 'egyvalasztos') : ?>
+                                        <?php foreach ($opciok as $opcio) : ?>
+                                            <label class="tw-mb-1 tw-flex tw-items-center tw-gap-2 tw-text-sm tw-text-slate-700">
+                                                <input type="radio" name="mezok[<?php echo esc_attr($mezo->field_id); ?>]"
+                                                       value="<?php echo esc_attr($opcio); ?>"
+                                                       class="tw-h-4 tw-w-4 tw-border-slate-300 tw-text-sky-600">
+                                                <span><?php echo esc_html($opcio); ?></span>
+                                            </label>
+                                        <?php endforeach; ?>
+
+                                    <?php elseif ($mezo->field_type === 'tobbvalasztos') : ?>
+                                        <?php foreach ($opciok as $opcio) : ?>
+                                            <label class="tw-mb-1 tw-flex tw-items-center tw-gap-2 tw-text-sm tw-text-slate-700">
+                                                <input type="checkbox" name="mezok[<?php echo esc_attr($mezo->field_id); ?>][]"
+                                                       value="<?php echo esc_attr($opcio); ?>"
+                                                       class="tw-h-4 tw-w-4 tw-rounded tw-border-slate-300 tw-text-sky-600">
+                                                <span><?php echo esc_html($opcio); ?></span>
+                                            </label>
+                                        <?php endforeach; ?>
+
+                                    <?php elseif ($mezo->field_type === 'nyilatkozat') : ?>
+                                        <label class="tw-flex tw-items-start tw-gap-2 tw-text-sm tw-text-slate-700">
+                                            <input type="checkbox" name="mezok[<?php echo esc_attr($mezo->field_id); ?>]" value="1"
+                                                   class="tw-mt-0.5 tw-h-4 tw-w-4 tw-rounded tw-border-slate-300 tw-text-sky-600">
+                                            <span><?php echo esc_html($mezo->label); ?> *</span>
+                                        </label>
+
+                                    <?php elseif ($mezo->field_type === 'hosszu_szoveg') : ?>
+                                        <textarea name="mezok[<?php echo esc_attr($mezo->field_id); ?>]" rows="3"
+                                                  class="<?php echo esc_attr($k_input); ?>"></textarea>
+
+                                    <?php elseif ($mezo->field_type === 'szam') : ?>
+                                        <input type="number" name="mezok[<?php echo esc_attr($mezo->field_id); ?>]"
+                                               class="<?php echo esc_attr($k_input); ?>">
+
+                                    <?php elseif ($mezo->field_type === 'datum') : ?>
+                                        <input type="date" name="mezok[<?php echo esc_attr($mezo->field_id); ?>]"
+                                               class="<?php echo esc_attr($k_input); ?>">
+
+                                    <?php else : ?>
+                                        <input type="text" name="mezok[<?php echo esc_attr($mezo->field_id); ?>]"
+                                               class="<?php echo esc_attr($k_input); ?>">
+                                    <?php endif; ?>
+
+                                    <p class="vespa-szabadidos-mezo-hiba tw-mt-1 tw-text-sm tw-font-medium tw-text-red-700"></p>
+                                </div>
+                            <?php endforeach; ?>
+
+                            <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-3">
+                                <button type="submit" class="<?php echo esc_attr($k_gomb); ?>">Nevezés véglegesítése</button>
+                                <button type="button" class="vespa-szabadidos-megse <?php echo esc_attr($k_gomb_alt); ?>">Mégsem</button>
+                            </div>
+                            <p class="vespa-szabadidos-urlap-uzenet <?php echo esc_attr($k_uzenet); ?>"></p>
+                        </form>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
@@ -217,11 +296,18 @@ $k_uzenet   = 'tw-mt-3 tw-text-sm tw-font-medium tw-text-slate-700';
     var nonce = gyoker.getAttribute('data-nonce');
     var url = (typeof vitarex_vespa_ajaxurl !== 'undefined') ? vitarex_vespa_ajaxurl : '/wp-admin/admin-ajax.php';
 
+    // Az adatok lehet sima objektum vagy kész FormData (a nevezési űrlaphoz,
+    // ahol a többválasztós mezők tömbként érkeznek).
     function kuld(action, adatok, kesz) {
-        var fd = new FormData();
+        var fd;
+        if (adatok instanceof FormData) {
+            fd = adatok;
+        } else {
+            fd = new FormData();
+            Object.keys(adatok).forEach(function (k) { fd.append(k, adatok[k]); });
+        }
         fd.append('action', action);
         fd.append('nonce', nonce);
-        Object.keys(adatok).forEach(function (k) { fd.append(k, adatok[k]); });
         fetch(url, { method: 'POST', credentials: 'same-origin', body: fd })
             .then(function (r) { return r.json(); })
             .then(kesz)
@@ -255,11 +341,66 @@ $k_uzenet   = 'tw-mt-3 tw-text-sm tw-font-medium tw-text-slate-700';
         });
     }
 
+    function hibakTorlese(urlap) {
+        urlap.querySelectorAll('.vespa-szabadidos-mezo-hiba').forEach(function (p) { p.textContent = ''; });
+        urlap.querySelector('.vespa-szabadidos-urlap-uzenet').textContent = '';
+    }
+
     document.querySelectorAll('.vespa-szabadidos-nevez').forEach(function (b) {
         b.addEventListener('click', function () {
-            kuld('vespa_szabadidos_signup', { contest_id: b.getAttribute('data-contest'), contest_event_id: b.getAttribute('data-event') }, function (resp) {
-                alert(resp.data.message);
-                if (resp.success) location.reload();
+            var kartya = b.closest('.vespa-szabadidos-verseny');
+            var urlap = kartya ? kartya.querySelector('.vespa-szabadidos-urlap') : null;
+
+            // Ha nincs kitöltendő mező (vagy a résztvevő már válaszolt erre a
+            // versenyre), a gomb a mai módon, egy kattintással nevez.
+            if (b.getAttribute('data-urlap') !== '1' || !urlap) {
+                kuld('vespa_szabadidos_signup', {
+                    contest_id: b.getAttribute('data-contest'),
+                    contest_event_id: b.getAttribute('data-event')
+                }, function (resp) {
+                    alert(resp.data.message);
+                    if (resp.success) location.reload();
+                });
+                return;
+            }
+
+            hibakTorlese(urlap);
+            urlap.setAttribute('data-event', b.getAttribute('data-event'));
+            urlap.classList.remove('tw-hidden');
+            urlap.scrollIntoView({ block: 'nearest' });
+        });
+    });
+
+    document.querySelectorAll('.vespa-szabadidos-megse').forEach(function (b) {
+        b.addEventListener('click', function () {
+            var urlap = b.closest('.vespa-szabadidos-urlap');
+            hibakTorlese(urlap);
+            urlap.classList.add('tw-hidden');
+        });
+    });
+
+    document.querySelectorAll('.vespa-szabadidos-urlap').forEach(function (urlap) {
+        urlap.addEventListener('submit', function (ev) {
+            ev.preventDefault();
+            hibakTorlese(urlap);
+
+            var kartya = urlap.closest('.vespa-szabadidos-verseny');
+            var fd = new FormData(urlap);
+            fd.append('contest_id', kartya.getAttribute('data-contest'));
+            fd.append('contest_event_id', urlap.getAttribute('data-event'));
+
+            kuld('vespa_szabadidos_signup', fd, function (resp) {
+                if (resp.success) {
+                    alert(resp.data.message);
+                    location.reload();
+                    return;
+                }
+                urlap.querySelector('.vespa-szabadidos-urlap-uzenet').textContent = resp.data.message;
+                var hibak = resp.data.field_errors || {};
+                Object.keys(hibak).forEach(function (fieldId) {
+                    var mezo = urlap.querySelector('.vespa-szabadidos-mezo[data-field="' + fieldId + '"]');
+                    if (mezo) mezo.querySelector('.vespa-szabadidos-mezo-hiba').textContent = hibak[fieldId];
+                });
             });
         });
     });
