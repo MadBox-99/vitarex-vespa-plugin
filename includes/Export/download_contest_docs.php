@@ -985,8 +985,12 @@ function vespa_download_answers($contest_id)
     // A kérdés ordernum-ja szerint rendezünk, nem qa_id szerint: a szerkeszthető
     // beszámoló egy utólag megválaszolt, korábban kihagyott kérdéshez a sor
     // végén szúr be új sort, ezért a qa_id sorrend már nem egyezik a
-    // kérdéssorrenddel.
-    $beszamolo_kerdesek = $wpdb->get_results($wpdb->prepare("SELECT qa.* FROM vespa_questions_answered qa LEFT JOIN vespa_contests_questions q ON q.question_id = qa.question_id WHERE qa.contest_id=%d ORDER BY q.ordernum ASC, qa.qa_id ASC", $contest_id));
+    // kérdéssorrenddel. A LEFT JOIN miatt a már megszűnt kérdéshez tartozó
+    // (question_id=0) történelmi és a teljesen üres szellemsoroknak nincs
+    // q.ordernum-juk (NULL) -- a "(q.ordernum IS NULL)" rendezőkulcs ezeket
+    // a végére teszi, nem az elejére, ahova a MySQL az ASC rendezésnél
+    // alapból tenné a NULL-t.
+    $beszamolo_kerdesek = $wpdb->get_results($wpdb->prepare("SELECT qa.* FROM vespa_questions_answered qa LEFT JOIN vespa_contests_questions q ON q.question_id = qa.question_id WHERE qa.contest_id=%d ORDER BY (q.ordernum IS NULL), q.ordernum ASC, qa.qa_id ASC", $contest_id));
     require VITAREX_VESPA_PLUGIN_DIR  . '/lib/vendor/autoload.php';
     $upload_dir   = wp_upload_dir();
     $path = $upload_dir['basedir'] . '/answers';
