@@ -388,8 +388,7 @@ $datum = function ($ertek) use ($ures_datum) {
                     is_required: kot.checked ? '1' : '0'
                 }).then(function (resp) {
                     if (!resp.success) { allapot(resp.data.message, true); return; }
-                    mezok = resp.data.fields;
-                    rajzol();
+                    frissitLista(resp.data.fields);
                     uzen(resp.data.message);
                 }).catch(function () { allapot('Hálózati hiba.', true); });
             });
@@ -409,8 +408,7 @@ $datum = function ($ertek) use ($ures_datum) {
                 kuld('vespa_szabadidos_field_delete', { field_id: mezo.field_id })
                     .then(function (resp) {
                         if (!resp.success) { allapot(resp.data.message, true); return; }
-                        mezok = resp.data.fields;
-                        rajzol();
+                        frissitLista(resp.data.fields);
                         uzen(resp.data.message);
                     }).catch(function () { allapot('Hálózati hiba.', true); });
             });
@@ -428,8 +426,7 @@ $datum = function ($ertek) use ($ures_datum) {
                 kuld('vespa_szabadidos_field_restore', { field_id: mezo.field_id })
                     .then(function (resp) {
                         if (!resp.success) { allapot(resp.data.message, true); return; }
-                        mezok = resp.data.fields;
-                        rajzol();
+                        frissitLista(resp.data.fields);
                         uzen(resp.data.message);
                     }).catch(function () { allapot('Hálózati hiba.', true); });
             });
@@ -450,8 +447,7 @@ $datum = function ($ertek) use ($ures_datum) {
         kuld('vespa_szabadidos_field_move', { field_id: fieldId, direction: irany })
             .then(function (resp) {
                 if (!resp.success) { uzen(resp.data.message); return; }
-                mezok = resp.data.fields;
-                rajzol();
+                frissitLista(resp.data.fields);
             }).catch(function () { uzen('Hálózati hiba.'); });
     }
 
@@ -459,9 +455,21 @@ $datum = function ($ertek) use ($ures_datum) {
         globalisUzenet.textContent = szoveg || '';
     }
 
+    // A szerver válasza sosem tartalmazza a még nem mentett (field_id === 0)
+    // piszkozat sort — ha közben más soron ment/töröl/visszaállít/mozgat
+    // történt, a piszkozat így sem vész el. A négy AJAX-sikerkezelő közös
+    // útja ez, hogy a megőrzés logikája egyetlen helyen legyen.
+    function frissitLista(ujLista) {
+        var piszkozatok = mezok.filter(function (m) { return m.field_id === 0; });
+        mezok = ujLista.concat(piszkozatok);
+        rajzol();
+    }
+
     function rajzol() {
         lista.textContent = '';
-        var aktivDb = mezok.filter(function (m) { return m.is_active === 1; }).length;
+        // A piszkozat (field_id === 0) sorok nem részei a szerver oldali
+        // sorrendnek, ezért a nyíl-határok számításából ki kell hagyni őket.
+        var aktivDb = mezok.filter(function (m) { return m.is_active === 1 && m.field_id !== 0; }).length;
         mezok.forEach(function (mezo, index) {
             lista.appendChild(sortEpit(mezo, index, aktivDb));
         });
