@@ -169,37 +169,52 @@ $datum = function ($ertek) use ($ures_datum) {
     <h2>Külső nevezők</h2>
 
     <?php if ($valasztott > 0) : ?>
-        <?php
-        $nevezok = $wpdb->get_results($wpdb->prepare(
-            "SELECT p.full_name, p.birth_date, p.gender, p.email, p.phone, e.entry_date, vse.sport_event_name, vs.sport_name
-             FROM vespa_external_entries AS e
-             INNER JOIN vespa_external_participants AS p ON p.participant_id=e.participant_id
-             LEFT JOIN vespa_constest_events AS vce ON vce.id=e.contest_event_id
-             LEFT JOIN vespa_sport_events AS vse ON vse.sport_event_id=vce.event_id
-             LEFT JOIN vespa_sports AS vs ON vs.sport_id=vce.sport_id
-             WHERE e.contest_id=%d
-             ORDER BY p.full_name",
-            $valasztott
-        ));
-        ?>
+        <?php $tabla = vespa_szabadidos_entry_table($valasztott); ?>
         <p>
             <a class="button" href="<?php echo esc_url(add_query_arg('vespa_szabadidos_export', $valasztott, home_url('/'))); ?>">XLSX export</a>
         </p>
-        <?php if (empty($nevezok)) : ?>
+        <?php if (empty($tabla['rows'])) : ?>
             <p>Erre a versenyre még nincs külső nevező.</p>
         <?php else : ?>
             <table class="widefat">
-                <thead><tr><th>Név</th><th>Szül. dátum</th><th>Nem</th><th>E-mail</th><th>Telefon</th><th>Versenyszám</th><th>Nevezés dátuma</th></tr></thead>
-                <tbody>
-                <?php foreach ($nevezok as $n) : ?>
+                <thead>
                     <tr>
-                        <td><?php echo esc_html($n->full_name); ?></td>
+                        <th>Név</th>
+                        <th>Szül. dátum</th>
+                        <th>Nem</th>
+                        <th>E-mail</th>
+                        <th>Telefon</th>
+                        <th>Versenyszám</th>
+                        <th>Nevezés dátuma</th>
+                        <?php foreach ($tabla['columns'] as $oszlop) : ?>
+                            <th>
+                                <?php echo esc_html($oszlop['label']); ?>
+                                <?php if ($oszlop['archived']) : ?>
+                                    <br><span style="color:#8c8f94; font-weight:400;">(archivált)</span>
+                                <?php endif; ?>
+                            </th>
+                        <?php endforeach; ?>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($tabla['rows'] as $sor) : ?>
+                    <?php $n = $sor['nevezo']; ?>
+                    <tr>
+                        <td>
+                            <?php echo esc_html($n->full_name); ?>
+                            <?php if ($sor['missing']) : ?>
+                                <br><span style="color:#b32d2e; font-weight:600;">hiányzó adat</span>
+                            <?php endif; ?>
+                        </td>
                         <td><?php echo esc_html($n->birth_date); ?></td>
                         <td><?php echo esc_html($n->gender); ?></td>
                         <td><?php echo esc_html($n->email); ?></td>
                         <td><?php echo esc_html($n->phone); ?></td>
                         <td><?php echo esc_html(trim(($n->sport_name ?: '') . ' ' . ($n->sport_event_name ?: ''))); ?></td>
                         <td><?php echo esc_html($n->entry_date); ?></td>
+                        <?php foreach ($tabla['columns'] as $oszlop) : ?>
+                            <td><?php echo esc_html($sor['answers'][$oszlop['field_id']]); ?></td>
+                        <?php endforeach; ?>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
