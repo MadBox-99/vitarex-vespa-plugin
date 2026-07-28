@@ -286,3 +286,164 @@ endif;
     </div>
 
 </div>
+
+<?php
+// A Szintidők szekció szándékosan a fő <form>-on KÍVÜL él, hogy semmiképp
+// ne zavarhassa a sportoló-mentést. Csak meglévő sportolónál jelenik meg
+// (új felvételnél még nincs athlete_id, amihez az időt kötni lehetne).
+if ($record !== null && current_user_can(VESPA_Roles::sportolok_letrehozasa_modositasa)) :
+    $vespa_szintido_nonce = wp_create_nonce('vespa_nonce');
+    $vespa_szintido_esemenyek = $wpdb->get_results("SELECT * FROM vespa_sport_events WHERE is_deleted=0 ORDER BY sport_event_name ASC");
+    $vespa_szintido_lista = vespa_szintido_athlete_times($record->athlete_id);
+?>
+<div class="wrap vespa-szintido" data-nonce="<?php echo esc_attr($vespa_szintido_nonce); ?>" data-athlete="<?php echo esc_attr($record->athlete_id); ?>">
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Szintidők</h3>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-striped vespa-szintido-tabla">
+                <thead>
+                    <tr>
+                        <th>Sportesemény</th>
+                        <th>Idő</th>
+                        <th>&nbsp;</th>
+                    </tr>
+                </thead>
+                <tbody class="vespa-szintido-sorok"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Sportesemény</label>
+                <select class="form-control vespa-szintido-esemeny">
+                    <?php foreach ($vespa_szintido_esemenyek as $se) : ?>
+                        <option value="<?php echo esc_attr($se->sport_event_id); ?>"><?php echo esc_html($se->sport_event_name); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Idő</label>
+                <input type="text" class="form-control vespa-szintido-ido" placeholder="pl. 14.84 vagy 1:02.5" autocomplete="off">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <button type="button" class="btn btn-primary form-control vespa-szintido-ment">Mentés</button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <p class="vespa-szintido-uzenet"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var doboz = document.querySelector('.vespa-szintido');
+    if (!doboz) return;
+
+    var nonce = doboz.getAttribute('data-nonce');
+    var athleteId = doboz.getAttribute('data-athlete');
+    var url = (typeof ajaxurl !== 'undefined') ? ajaxurl : '/wp-admin/admin-ajax.php';
+    var sorok = doboz.querySelector('.vespa-szintido-sorok');
+    var uzenetEl = doboz.querySelector('.vespa-szintido-uzenet');
+    var idok = <?php echo json_encode($vespa_szintido_lista, JSON_HEX_TAG | JSON_UNESCAPED_UNICODE); ?>;
+
+    function uzen(szoveg) {
+        uzenetEl.textContent = szoveg || '';
+    }
+
+    function kuld(action, adatok) {
+        var fd = new FormData();
+        fd.append('action', action);
+        fd.append('nonce', nonce);
+        fd.append('athlete_id', athleteId);
+        Object.keys(adatok).forEach(function (k) { fd.append(k, adatok[k]); });
+        return fetch(url, { method: 'POST', credentials: 'same-origin', body: fd })
+            .then(function (r) { return r.json(); });
+    }
+
+    // Minden szöveg value/textContent útján kerül be, sehol nincs
+    // innerHTML-interpoláció.
+    function rajzol() {
+        sorok.textContent = '';
+
+        if (idok.length === 0) {
+            var ures = document.createElement('tr');
+            var td = document.createElement('td');
+            td.colSpan = 3;
+            td.textContent = 'Még nincs rögzített szintidő.';
+            ures.appendChild(td);
+            sorok.appendChild(ures);
+            return;
+        }
+
+        idok.forEach(function (ido) {
+            var tr = document.createElement('tr');
+
+            var tdNev = document.createElement('td');
+            tdNev.textContent = ido.sport_event_name;
+            tr.appendChild(tdNev);
+
+            var tdIdo = document.createElement('td');
+            tdIdo.textContent = ido.formatted;
+            tr.appendChild(tdIdo);
+
+            var tdMuvelet = document.createElement('td');
+            var torol = document.createElement('button');
+            torol.type = 'button';
+            torol.className = 'btn btn-cancel';
+            torol.textContent = 'Törlés';
+            torol.addEventListener('click', function () {
+                torol.disabled = true;
+                kuld('vespa_szintido_delete', { sport_event_id: ido.sport_event_id })
+                    .then(function (resp) {
+                        torol.disabled = false;
+                        if (!resp.success) { uzen(resp.data.message); return; }
+                        idok = resp.data.times;
+                        rajzol();
+                        uzen(resp.data.message);
+                    }).catch(function () { torol.disabled = false; uzen('Hálózati hiba.'); });
+            });
+            tdMuvelet.appendChild(torol);
+            tr.appendChild(tdMuvelet);
+
+            sorok.appendChild(tr);
+        });
+    }
+
+    doboz.querySelector('.vespa-szintido-ment').addEventListener('click', function () {
+        var gomb = doboz.querySelector('.vespa-szintido-ment');
+        var esemenySelect = doboz.querySelector('.vespa-szintido-esemeny');
+        var idoInput = doboz.querySelector('.vespa-szintido-ido');
+
+        gomb.disabled = true;
+        kuld('vespa_szintido_save', {
+            sport_event_id: esemenySelect.value,
+            ido: idoInput.value
+        }).then(function (resp) {
+            gomb.disabled = false;
+            if (!resp.success) { uzen(resp.data.message); return; }
+            idok = resp.data.times;
+            idoInput.value = '';
+            rajzol();
+            uzen(resp.data.message);
+        }).catch(function () { gomb.disabled = false; uzen('Hálózati hiba.'); });
+    });
+
+    rajzol();
+})();
+</script>
+<?php endif; ?>

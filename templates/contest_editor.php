@@ -80,7 +80,20 @@ if (is_numeric($id) && $id > 0) {
         <div class="col-md-6">
             <div class="form-group">
                 <label>Rendező</label>
-                <input type="text" class="form-control" name="organiser" id="organiser" autocomplete="off" value="<?php echo ($record == null ? '' : esc_attr($record->organiser)); ?>">
+                <?php
+                // meglévő rendező-értékek lekérdezése legördülőhöz (statikus oszlopnév, nincs user input)
+                $organiser_options  = $wpdb->get_col("SELECT DISTINCT organiser FROM vespa_contests WHERE organiser IS NOT NULL AND organiser <> '' ORDER BY organiser ASC");
+                $organiser_value    = ($record == null ? '' : $record->organiser);
+                $organiser_in_list  = ($organiser_value !== '' && in_array($organiser_value, $organiser_options, true));
+                ?>
+                <select id="organiser_select" class="form-control">
+                    <option value="">— válassz —</option>
+                    <?php foreach ($organiser_options as $organiser_option) : ?>
+                        <option value="<?php echo esc_attr($organiser_option); ?>" <?php echo ($organiser_in_list && $organiser_option === $organiser_value ? 'selected' : ''); ?>><?php echo esc_html($organiser_option); ?></option>
+                    <?php endforeach; ?>
+                    <option value="__uj__" <?php echo (!$organiser_in_list && $organiser_value !== '' ? 'selected' : ''); ?>>+ Új érték megadása…</option>
+                </select>
+                <input type="text" class="form-control" name="organiser" id="organiser" autocomplete="off" style="margin-top:5px;<?php echo ($organiser_in_list || $organiser_value === '' ? 'display:none;' : ''); ?>" value="<?php echo esc_attr($organiser_value); ?>">
             </div>
         </div>
 
@@ -120,7 +133,20 @@ if (is_numeric($id) && $id > 0) {
         <div class="col-md-12">
             <div class="form-group">
                 <label>Helyszín neve</label>
-                <input type="text" class="form-control" name="place_name" id="place_name" autocomplete="off" value="<?php echo ($record == null ? '' : esc_attr($record->place_name)); ?>">
+                <?php
+                // meglévő helyszín-értékek lekérdezése legördülőhöz (statikus oszlopnév, nincs user input)
+                $place_name_options  = $wpdb->get_col("SELECT DISTINCT place_name FROM vespa_contests WHERE place_name IS NOT NULL AND place_name <> '' ORDER BY place_name ASC");
+                $place_name_value    = ($record == null ? '' : $record->place_name);
+                $place_name_in_list  = ($place_name_value !== '' && in_array($place_name_value, $place_name_options, true));
+                ?>
+                <select id="place_name_select" class="form-control">
+                    <option value="">— válassz —</option>
+                    <?php foreach ($place_name_options as $place_name_option) : ?>
+                        <option value="<?php echo esc_attr($place_name_option); ?>" <?php echo ($place_name_in_list && $place_name_option === $place_name_value ? 'selected' : ''); ?>><?php echo esc_html($place_name_option); ?></option>
+                    <?php endforeach; ?>
+                    <option value="__uj__" <?php echo (!$place_name_in_list && $place_name_value !== '' ? 'selected' : ''); ?>>+ Új érték megadása…</option>
+                </select>
+                <input type="text" class="form-control" name="place_name" id="place_name" autocomplete="off" style="margin-top:5px;<?php echo ($place_name_in_list || $place_name_value === '' ? 'display:none;' : ''); ?>" value="<?php echo esc_attr($place_name_value); ?>">
             </div>
         </div>
 
@@ -317,5 +343,27 @@ if (is_numeric($id) && $id > 0) {
     jQuery(function() {
         const contestType = jQuery('#contest_types').val()
         updateVisibility(contestType)
+    });
+</script>
+
+<script>
+    // Rendező / Helyszín neve legördülők: kiválasztott érték átmásolása a valódi (submitolt) szöveges mezőbe,
+    // "+ Új érték megadása…" választásakor pedig a szöveges mező megjelenítése és fókuszba állítása.
+    jQuery(function($) {
+        function bindDropdownFallback(selectId, inputId) {
+            var $select = $('#' + selectId);
+            var $input = $('#' + inputId);
+
+            $select.on('change', function() {
+                if (this.value === '__uj__') {
+                    $input.val('').show().focus();
+                } else {
+                    $input.val(this.value).hide();
+                }
+            });
+        }
+
+        bindDropdownFallback('organiser_select', 'organiser');
+        bindDropdownFallback('place_name_select', 'place_name');
     });
 </script>

@@ -509,6 +509,12 @@ function downloadXLS(model) {
     url = `${url}&school_id=${jQuery("#school_id").val()}`;
   }
 
+  if (model == "athlete_results") {
+    url = `${url}&birth_place=${jQuery("#birth_place").val()}`;
+    url = `${url}&birth_date=${jQuery("#birth_date").val()}`;
+    url = `${url}&school_id=${jQuery("#school_id").val()}`;
+  }
+
   console.log(url);
   location.href = url;
 

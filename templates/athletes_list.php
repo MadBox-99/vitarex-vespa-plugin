@@ -16,8 +16,13 @@
             <a href="#" class="btn btn-sm btn-primary pull-right" onclick="downloadXLS('athletes')" style="margin-right:10px">
                 <i class="fa fa-download" aria-hidden="true"></i>
                 Export
-            </a>            
-            
+            </a>
+
+            <a href="#" class="btn btn-sm btn-primary pull-right" onclick="downloadXLS('athlete_results')" style="margin-right:10px">
+                <i class="fa fa-download" aria-hidden="true"></i>
+                Eredmények
+            </a>
+
             <a href="<?php echo admin_url('admin.php?page=import_athletes'); ?>" class="btn btn-sm btn-primary pull-right" style="margin-right:10px">
                 <i class="fa fa-plus" aria-hidden="true"></i>
                 Importálás
