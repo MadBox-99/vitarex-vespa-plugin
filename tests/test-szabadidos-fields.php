@@ -54,6 +54,18 @@ allit(
     vespa_szabadidos_parse_options("Boccia; tollaslabda\nDarts") === array('Boccia; tollaslabda', 'Darts'),
     'a pontosvesszo a lehetoseg szovegeben megmarad'
 );
+allit(
+    vespa_szabadidos_parse_options("A  B") === array('A B'),
+    'a lehetoseg belsejeben levo tobbszoros szokoz egyre osszevonva'
+);
+allit(
+    vespa_szabadidos_parse_options("A\tB") === array('A B'),
+    'a lehetoseg belsejeben levo tabulator szokozze alakul'
+);
+allit(
+    vespa_szabadidos_parse_options("A  B\nA B") === array('A B'),
+    'az osszevonas utan azonossa valo sorok is deduplikalodnak'
+);
 
 // ---- Meződefiníció ellenőrzése ------------------------------------------
 
@@ -82,6 +94,15 @@ allit($e['field']['is_required'] === 0, 'nem kotelezo mezo jelzese megmarad');
 $e = vespa_szabadidos_validate_field('Elfogadom a GDPR-t', 'nyilatkozat', '', 0);
 allit($e['ok'] === true, 'nyilatkozat lehetosegek nelkul is ervenyes');
 allit($e['field']['is_required'] === 1, 'a nyilatkozat mindig kotelezo lesz');
+
+$e = vespa_szabadidos_validate_field(str_repeat('a', 255), 'szoveg', '', 0);
+allit($e['ok'] === true, '255 karakteres cimke atmegy');
+
+$e = vespa_szabadidos_validate_field(str_repeat('a', 256), 'szoveg', '', 0);
+allit($e['ok'] === false, '256 karakteres cimke elbukik');
+
+$e = vespa_szabadidos_validate_field(str_repeat('á', 255), 'szoveg', '', 0);
+allit($e['ok'] === true, 'ekezetes 255 karakteres cimke is atmegy (mb_strlen)');
 
 // ---- Válasz ellenőrzése --------------------------------------------------
 

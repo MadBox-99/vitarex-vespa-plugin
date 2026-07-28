@@ -49,6 +49,11 @@ function vespa_szabadidos_parse_options($text)
 
     $eredmeny = array();
     foreach (preg_split('/\r\n|\r|\n/', $text) as $sor) {
+        // A tárolt lehetőségnek meg kell egyeznie azzal, amit a beküldött válasz
+        // a sanitize_text_field kollabálása után tartalmaz — különben a szigorú
+        // in_array-es egyezés hamisan bukik. Ezért itt is összevonjuk a belső
+        // szóköz/tab-futamokat, mielőtt levágnánk és deduplikálnánk.
+        $sor = preg_replace('/[ \t]+/', ' ', $sor);
         $sor = trim($sor);
         if ($sor !== '' && !in_array($sor, $eredmeny, true)) {
             $eredmeny[] = $sor;
@@ -67,6 +72,9 @@ function vespa_szabadidos_validate_field($label, $type, $options_text, $is_requi
     $label = trim((string) $label);
     if ($label === '') {
         return array('ok' => false, 'error' => 'A címke nem lehet üres.', 'field' => null);
+    }
+    if (mb_strlen($label) > 255) {
+        return array('ok' => false, 'error' => 'A címke legfeljebb 255 karakter lehet.', 'field' => null);
     }
 
     if (!vespa_szabadidos_field_type_valid($type)) {

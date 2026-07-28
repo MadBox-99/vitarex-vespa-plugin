@@ -1,7 +1,7 @@
 <?php
 
 /**
- * A szabadidős külső regisztráció három táblájának idempotens létrehozása.
+ * A szabadidős külső regisztráció öt táblájának idempotens létrehozása.
  * A plugin nem használ aktivációs hookot; a séma a dumpban él, ezért — a
  * szerepekhez hasonlóan (init_custom_roles) — init-en, verzió-kapuval fut.
  */

@@ -133,21 +133,7 @@ $datum = function ($ertek) use ($ures_datum) {
     </form>
 
     <?php if ($valasztott > 0) : ?>
-        <?php
-        $mezo_lista = array();
-        foreach (vespa_szabadidos_get_fields($valasztott, false) as $mezo) {
-            $mezo_lista[] = array(
-                'field_id'      => intval($mezo->field_id),
-                'label'         => $mezo->label,
-                'field_type'    => $mezo->field_type,
-                'field_options' => $mezo->field_options === null ? '' : $mezo->field_options,
-                'is_required'   => intval($mezo->is_required),
-                'ordernum'      => intval($mezo->ordernum),
-                'is_active'     => intval($mezo->is_active),
-                'answer_count'  => vespa_szabadidos_field_answer_count($mezo->field_id),
-            );
-        }
-        ?>
+        <?php $mezo_lista = vespa_szabadidos_fields_payload($valasztott); ?>
         <h2>Nevezési mezők</h2>
         <p class="description">
             Ezeket a mezőket a külső résztvevő a nevezéskor tölti ki, versenyenként
@@ -290,6 +276,13 @@ $datum = function ($ertek) use ($ures_datum) {
         var sor = document.createElement('div');
         sor.className = 'vespa-mezo-sor' + (mezo.is_active ? '' : ' archivalt');
 
+        // A betöltéskori típus/opciók — ehhez képest mérjük, hogy a mentés
+        // kockázatos-e egy már megválaszolt mezőnél. A mezo objektumot a
+        // valtozas() a gépeléssel egy időben felülírja, ezért ezt itt, a sor
+        // felépítésekor kell elmenteni, mielőtt bármi módosítaná.
+        var eredetiTipus = mezo.field_type;
+        var eredetiOpciok = mezo.field_options || '';
+
         var fej = document.createElement('p');
 
         if (mezo.is_active && mezo.field_id > 0) {
@@ -405,6 +398,18 @@ $datum = function ($ertek) use ($ures_datum) {
             ment.className = 'button button-primary';
             ment.textContent = 'Mentés';
             ment.addEventListener('click', function () {
+                // A típus vagy a válaszlehetőségek módosítása érvényteleníti a
+                // már beérkezett válaszokat — erre a spec szerint figyelmeztetni
+                // kell. A puszta címke-átírás ártalmatlan, nem kérdez rá.
+                var kockazatos = mezo.answer_count > 0
+                    && (tipus.value !== eredetiTipus || opciok.value !== eredetiOpciok);
+                if (kockazatos) {
+                    var figyelmezteto = 'Erre a mezőre már ' + mezo.answer_count + ' válasz érkezett. '
+                        + 'A típus vagy a válaszlehetőségek módosítása érvénytelenítheti a meglévő válaszokat. Mented?';
+                    if (!window.confirm(figyelmezteto)) return;
+                }
+
+                ment.disabled = true;
                 allapot('Mentés…', false);
                 kuld('vespa_szabadidos_field_save', {
                     field_id: mezo.field_id,
@@ -413,10 +418,14 @@ $datum = function ($ertek) use ($ures_datum) {
                     field_options: opciok.value,
                     is_required: kot.checked ? '1' : '0'
                 }).then(function (resp) {
+                    ment.disabled = false;
                     if (!resp.success) { allapot(resp.data.message, true); return; }
                     frissitLista(resp.data.fields, mezo);
                     uzen(resp.data.message);
-                }).catch(function () { allapot('Hálózati hiba.', true); });
+                }).catch(function () {
+                    ment.disabled = false;
+                    allapot('Hálózati hiba.', true);
+                });
             });
             lab.appendChild(ment);
 
@@ -462,7 +471,12 @@ $datum = function ($ertek) use ($ures_datum) {
         lab.appendChild(allapotJel);
         sor.appendChild(lab);
 
-        if (mezo.field_id === 0) {
+        // Az újrarajzolás minden sort újraépít, ezért a piszkos-jelzést is
+        // innen kell újra kiírni — különben egy másik sor mentése után ez a
+        // sor mentettnek tűnik, holott a gépelése csak adatban él tovább.
+        if (mezo.piszkos) {
+            allapot('Nem mentett módosítás', false);
+        } else if (mezo.field_id === 0) {
             allapot('Még nincs mentve', false);
         }
 
@@ -544,6 +558,20 @@ $datum = function ($ertek) use ($ures_datum) {
         });
         rajzol();
         uzen('');
+    });
+
+    // A verseny-választó <select onchange="this.form.submit()"> figyelmeztetés
+    // nélkül navigálna el — ez itt az utolsó védelmi vonal, hogy egy elküldetlen
+    // módosítás (akár egy már mentett sor átírása, akár egy még el nem küldött
+    // piszkozat gépelése) ne vesszen el észrevétlenül. A valtozas() a piszkozat
+    // sorokon is beállítja a piszkos jelzőt, mihelyt az admin gépel, ezért az
+    // önmagában elég mindkét eset felismeréséhez.
+    window.addEventListener('beforeunload', function (ev) {
+        var vanNemMentett = mezok.some(function (m) { return m.piszkos; });
+        if (vanNemMentett) {
+            ev.preventDefault();
+            ev.returnValue = '';
+        }
     });
 
     rajzol();

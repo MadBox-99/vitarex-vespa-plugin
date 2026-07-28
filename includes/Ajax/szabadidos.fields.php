@@ -85,13 +85,16 @@ function vespa_szabadidos_field_save()
 
     if ($field_id > 0) {
         vespa_szabadidos_fields_require_own($field_id, $contest_id);
-        $wpdb->update(
+        $siker = $wpdb->update(
             'vespa_szabadidos_fields',
             $adat,
             array('field_id' => $field_id),
             array('%s', '%s', '%s', '%d'),
             array('%d')
         );
+        if ($siker === false) {
+            wp_send_json_error(array('message' => 'A mező mentése nem sikerült.'));
+        }
         $uzenet = 'Mentve.';
     } else {
         $adat['contest_id'] = $contest_id;
