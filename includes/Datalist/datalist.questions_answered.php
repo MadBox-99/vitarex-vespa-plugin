@@ -11,48 +11,92 @@
         public function save(){
             global $wpdb;
 
-            $errors = array();
-            // for($i = 0; $i < intval($_POST['data_count']); $i++){
-            //     if(empty($_POST['answer' . $i])){
-            //         $errors['answer' . $i] = 'Kötelező mező';
-            //     } 
-            // }
+            check_ajax_referer( 'vespa_nonce', 'nonce' );
 
-            if(!empty($errors)){
-                wp_send_json_error( array('errors' => $errors) );
-            }            
+            if( ! current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles ) ){
+                wp_send_json_error( array('errors' => array('contest_id' => 'Nincs jogosultságod a beszámoló mentéséhez.')) );
+            }
 
-            // insert or update
-            if( intval($_POST['qa_id']) == 0 ){
-                for($i = 0; $i < intval($_POST['data_count']); $i++){
-                    $success = $wpdb->insert( $this->tablename, array(
-                        'contest_id'    => intval($_POST['contest_id']),
-                        'question'    => sanitize_text_field($_POST['question' . $i]),
-                        'answer'    => sanitize_text_field($_POST['answer' . $i]),
-                        'qnote'    => sanitize_text_field($_POST['qnote' . $i]),
-                    ), array(
-                        '%s'
-                    ));
+            $contest_id = isset($_POST['contest_id']) ? intval($_POST['contest_id']) : 0;
+            if( $contest_id <= 0 ){
+                wp_send_json_error( array('errors' => array('contest_id' => 'Hibás verseny.')) );
+            }
+
+            $kerdesek = $wpdb->get_results("SELECT * FROM vespa_contests_questions ORDER BY ordernum ASC");
+
+            // A verseny már mentett sorai question_id szerint indexelve. A 0-s
+            // sorok azóta megszűnt kérdésekhez tartoznak — azokhoz nem nyúlunk.
+            $meglevo = array();
+            $sorok = $wpdb->get_results( $wpdb->prepare(
+                "SELECT * FROM vespa_questions_answered WHERE contest_id=%d",
+                $contest_id
+            ));
+            foreach( $sorok as $sor ){
+                if( intval($sor->question_id) > 0 ){
+                    $meglevo[ intval($sor->question_id) ] = $sor;
                 }
             }
-            // else {
-            //     $success = $wpdb->update( $this->tablename, array(
-            //         'series_name'    => $_POST['series_name']
-            //     ), array(
-            //         'series_id' => $_POST['series_id']
-            //     ),
-            //     array(
-            //         '%s'
-            //     ));                
-            // }
+
+            // FONTOS: az űrlapmezők a kérdés ordernum-áról kapják a nevüket, és
+            // az ordernum értékek NEM folytonosak (0, 1, 7, 8 ... 26, 28). Ezért
+            // a kérdéseken iterálunk, nem egy 0..count-1 számlálón — az utóbbi
+            // néma kérdésvesztést okozott.
+            foreach( $kerdesek as $kerdes ){
+                $ordernum    = intval($kerdes->ordernum);
+                $question_id = intval($kerdes->question_id);
+
+                // A be nem jelölt rádiógombot a böngésző nem küldi el.
+                $answer = isset($_POST['answer' . $ordernum])
+                    ? sanitize_text_field( wp_unslash($_POST['answer' . $ordernum]) )
+                    : '';
+                $qnote = isset($_POST['qnote' . $ordernum])
+                    ? sanitize_textarea_field( wp_unslash($_POST['qnote' . $ordernum]) )
+                    : '';
+
+                $van_adat = vespa_kerdoiv_kerdes_megvalaszolt($answer, $qnote);
+                $regi     = isset($meglevo[$question_id]) ? $meglevo[$question_id] : null;
+
+                if( $regi === null ){
+                    // Üres kérdéshez nem hozunk létre sort — attól lenne hazug
+                    // a kitöltöttség-számláló.
+                    if( ! $van_adat ){
+                        continue;
+                    }
+
+                    $wpdb->insert( $this->tablename, array(
+                        'contest_id'  => $contest_id,
+                        'question_id' => $question_id,
+                        'question'    => $kerdes->question,
+                        'answer'      => $answer,
+                        'qnote'       => $qnote,
+                    ), array( '%d', '%d', '%s', '%s', '%s' ));
+                    continue;
+                }
+
+                if( ! $van_adat ){
+                    // Üresre szerkesztett sorban nincs adat, amit őrizni kellene.
+                    $wpdb->delete( $this->tablename, array( 'qa_id' => intval($regi->qa_id) ), array('%d') );
+                    continue;
+                }
+
+                $wpdb->update( $this->tablename, array(
+                    'question' => $kerdes->question,
+                    'answer'   => $answer,
+                    'qnote'    => $qnote,
+                ), array(
+                    'qa_id' => intval($regi->qa_id),
+                ),
+                array( '%s', '%s', '%s' ),
+                array( '%d' ));
+            }
 
             $vars = array(
-                "{=TEXT=}" => 'A kérdések kitöltése sikeres volt.',
-                "{=URL=}" => admin_url('admin.php?page=contests') . '&action=view&id='. intval($_POST['contest_id'])
+                "{=TEXT=}" => 'A beszámoló mentése sikeres volt.',
+                "{=URL=}" => admin_url('admin.php?page=contests') . '&action=view&id='. $contest_id
             );
 
-            wp_send_json_success( array('modal' => vespa_load_template_with_vars( 'success-modal.php', $vars ), 'modalId' => 'succesModal' ) );    	   		
-        }        
+            wp_send_json_success( array('modal' => vespa_load_template_with_vars( 'success-modal.php', $vars ), 'modalId' => 'succesModal' ) );
+        }
 
         public function checkDelete( $id ){
             return current_user_can( 'manage_options' ) || current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles );

@@ -239,6 +239,12 @@ function vespa_menu_contests()
         } else if ('results' == $_GET['action']) {
             vespa_load_template('contest_results.php');
         } else if ('question' == $_GET['action']) {
+            // A mentés is ezt a jogosultságot követeli; enélkül a link
+            // látszana, de a mentés elszállna.
+            if (!current_user_can(VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles)) {
+                echo 'Nincs megfelelő jogosultságod az oldal megtekintéséhez.';
+                return;
+            }
             vespa_load_template('questions_answered_editor.php');
         }
     }
