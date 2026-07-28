@@ -242,7 +242,7 @@
     $megyeiSportFilter = '';
     if ($megyei_sportag_id > 0) {
         $megyei_sportag_id = intval($megyei_sportag_id);
-        $megyeiSportFilter = " AND sport_id = $orszagos_sportag_id ";
+        $megyeiSportFilter = " AND sport_id = $megyei_sportag_id ";
     }
     $regionalisSportFilter = '';
     if ($regionalis_sportag_id > 0) {
