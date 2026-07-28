@@ -129,6 +129,28 @@ if (is_numeric($id) && $id > 0) {
             </div>
         </div>
 
+        <?php if ($record == null) : ?>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Sportág (a névhez)</label>
+                <select id="sportag_nev" class="form-control">
+                    <option value="">— válassz —</option>
+                    <?php
+                    $sport_list = $wpdb->get_results("SELECT * FROM vespa_sports WHERE is_deleted=0 ORDER BY sport_name ASC");
+                    foreach ($sport_list as $sport_item) {
+                        echo '<option value="' . esc_attr($sport_item->sport_name) . '">' . esc_html($sport_item->sport_name) . '</option>';
+                    }
+                    ?>
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-2" id="is_donto_line" style="display:none;">
+            <div class="form-group">
+                <label><input type="checkbox" id="is_donto"> Döntő</label>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <div class="col-md-12">
             <div class="form-group">
@@ -367,3 +389,88 @@ if (is_numeric($id) && $id > 0) {
         bindDropdownFallback('place_name_select', 'place_name');
     });
 </script>
+
+<?php if ($record == null) : ?>
+<script>
+    // Verseny nevének automatikus összeállítása új verseny felvételekor
+    // (megye + típus + sportág + döntő). Meglévő versenynél ez a blokk
+    // nem is töltődik be, a contest_name mezőt így soha nem érinti.
+    jQuery(function($) {
+        var contestTypeNames = <?php
+            $contest_type_map = array();
+            $contest_type_list = $wpdb->get_results("SELECT * FROM vespa_contest_types");
+            foreach ($contest_type_list as $ct) {
+                $contest_type_map[$ct->contest_type_id] = $ct->contest_type_name;
+            }
+            echo wp_json_encode($contest_type_map);
+        ?>;
+        var stateNames = <?php
+            $state_map = array();
+            $state_list = $wpdb->get_results("SELECT * FROM vespa_states");
+            foreach ($state_list as $st) {
+                $state_map[$st->state_id] = $st->state_name;
+            }
+            echo wp_json_encode($state_map);
+        ?>;
+
+        var userEditedName = false;
+
+        // ha a felhasználó saját maga gépel a mezőbe, onnantól nem írjuk felül
+        $('#contest_name').on('input', function(e) {
+            if (!e.originalEvent) {
+                return; // saját (script által kiváltott) esemény, nem számít kézi szerkesztésnek
+            }
+            userEditedName = true;
+        });
+
+        function composeContestName() {
+            if (userEditedName) {
+                return;
+            }
+
+            var typeId = $('#contest_types').val();
+            var stateId = $('#state_id').val();
+            var sport = ($('#sportag_nev').val() || '').toString();
+            var isDonto = $('#is_donto').is(':checked');
+
+            var lead = '';
+            if (typeId == 3) {
+                // megyei verseny: a megye neve + a "megyei" szó
+                var stateName = stateNames[stateId] || '';
+                lead = (stateName + ' megyei').replace(/\s+/g, ' ').trim();
+            } else {
+                lead = contestTypeNames[typeId] || '';
+            }
+
+            var parts = [lead, sport];
+            if (typeId == 1 || (typeId == 3 && isDonto)) {
+                parts.push('döntő');
+            }
+
+            var name = parts.join(' ').replace(/\s+/g, ' ').trim();
+            $('#contest_name').val(name);
+        }
+
+        function updateDontoVisibility() {
+            var typeId = $('#contest_types').val();
+            if (typeId == 1) {
+                // országos verseny mindig döntő, a jelölőnégyzet nem is jelenik meg
+                $('#is_donto_line').hide();
+                $('#is_donto').prop('checked', true);
+            } else if (typeId == 3) {
+                // megyei versenynél az admin dönti el
+                $('#is_donto_line').show();
+            } else {
+                $('#is_donto_line').hide();
+                $('#is_donto').prop('checked', false);
+            }
+            composeContestName();
+        }
+
+        $('#state_id, #sportag_nev, #is_donto').on('change', composeContestName);
+        $('#contest_types').on('change', updateDontoVisibility);
+
+        updateDontoVisibility();
+    });
+</script>
+<?php endif; ?>
