@@ -101,6 +101,113 @@ if (current_user_can(VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles)) :
         </div>
     </div>
 
+    <?php
+    // Szintidő-feltételek: opcionális, versenyszámonkénti minimum. Az
+    // aktuális versenyszámok listáját ugyanazzal a join-nal kérdezzük le,
+    // mint az ajax_table_contest_races (lásd includes/Ajax/ajax.contest_races.php).
+    $vespa_szintido_admin_nonce = wp_create_nonce('vespa_nonce');
+    $vespa_szintido_esemenyek = $wpdb->get_results($wpdb->prepare(
+        "SELECT e.id, e.min_qualifying_seconds, p.sport_name, s.sport_event_name
+         FROM vespa_constest_events as e
+         LEFT JOIN vespa_sports as p ON p.sport_id = e.sport_id
+         LEFT JOIN vespa_sport_events as s ON s.sport_event_id = e.event_id
+         WHERE e.contest_id = %d
+         ORDER BY p.sport_name ASC, s.sport_event_name ASC",
+        $id
+    ));
+    ?>
+
+    <div class="vespa-box" id="vespa-szintido-feltetelek" data-nonce="<?php echo esc_attr($vespa_szintido_admin_nonce); ?>">
+        <div class="row">
+            <div class="col-md-12">
+                <h3 style="margin-top:0">Szintidő-feltételek</h3>
+                <p>
+                    Az üresen hagyott mező azt jelenti, hogy a versenyszámhoz nincs szintidő-feltétel: bárki
+                    nevezhető. Ha megadsz egy időt, a nevezés attól kezdve elutasítja azokat a tanulókat, akiknek
+                    nincs rögzített ideje az adott sporteseményre, vagy a rögzített idejük lassabb a megadottnál.
+                </p>
+            </div>
+        </div>
+
+        <?php if (empty($vespa_szintido_esemenyek)) : ?>
+            <div class="row">
+                <div class="col-md-12">
+                    <p>Ehhez a versenyhez még nincs felvéve versenyszám.</p>
+                </div>
+            </div>
+        <?php else : ?>
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table table-striped vespa-szintido-tabla">
+                        <thead>
+                            <tr>
+                                <th>Sport</th>
+                                <th>Versenyszám</th>
+                                <th width="200">Minimum szintidő</th>
+                                <th width="150">&nbsp;</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($vespa_szintido_esemenyek as $cse) : ?>
+                                <tr data-contest-event="<?php echo esc_attr($cse->id); ?>">
+                                    <td><?php echo esc_html($cse->sport_name); ?></td>
+                                    <td><?php echo esc_html($cse->sport_event_name); ?></td>
+                                    <td>
+                                        <input type="text" class="form-control vespa-szintido-min-input"
+                                               placeholder="pl. 14.84 vagy 1:02.5"
+                                               value="<?php echo $cse->min_qualifying_seconds !== null ? esc_attr(vespa_szintido_format($cse->min_qualifying_seconds)) : ''; ?>">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-primary vespa-szintido-min-ment">Mentés</button>
+                                        <span class="vespa-szintido-min-uzenet"></span>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <script>
+    (function () {
+        var doboz = document.getElementById('vespa-szintido-feltetelek');
+        if (!doboz) return;
+
+        var nonce = doboz.getAttribute('data-nonce');
+        var url = (typeof ajaxurl !== 'undefined') ? ajaxurl : '/wp-admin/admin-ajax.php';
+
+        Array.prototype.forEach.call(doboz.querySelectorAll('.vespa-szintido-min-ment'), function (gomb) {
+            gomb.addEventListener('click', function () {
+                var sor = gomb.closest('tr');
+                var contestEventId = sor.getAttribute('data-contest-event');
+                var input = sor.querySelector('.vespa-szintido-min-input');
+                var uzenetEl = sor.querySelector('.vespa-szintido-min-uzenet');
+
+                gomb.disabled = true;
+                uzenetEl.textContent = '';
+
+                var fd = new FormData();
+                fd.append('action', 'vespa_szintido_set_min');
+                fd.append('nonce', nonce);
+                fd.append('contest_event_id', contestEventId);
+                fd.append('ido', input.value);
+
+                fetch(url, { method: 'POST', credentials: 'same-origin', body: fd })
+                    .then(function (r) { return r.json(); })
+                    .then(function (resp) {
+                        gomb.disabled = false;
+                        if (!resp.success) { uzenetEl.textContent = resp.data.message; return; }
+                        input.value = resp.data.formatted || '';
+                        uzenetEl.textContent = resp.data.message;
+                    })
+                    .catch(function () { gomb.disabled = false; uzenetEl.textContent = 'Hálózati hiba.'; });
+            });
+        });
+    })();
+    </script>
+
 <?php
 endif;
 ?>

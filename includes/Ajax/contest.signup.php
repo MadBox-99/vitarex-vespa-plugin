@@ -186,6 +186,57 @@ class VespaContestSignups
                 $success;
                 $list = explode(',', $_POST['athlete_ids']);
 
+                // Szintidő-ellenőrzés. Ha a versenyszámhoz nincs minimum
+                // beállítva (a leggyakoribb eset, minden meglévő sor ilyen),
+                // ez az egyetlen lekérdezés fut le, és senki nem esik ki —
+                // ez teszi a feltételt opt-in-né.
+                $szintido_esemeny = $wpdb->get_row($wpdb->prepare(
+                    "SELECT event_id, min_qualifying_seconds FROM vespa_constest_events WHERE id=%d",
+                    $contest_event_id
+                ));
+
+                if ($szintido_esemeny !== null && $szintido_esemeny->min_qualifying_seconds !== null) {
+                    // A $list a POST-ból jön (vesszővel elválasztott azonosítók),
+                    // ezért intval-lel térképezzük az IN (...) lista elemeit —
+                    // ez egy változó hosszúságú lista, nem prepare-elhető egyetlen paraméterként.
+                    $szintido_athlete_ids = array_map('intval', $list);
+
+                    $szintido_idok_by_id = array();
+                    if (count($szintido_athlete_ids) > 0) {
+                        $helyorzok = implode(',', array_fill(0, count($szintido_athlete_ids), '%d'));
+                        $szintido_sql = "SELECT a.athlete_id, a.athlete_name, qt.seconds
+                                          FROM vespa_athletes AS a
+                                          LEFT JOIN vespa_athlete_qualifying_times AS qt
+                                            ON qt.athlete_id = a.athlete_id AND qt.sport_event_id = %d
+                                          WHERE a.athlete_id IN ($helyorzok)";
+                        $szintido_parameterek = array_merge(array($szintido_esemeny->event_id), $szintido_athlete_ids);
+                        $szintido_sorok = $wpdb->get_results($wpdb->prepare($szintido_sql, ...$szintido_parameterek));
+                        foreach ($szintido_sorok as $szintido_sor) {
+                            $szintido_idok_by_id[intval($szintido_sor->athlete_id)] = $szintido_sor;
+                        }
+                    }
+
+                    $szintido_sikertelenek = array();
+                    foreach ($szintido_athlete_ids as $szintido_aid) {
+                        $szintido_sor = isset($szintido_idok_by_id[$szintido_aid]) ? $szintido_idok_by_id[$szintido_aid] : null;
+                        $szintido_ido = $szintido_sor ? $szintido_sor->seconds : null;
+                        if (!vespa_szintido_megfelel($szintido_ido, $szintido_esemeny->min_qualifying_seconds)) {
+                            $szintido_sikertelenek[] = $szintido_sor ? $szintido_sor->athlete_name : ('#' . $szintido_aid);
+                        }
+                    }
+
+                    if (count($szintido_sikertelenek) > 0) {
+                        // Mindent-vagy-semmit: ha bárki nem felel meg, egyetlen
+                        // sor sem kerül be ebből a beküldésből.
+                        $response['success'] = false;
+                        $response['message'] = 'A következő tanuló(k) nem felelnek meg a szintidő-feltételnek (minimum '
+                            . vespa_szintido_format($szintido_esemeny->min_qualifying_seconds) . '): '
+                            . implode(', ', $szintido_sikertelenek) . '.';
+                        wp_send_json($response);
+                        die();
+                    }
+                }
+
                 foreach ($list as $athlete_id) {
                     if (!in_array($athlete_id, $entered_ids)) {
                         $success = $wpdb->insert('vespa_athlete_entries', array(
