@@ -156,6 +156,56 @@ function vespa_contest_has_answers($contest_id)
     return true;
 }
 
+/**
+ * Versenyenként hány AKTUÁLIS kérdésre van érdemi válasz (válasz vagy
+ * megjegyzés)? Egyetlen lekérdezés — a versenylista soronkénti hívás helyett,
+ * ahol ez négy táblázatnyi versenyre N lekérdezést jelentene.
+ *
+ * A question_id szerinti INNER JOIN egyben kiszűri a 0-s történelmi sorokat
+ * is: azok azóta törölt vagy átírt kérdéshez tartoznak, és nem részei a mai
+ * mércének.
+ *
+ * $contest_ids = null esetén minden versenyre. Visszatérés: contest_id => int.
+ */
+function vespa_contest_answer_counts($contest_ids = null)
+{
+    global $wpdb;
+
+    $sql = "SELECT qa.contest_id, COUNT(DISTINCT qa.question_id) AS db
+            FROM vespa_questions_answered AS qa
+            INNER JOIN vespa_contests_questions AS q ON q.question_id = qa.question_id
+            WHERE (TRIM(qa.answer) <> '' OR TRIM(qa.qnote) <> '')";
+
+    if (is_array($contest_ids)) {
+        // Az intval miatt az interpoláció itt biztonságos; a $wpdb->prepare
+        // nem tud változó hosszúságú IN() listát kezelni.
+        $tisztitott = array_filter(array_map('intval', $contest_ids));
+        if (empty($tisztitott)) {
+            return array();
+        }
+        $sql .= ' AND qa.contest_id IN (' . implode(',', $tisztitott) . ')';
+    }
+
+    $sql .= ' GROUP BY qa.contest_id';
+
+    $eredmeny = array();
+    foreach ((array) $wpdb->get_results($sql) as $sor) {
+        $eredmeny[intval($sor->contest_id)] = intval($sor->db);
+    }
+
+    return $eredmeny;
+}
+
+/**
+ * Az aktuális közös kérdések száma — a kitöltöttség osztója.
+ */
+function vespa_contest_question_count()
+{
+    global $wpdb;
+
+    return intval($wpdb->get_var("SELECT COUNT(*) FROM vespa_contests_questions"));
+}
+
 // =============================================
 // WordPress hookok
 // =============================================

@@ -95,8 +95,10 @@ if (is_numeric($id) && $id > 0) {
             <!--            
             <a href="#jelentkezok" class="btn btn-default btn-sm">Nevezettek</a>
 -->
-            <?php if (!vespa_contest_has_answers($id)) : ?>
-                <a href="<?php echo admin_url('admin.php?page=contests&action=question&id=') . $id; ?>" class="btn btn-default btn-sm">Beszámoló rögzítése</a>
+            <?php if (current_user_can(VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles)) : ?>
+                <a href="<?php echo admin_url('admin.php?page=contests&action=question&id=') . $id; ?>" class="btn btn-default btn-sm">
+                    <?php echo vespa_contest_has_answers($id) ? 'Beszámoló szerkesztése' : 'Beszámoló rögzítése'; ?>
+                </a>
             <?php endif; ?>
 
         </div>
