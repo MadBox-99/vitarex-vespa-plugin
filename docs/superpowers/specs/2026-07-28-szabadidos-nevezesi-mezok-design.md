@@ -152,8 +152,11 @@ kér, és a sor utána „Archivált — X válasz megmarad" állapotba kerül, 
 visszakapcsolható. Ha még nincs rá válasz, a sor egyszerűen eltűnik (a rekord
 ilyenkor valóban törölhető).
 
-A mezőlista kezdeti kirajzolása szerver oldali PHP a sablonban; a további
-műveletek AJAX-osak. Ez illeszkedik a fájl mai stílusához.
+A mezősorokat JavaScript rajzolja ki egy, a PHP által beágyazott JSON
+adatból — ugyanúgy, ahogy a „Beszámoló kérdések" oldal teszi. Így a sor
+felépítése egyetlen helyen van leírva; ha a PHP is rajzolna sorokat, a
+kétféle markupot örökké szinkronban kellene tartani. A JS az értékeket
+`value`/`textContent` beállítással teszi be, nem `innerHTML`-lel.
 
 ### AJAX végpontok
 
@@ -313,7 +316,8 @@ lépéssoros listát adunk a megvalósítási tervben.
 | Fájl | Változás |
 |---|---|
 | `includes/Core/vespa.szabadidos.install.php` | két új tábla, verzió `2` → `3` |
-| `includes/Core/vespa.szabadidos.helpers.php` | mezőkezelő és validáló függvények, közös nevező-lekérdezés |
+| `includes/Core/vespa.szabadidos.fields.php` | **új** — tiszta, WordPress-független mezőlogika (típusok, validálás, formázás) |
+| `includes/Core/vespa.szabadidos.helpers.php` | adatbázist érintő mező- és válaszkezelés, közös nevező-lekérdezés |
 | `includes/Ajax/szabadidos.fields.php` | **új** — négy admin AJAX végpont |
 | `includes/Ajax/szabadidos.entries.php` | a `signup` válaszokat is fogad és ellenőriz |
 | `templates/szabadidos_admin.php` | átrendezés, mezőszerkesztő blokk, dinamikus oszlopok |
