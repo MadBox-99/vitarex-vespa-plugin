@@ -24,11 +24,18 @@
         if( intval($sor->question_id) > 0 ){
             $valaszok[ intval($sor->question_id) ] = $sor;
         } else {
-            $tortenelmi[] = $sor;
+            // A régi, hibás számláló miatt keletkezett teljesen üres sorokat
+            // (kérdés, válasz ÉS megjegyzés is üres) nem mutatjuk: azok nem
+            // tartoznak semmilyen kérdéshez, csak szellemsorok.
+            $ures = trim((string) $sor->question) === ''
+                && trim((string) $sor->answer) === ''
+                && trim((string) $sor->qnote) === '';
+
+            if( ! $ures ){
+                $tortenelmi[] = $sor;
+            }
         }
     }
-
-    $van_mar_valasz = ! empty($valaszok) || ! empty($tortenelmi);
 ?>
 
 
@@ -67,8 +74,9 @@
 
                             // Egyetlen lehetőség nem választás: a 23 kérdésből 17-nek
                             // csak egy "válasz a megjegyzésben" opciója van. Ilyenkor
-                            // rádiógombot sem rajzolunk, csak a megjegyzés mezőt.
-                            $van_valasztas = count($lehetosegek) > 1;
+                            // rádiógombot sem rajzolunk, csak a megjegyzés mezőt. Ugyanezt
+                            // a szabályt használja a mentés is (lásd vespa_kerdoiv_egyopcios).
+                            $van_valasztas = ! vespa_kerdoiv_egyopcios($question->answers);
                         ?>
 
                 <div class="row">
@@ -76,6 +84,12 @@
                         <h3><?php echo esc_html( ($sorszam + 1) . '. ' . $question->question ); ?></h3>
 
                         <?php if( $van_valasztas ) : ?>
+                            <div class="form-group form-checkbox">
+                                <input type="radio" name="<?php echo 'answer'. $ordernum; ?>" id="<?php echo 'answer'. $ordernum . '-nincs'; ?>" autocomplete="off" value="" <?php checked($mentett_answer, ''); ?>>
+                                <label for="<?php echo 'answer'. $ordernum . '-nincs'; ?>">
+                                    Nincs válasz
+                                </label>
+                            </div>
                             <?php foreach($lehetosegek as $ind => $answer): ?>
                             <div class="form-group form-checkbox">
                                 <input type="radio" name="<?php echo 'answer'. $ordernum; ?>" id="<?php echo 'answer'. $ordernum . '-' . $ind; ?>" autocomplete="off" value="<?php echo esc_attr($answer); ?>" <?php checked($mentett_answer, $answer); ?>>
@@ -89,7 +103,7 @@
                     <div class="col-md-<?php echo $van_valasztas ? '6' : '12'; ?>">
                         <div class="form-group">
                             <label>Megjegyzés</label>
-                            <textarea name="<?php echo 'qnote'. $ordernum; ?>" id="<?php echo 'qnote'. $ordernum; ?>" cols="30" rows="<?php echo $van_valasztas ? '10' : '4'; ?>" autocomplete="off" class="form-control"><?php echo esc_textarea($mentett_qnote); ?></textarea>
+                            <textarea name="<?php echo 'qnote'. $ordernum; ?>" id="<?php echo 'qnote'. $ordernum; ?>" cols="30" rows="<?php echo $van_valasztas ? '10' : '4'; ?>" maxlength="400" autocomplete="off" class="form-control"><?php echo esc_textarea($mentett_qnote); ?></textarea>
                         </div>
                     </div>
                 </div>

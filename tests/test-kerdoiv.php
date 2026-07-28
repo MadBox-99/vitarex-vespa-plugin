@@ -86,5 +86,39 @@ $c = vespa_kerdoiv_cella(0, 0);
 allit($c['cimke'] === '—', 'kerdes nelkul gondolatjel a cimke');
 allit($c['szin'] === '#646970', 'kerdes nelkul semleges szin, nem piros');
 
+// ---- Egyopciós kérdés felismerése -------------------------------------
+// (17/23 kérdésnek egyetlen válaszlehetősége van, jellemzően "válasz a
+// megjegyzésben" -- ezeknél nem rajzolunk rádiógombot, és a mentés nem
+// írhatja felül a régi választ egy soha el nem küldött mezővel.)
+
+allit(
+    vespa_kerdoiv_egyopcios('válasz a megjegyzésben') === true,
+    'egyetlen opcio -> egyopcios'
+);
+allit(
+    vespa_kerdoiv_egyopcios('') === true,
+    'ures string -> egyopcios (nincs opcio)'
+);
+allit(
+    vespa_kerdoiv_egyopcios(null) === true,
+    'null -> egyopcios (nincs opcio)'
+);
+allit(
+    vespa_kerdoiv_egyopcios(';;') === true,
+    'csupa ures elem -> egyopcios'
+);
+allit(
+    vespa_kerdoiv_egyopcios('igen;nem') === false,
+    'ket opcio -> nem egyopcios'
+);
+allit(
+    vespa_kerdoiv_egyopcios('igen; ;nem') === false,
+    'ket ervenyes opcio ures elem mellett -> nem egyopcios'
+);
+allit(
+    vespa_kerdoiv_egyopcios('  igen  ') === true,
+    'egyetlen opcio korulotte whitespace-szel -> egyopcios'
+);
+
 echo "\n" . ($hibak === 0 ? "Minden teszt sikeres.\n" : $hibak . " teszt elbukott.\n");
 exit($hibak === 0 ? 0 : 1);

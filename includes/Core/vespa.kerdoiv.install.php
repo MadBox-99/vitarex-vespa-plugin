@@ -46,7 +46,7 @@ function vespa_kerdoiv_install()
     // "Korábbi kérdések" (read-only) szekció alá kerül, így nem vész el,
     // de nem férj fel a szerkesztő-sablonba sem. Ez jobb, mint tetszőlegesen
     // választani egy question_id-t, ami hallgatagon duplikálná az adatot.
-    $wpdb->query(
+    $backfill_eredmeny = $wpdb->query(
         "UPDATE vespa_questions_answered AS qa
          INNER JOIN (
              SELECT question, MIN(question_id) AS question_id
@@ -57,6 +57,14 @@ function vespa_kerdoiv_install()
          SET qa.question_id = q.question_id
          WHERE qa.question_id = 0"
     );
+
+    // Ha a backfill elbukott, a kaput nem zárjuk le — különben a 0-n maradt
+    // sorok véglegesen a "Korábbi kérdések" (read-only) blokkba kerülnének,
+    // egy későbbi mentés pedig új sorokat szúrna be ugyanezekhez a
+    // kérdésekhez a régiek mellé.
+    if ($backfill_eredmeny === false) {
+        return;
+    }
 
     update_option('vespa_kerdoiv_db_version', '1');
 }

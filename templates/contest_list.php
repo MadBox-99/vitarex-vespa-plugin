@@ -527,7 +527,6 @@
     $beszamolo_szamlalok  = vespa_contest_answer_counts();
     $beszamolo_kerdesszam = vespa_contest_question_count();
 
-
     ?>
 
     <form action="admin.php?page=contests" method="post">

@@ -982,7 +982,11 @@ function vespa_download_answers($contest_id)
     global $wpdb;
     // get data for contest
     $record = $GLOBALS['VESPA_Contests']->load($contest_id);
-    $beszamolo_kerdesek = $wpdb->get_results($wpdb->prepare("SELECT * FROM vespa_questions_answered WHERE contest_id=%d  ORDER BY qa_id ASC", $contest_id));
+    // A kérdés ordernum-ja szerint rendezünk, nem qa_id szerint: a szerkeszthető
+    // beszámoló egy utólag megválaszolt, korábban kihagyott kérdéshez a sor
+    // végén szúr be új sort, ezért a qa_id sorrend már nem egyezik a
+    // kérdéssorrenddel.
+    $beszamolo_kerdesek = $wpdb->get_results($wpdb->prepare("SELECT qa.* FROM vespa_questions_answered qa LEFT JOIN vespa_contests_questions q ON q.question_id = qa.question_id WHERE qa.contest_id=%d ORDER BY q.ordernum ASC, qa.qa_id ASC", $contest_id));
     require VITAREX_VESPA_PLUGIN_DIR  . '/lib/vendor/autoload.php';
     $upload_dir   = wp_upload_dir();
     $path = $upload_dir['basedir'] . '/answers';
