@@ -23,14 +23,14 @@ létezik — a `vespa_contest_has_answers()` már megvan
 (`includes/Core/functions.php:145`) —, de csak a verseny részletei oldalon,
 közvetve: attól függ, látszik-e a „Beszámoló rögzítése" gomb.
 
-**Megjegyzés kiválasztás nélkül.** A 23 közös kérdésből 21-nek az egyetlen
-válaszlehetősége szó szerint `válasz a megjegyzésben`. Ezeknél a rádiógomb
+**Megjegyzés kiválasztás nélkül.** A 23 közös kérdésből 17-nek egyetlen
+válaszlehetősége van, jellemzően szó szerint `válasz a megjegyzésben`. Ezeknél a rádiógomb
 értelmetlen: a tartalom a megjegyzésbe kerül. A kitöltő mégis kénytelen
 választani, mert a be nem jelölt rádiógombot a böngésző nem küldi el, és a
 mentés definiálatlan indexre hivatkozna.
 
-**Két hiba, ami menet közben derült ki.** Mindkettőt ez az alprojekt javítja,
-mert ugyanazt a mentési utat érinti:
+**Három hiba, ami menet közben derült ki.** Mindhármat ez az alprojekt
+javítja, mert ugyanazt a mentési utat érinti:
 
 1. A mentés **mindig `INSERT`-el**, sosem frissít
    (`includes/Datalist/datalist.questions_answered.php`), és az űrlap sosem
@@ -43,6 +43,17 @@ mert ugyanazt a mentési utat érinti:
    sem végzi el. Ma bármely bejelentkezett felhasználó beszúrhat
    beszámoló-sorokat. Amíg ez csak beszúrás volt, kevésbé fájt; szerkeszthetővé
    téve felülírássá válik.
+
+3. **A mentés ma kérdéseket veszít.** Az űrlap a mezőit a kérdés
+   `ordernum`-ával nevezi el (`answer0`, `answer1`, `answer7` …), a mentés
+   viszont `0`-tól `count(kérdés) - 1`-ig számlálva olvassa őket. Az
+   `ordernum` értékek **nem folytonosak**: `0, 1, 7, 8 … 26, 28`, 23 kérdés
+   mellett. Így a mentés az `answer2`–`answer6` nem létező mezőket olvassa
+   (definiálatlan index, üres sor), az `answer23`–`answer26` és `answer28`
+   mezőket pedig **soha nem olvassa el** — az azokra adott válasz némán
+   elvész. Ez magyarázza, miért 17–18 sorosak a beszámolók 23 kérdés mellett.
+   A javítás ugyanaz a lépés, ami a szerkeszthetőséghez amúgy is kell: a
+   mentés a kérdéseken iterál, nem egy számlálón.
 
 ## Amit építünk
 
@@ -139,7 +150,10 @@ megtekintő szerep veszít el egy képességet, amivel eddig sem kellett volna
 rendelkeznie: felettes szerv és tankerületi igazgató.
 
 **A művelet párosít, nem szúr be vakon.** Betöltjük a verseny meglévő sorait
-`question_id` szerint indexelve, majd az aktuális kérdéseken végigmenve:
+`question_id` szerint indexelve, majd az **aktuális kérdéseken** végigmenve —
+nem egy `0..count-1` számlálón, ami ma kérdéseket veszít. Az űrlapmezők
+nevében a kérdés `ordernum`-a áll (`answer7`, `qnote7`), tehát a mentés is ezt
+használja kulcsként a `$_POST`-ban:
 
 | eset | művelet |
 |---|---|
