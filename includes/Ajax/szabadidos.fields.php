@@ -99,7 +99,7 @@ function vespa_szabadidos_field_save()
         $adat['is_active']  = 1;
         $adat['created_at'] = current_time('mysql');
 
-        $siker = $wpdb->insert('vespa_szabadidos_fields', $adat);
+        $siker = $wpdb->insert('vespa_szabadidos_fields', $adat, array('%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s'));
         if ($siker === false) {
             wp_send_json_error(array('message' => 'A mező mentése nem sikerült.'));
         }
