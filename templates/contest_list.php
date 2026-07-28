@@ -521,6 +521,12 @@
         });
     }
 
+    // A beszámoló kitöltöttsége EGYETLEN lekérdezésből, a táblázatok
+    // kirajzolása előtt. Soronkénti hívás négy táblázatnyi versenyre N
+    // lekérdezést jelentene.
+    $beszamolo_szamlalok  = vespa_contest_answer_counts();
+    $beszamolo_kerdesszam = vespa_contest_question_count();
+
 
     ?>
 
@@ -619,6 +625,7 @@
                                 <th>Helyszín</th>
                                 <th>Cím</th>
                                 <th>Fogy. csoport</th>
+                                <th>Beszámoló</th>
                                 <th class="no-export">Műveletek</th>
                             </tr>
 
@@ -657,6 +664,17 @@
                                             $mapped = mapIdsToNames($disablities, $fogyatekossag_lista);
                                             echo implode(', ', $mapped); 
                                         ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                            $beszamolo_db = isset($beszamolo_szamlalok[intval($race->contest_id)])
+                                                ? $beszamolo_szamlalok[intval($race->contest_id)]
+                                                : 0;
+                                            $beszamolo_cella = vespa_kerdoiv_cella($beszamolo_db, $beszamolo_kerdesszam);
+                                        ?>
+                                        <span style="color: <?php echo esc_attr($beszamolo_cella['szin']); ?>; font-weight: <?php echo $beszamolo_cella['allapot'] === 'reszleges' ? '400' : '600'; ?>;">
+                                            <?php echo esc_html($beszamolo_cella['cimke']); ?>
+                                        </span>
                                     </td>
                                     <td class="no-export">
                                         <div style="display: flex;">
@@ -745,6 +763,7 @@
                                 <th>Helyszín</th>
                                 <th>Cím</th>
                                 <th>Fogy. csoport</th>
+                                <th>Beszámoló</th>
                                 <th class="no-export">Műveletek</th>
                             </tr>
                         </thead>
@@ -782,6 +801,17 @@
                                             $mapped = mapIdsToNames($disablities, $fogyatekossag_lista);
                                             echo implode(', ', $mapped);
                                         ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                            $beszamolo_db = isset($beszamolo_szamlalok[intval($race->contest_id)])
+                                                ? $beszamolo_szamlalok[intval($race->contest_id)]
+                                                : 0;
+                                            $beszamolo_cella = vespa_kerdoiv_cella($beszamolo_db, $beszamolo_kerdesszam);
+                                        ?>
+                                        <span style="color: <?php echo esc_attr($beszamolo_cella['szin']); ?>; font-weight: <?php echo $beszamolo_cella['allapot'] === 'reszleges' ? '400' : '600'; ?>;">
+                                            <?php echo esc_html($beszamolo_cella['cimke']); ?>
+                                        </span>
                                     </td>
                                     <td class="no-export">
                                         <div style="display: flex;">
@@ -844,6 +874,7 @@
                                 <th>Helyszín</th>
                                 <th>Cím</th>
                                 <th>Fogy. csoport</th>
+                                <th>Beszámoló</th>
                                 <th class="no-export">Műveletek</th>
                             </tr>
                         </thead>
@@ -880,6 +911,17 @@
                                             $mapped = mapIdsToNames($disablities, $fogyatekossag_lista);
                                             echo implode(', ', $mapped);
                                         ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                            $beszamolo_db = isset($beszamolo_szamlalok[intval($race->contest_id)])
+                                                ? $beszamolo_szamlalok[intval($race->contest_id)]
+                                                : 0;
+                                            $beszamolo_cella = vespa_kerdoiv_cella($beszamolo_db, $beszamolo_kerdesszam);
+                                        ?>
+                                        <span style="color: <?php echo esc_attr($beszamolo_cella['szin']); ?>; font-weight: <?php echo $beszamolo_cella['allapot'] === 'reszleges' ? '400' : '600'; ?>;">
+                                            <?php echo esc_html($beszamolo_cella['cimke']); ?>
+                                        </span>
                                     </td>
                                     <td class="no-export">
                                         <div style="display: flex;">
@@ -928,6 +970,7 @@
                                 <th>Helyszín</th>
                                 <th>Cím</th>
                                 <th>Fogy. csoport</th>
+                                <th>Beszámoló</th>
                                 <th class="no-export">Műveletek</th>
                             </tr>
                         </thead>
@@ -964,6 +1007,17 @@
                                             $mapped = mapIdsToNames($disablities, $fogyatekossag_lista);
                                             echo implode(', ', $mapped);
                                         ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                            $beszamolo_db = isset($beszamolo_szamlalok[intval($race->contest_id)])
+                                                ? $beszamolo_szamlalok[intval($race->contest_id)]
+                                                : 0;
+                                            $beszamolo_cella = vespa_kerdoiv_cella($beszamolo_db, $beszamolo_kerdesszam);
+                                        ?>
+                                        <span style="color: <?php echo esc_attr($beszamolo_cella['szin']); ?>; font-weight: <?php echo $beszamolo_cella['allapot'] === 'reszleges' ? '400' : '600'; ?>;">
+                                            <?php echo esc_html($beszamolo_cella['cimke']); ?>
+                                        </span>
                                     </td>
                                     <td class="no-export">
                                         <div style="display: flex;">
