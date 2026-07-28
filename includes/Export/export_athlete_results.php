@@ -25,7 +25,7 @@ function vespa_export_athlete_results_init()
     // 1. lekérdezés: sportolók (a lista szűrőivel), csak a nem törölt sportolók
     $sql = "SELECT va.athlete_id, va.athlete_name, va.birth_date, va.gender, vi.ins_name
             FROM vespa_athletes AS va
-            JOIN vespa_institutions AS vi ON vi.institution_id = va.school_id
+            LEFT JOIN vespa_institutions AS vi ON vi.institution_id = va.school_id
             WHERE va.is_deleted=0";
 
     $params = array();
