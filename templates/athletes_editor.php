@@ -359,7 +359,7 @@ if ($record !== null && current_user_can(VESPA_Roles::sportolok_letrehozasa_modo
     var url = (typeof ajaxurl !== 'undefined') ? ajaxurl : '/wp-admin/admin-ajax.php';
     var sorok = doboz.querySelector('.vespa-szintido-sorok');
     var uzenetEl = doboz.querySelector('.vespa-szintido-uzenet');
-    var idok = <?php echo json_encode($vespa_szintido_lista); ?>;
+    var idok = <?php echo json_encode($vespa_szintido_lista, JSON_HEX_TAG | JSON_UNESCAPED_UNICODE); ?>;
 
     function uzen(szoveg) {
         uzenetEl.textContent = szoveg || '';

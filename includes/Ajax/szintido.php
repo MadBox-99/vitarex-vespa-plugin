@@ -10,6 +10,38 @@
  * nonce-ot használja, mint a plugin többi admin AJAX hívása.
  */
 
+/**
+ * IDOR-védelem: az iskolához kötött felhasználó (pl. testnevelő) csak a saját
+ * iskolája sportolóinak szintidejéhez férhet hozzá — enélkül egy tanár egy
+ * másik iskola sportolójának athlete_id-jét beküldve olvashatná/törölhetné/
+ * felülírhatná annak idejét, ami egy beállított minimum mellett a másik
+ * iskola tanulóit is kizárhatná a nevezésből.
+ *
+ * Ugyanazt a szabályt követi, mint a templates/athletes_editor.php (lásd ott
+ * a get_user_meta 'school_id' ellenőrzést): üres iskola-meta esetén a
+ * felhasználó nem iskolához kötött (admin / országos szerep), tehát nem
+ * korlátozzuk — csak egy NEM üres, eltérő iskola-azonosító számít elutasításnak.
+ *
+ * Hiba esetén maga küldi a JSON választ és kilép.
+ */
+function vespa_szintido_require_own_school($athlete_id)
+{
+    $school_id = get_user_meta(get_current_user_id(), 'school_id', true);
+    if (empty($school_id)) {
+        return;
+    }
+
+    global $wpdb;
+    $athlete_school_id = $wpdb->get_var($wpdb->prepare(
+        "SELECT school_id FROM vespa_athletes WHERE athlete_id=%d",
+        $athlete_id
+    ));
+
+    if ($athlete_school_id === null || intval($athlete_school_id) !== intval($school_id)) {
+        wp_send_json_error(array('message' => 'Ehhez a sportolóhoz nincs jogosultsága.'));
+    }
+}
+
 add_action('wp_ajax_vespa_szintido_save', 'vespa_szintido_ajax_save');
 
 function vespa_szintido_ajax_save()
@@ -27,6 +59,8 @@ function vespa_szintido_ajax_save()
     if ($athlete_id <= 0 || $sport_event_id <= 0) {
         wp_send_json_error(array('message' => 'Hiányzó sportoló vagy sportesemény.'));
     }
+
+    vespa_szintido_require_own_school($athlete_id);
 
     $masodperc = vespa_szintido_parse($ido_szoveg);
     if ($masodperc === null) {
@@ -78,6 +112,8 @@ function vespa_szintido_ajax_delete()
 
     $athlete_id     = isset($_POST['athlete_id']) ? intval($_POST['athlete_id']) : 0;
     $sport_event_id = isset($_POST['sport_event_id']) ? intval($_POST['sport_event_id']) : 0;
+
+    vespa_szintido_require_own_school($athlete_id);
 
     global $wpdb;
     $wpdb->delete(
@@ -160,6 +196,8 @@ function vespa_szintido_ajax_list()
     }
 
     $athlete_id = isset($_POST['athlete_id']) ? intval($_POST['athlete_id']) : 0;
+
+    vespa_szintido_require_own_school($athlete_id);
 
     wp_send_json_success(array(
         'times' => vespa_szintido_athlete_times($athlete_id),
