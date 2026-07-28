@@ -39,9 +39,21 @@ function vespa_kerdoiv_install()
     // alapján — ez az egyetlen kapocs, ami a régi adatban létezik. Ami nem
     // talál (azóta törölt vagy átírt kérdés), az 0 marad, és a beszámoló
     // történelmi részeként megőrződik.
+    //
+    // FONTOS: csak olyan szövegeket párosítunk, amelyek pontosan EGYSZER
+    // szerepelnek az aktuális kérdéskészletben. Ha egy szöveg több kérdéshez
+    // is van (admin által soha nem ellenőrzött), az sor 0-n marad: az a
+    // "Korábbi kérdések" (read-only) szekció alá kerül, így nem vész el,
+    // de nem férj fel a szerkesztő-sablonba sem. Ez jobb, mint tetszőlegesen
+    // választani egy question_id-t, ami hallgatagon duplikálná az adatot.
     $wpdb->query(
         "UPDATE vespa_questions_answered AS qa
-         INNER JOIN vespa_contests_questions AS q ON q.question = qa.question
+         INNER JOIN (
+             SELECT question, MIN(question_id) AS question_id
+             FROM vespa_contests_questions
+             GROUP BY question
+             HAVING COUNT(*) = 1
+         ) AS q ON q.question = qa.question
          SET qa.question_id = q.question_id
          WHERE qa.question_id = 0"
     );
