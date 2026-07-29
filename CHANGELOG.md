@@ -1,5 +1,104 @@
 # Changelog
 
+## [2.3.16] - 2026-07-28
+
+### Új funkciók
+- **Verseny nevének automatikus összeállítása:** Új verseny felvitelekor a versenynév a kiválasztott értékekből áll össze (megye / verseny típusa / sportág / döntő), így egységes elnevezést kapnak a kiírások. A mező továbbra is kézzel felülírható.
+
+### Javítások
+- **Megyei sportág-szűrő:** A versenylista megyei táblázatának sportág-szűrője az országos legördülő értékét olvasta, ezért rossz (vagy üres) találatokat adott — mostantól a saját szűrőjének értékét használja.
+
+## [2.3.14] - 2026-07-28
+
+### Új funkciók
+- **Szintidő-nyilvántartás:** Új `vespa_athlete_qualifying_times` tábla, ahol sportolónként és versenyszámonként rögzíthető a szintidő (a sportoló-szerkesztőben). A versenyszám-felvitelnél megadható egy `min_qualifying_seconds` küszöb, és ha be van állítva, a nevezés csak a küszöböt teljesítő sportolóknál engedélyezett. A szintidő-végpontok iskolához vannak kötve (más iskola sportolójának ideje nem írható/olvasható), a beágyazott JSON `JSON_HEX_TAG`-gel készül.
+- **Sportolói eredmények XLSX exportja:** A sportolói listáról egy kattintással letölthetők a sportoló eredményei Excel-ben.
+- **Rendező és Helyszín legördülő:** A verseny-szerkesztőben a Rendező és a Helyszín mező a már meglévő értékekből választható, de szabad szöveggel bővíthető, így csökken az elgépelésből adódó duplikáció.
+
+### Javítások
+- **Export intézmény-JOIN:** A diákexport `LEFT JOIN`-ra vált az intézménynél, így hibás vagy hiányzó `school_id` esetén sem esik ki a diák a listából.
+
+### Adatbázis migráció
+- A szintidő-séma (`vespa_athlete_qualifying_times` tábla + `vespa_constest_events.min_qualifying_seconds` oszlop) `init`-en, a `vespa_szintido_db_version` option-kapuval jön létre — élesítés után egyszer be kell töltődnie a wp-adminnak.
+
+## [2.3.13] - 2026-07-28
+
+### Új funkciók
+- **Szerkeszthető beszámoló (kérdőív):** A beszámoló utólag is módosítható, a korábbi válaszokkal előre kitöltve; az egyopciós kérdések válaszai megmaradnak, a rádiógombos válasz törölhető.
+- **Kitöltöttség-jelzés a versenylistában:** Új oszlop mutatja, hogy az adott verseny beszámolója mennyire van kitöltve (aggregáló számláló helperekkel, unit tesztekkel).
+- **`question_id` a beszámoló-válaszokban:** A válaszok mostantól kérdés-azonosítóhoz kötődnek, nem a kérdés szövegéhez. A visszatöltés (backfill) csak egyedi kérdésszövegekre fut, a duplikált szövegű kérdések tudatosan 0-n maradnak.
+
+### Javítások
+- **Beszámoló-mentés jogosultság:** A párosító típusú kérdések mentése nonce-t és jogosultság-ellenőrzést kapott, a mentés eredményét a felület ellenőrzi.
+- **Beszámoló PDF sorrend:** A `NULL` `ordernum`-ú kérdések a PDF végére kerülnek, nem az elejére.
+
+## [2.3.12] - 2026-07-28
+
+### Új funkciók
+- **Szabadidős nevezési mezők (versenyenként szabadon bővíthető mezőépítő):** Az adminban versenyenként vehetők fel egyedi nevezési mezők (soronkénti AJAX mentéssel, sorrendezéssel), amelyek megjelennek a front-end nevezési űrlapon; a válaszok a nevezéssel együtt mentődnek, és láthatók az admin nevezői listában és az exportban. Két új tábla (db verzió 3), tiszta logika + unit tesztek.
+
+### Javítások
+- **Mezőszerkesztő adatvesztési hibák:** Code review alapján javítva a szerkesztés visszaírása, a piszkozat-sor duplikációja, a nyilakkal való mozgatás széle, valamint a `wpdb->insert` format tömbje a `field_save` végponton.
+
+## [2.3.10] - 2026-07-21
+
+### Új funkciók
+- **Lejárat jelzése a nevezés-megnyitó admin listában:** Látszik, ha egy szabadidős verseny külső nevezési ablaka már lejárt.
+- **Dátum a nevezők-legördülőben:** Az azonos nevű versenyek megkülönböztethetők a legördülőben megjelenő dátum alapján.
+
+### Javítások
+- **Regisztrációs dobbantó ablaka:** 1 óráról 10 percre csökkentve.
+
+## [2.3.9] - 2026-07-21
+
+### Felület
+- **Tailwind stílus a szabadidős front-end nevezési felületen.**
+
+## [2.3.8] - 2026-07-21
+
+### Új funkciók
+- **Front-end hozzáférés beállítása (5. csomag):** Új admin menü (`manage_options`), ahol pipa-listából jelölhetők a publikus, átirányítás alól mentesülő oldalak és a szabadidős landing page. Enélkül a `login.customiser.php` `redirect_to_admin()`-ja minden front-end kérést elterelt, így a `[vespa_szabadidos]` oldal senkinek nem volt elérhető, a szabadidős résztvevők pedig végtelen átirányítási hurokba kerültek.
+
+### Javítások
+- **Átirányítási hurok megszüntetése:** A szabadidős felhasználó a beállított nevezési oldalra kerül; a landing URL csak azonos hosztú lehet (`wp_validate_redirect` / `wp_safe_redirect`), az AJAX mentés hurokvédelmet kapott.
+
+## [2.3.6] - 2026-07-20
+
+A „Vespa fejlesztés, 2026.07.17." lista négy csomagja.
+
+### Új funkciók
+- **A1 — Excel-alapú tömeges sportoló-import:** Új `VESPA_Athlete_Importer` osztály (normalizálás, `parse()`, soronkénti `validate()`, tranzakciós `commit()` újra-deduplikálással), kétlépéses (előnézet → jóváhagyás) import UI és letölthető XLSX minta-sablon, jogosultság-ellenőrzéssel.
+- **A2 — Bővített szűrés az eredménylistákban:** Szerveroldali szűrők a verseny eredmények AJAX-ban, szűrő-sor a verseny eredmények nézetben, versenyszám-szűrő a riport felületen (Vue), sportág + versenyszám szűrés a riport-exportokban, valamint sportoló-keresés az eredmény-rögzítő rácson.
+- **A4 — Szabadidősport külső regisztráció (elkülönített alrendszer):** Új `szabadidos_resztvevo` szerep wp-admin izolációval, külső résztvevő regisztráció e-mailes megerősítéssel, `[vespa_szabadidos]` front-end (regisztráció/belépés + saját nézet), külső nevezés és visszavonás IDOR-védelemmel, admin menü a versenyek külső regisztrációra nyitásához/zárásához, külső nevezők listája és XLSX exportja. Három új tábla `init`-kor, `vespa_szabadidos_db_version` option-kapuval.
+- **A5/A3/A6 — Szezon riport, kötelező mezők, arculat:** Szezon riport szűrő- és `GROUP BY`-javítások (determinisztikus vödrök, hiányzó „Összes"/„Összes megye" ág), `VespaContestType` konstansok, telefonszám mező a felhasználói profilon, kísérő/gépkocsivezető e-mail + telefon formátum-validáció (`vespa_validate_email`, `vespa_validate_phone`), FODISZ logó az admin menüben, a láblécben és a login képernyőn, közös `vespa-palette.css` a hardkódolt színek helyett.
+
+### Javítások
+- **Excel dátum-sorszám konverzió** az importban (`parse()` → `Y-m-d`).
+- **`handleFields` szerepkör-forrás** javítása a saját profilon (`profile.php` regresszió).
+
+## [2.3.5] - 2026-06-05
+
+### Új funkciók
+- **Színjelmagyarázat a versenylistában:** Minden szekció (Országos / Megyei / Regionális / Szabadidősport) fejlécében megjelenik a sorszínek jelmagyarázata (Nevezhető / Még nem nevezhető / Már nem nevezhető).
+
+### Javítások
+- **Státusz-szín logika:** A lejárt nevezési határidő is pirosat ad (nemcsak a lezajlott verseny), a `0000-00-00 00:00:00` alapértelmezés pedig nem számít valódi határidőnek.
+
+## [2.3.3] - 2026-06-02
+
+### Javítások
+- **Testnevelő nem törölhet versenykiírást:** Sem a jogosultság-ellenőrzés (`VespaContest::can_delete()`), sem a felület nem engedi (a Törlés gomb el is tűnik), még a saját maga által létrehozott kiírásnál sem.
+- **Riport „Összes" szűrő:** A verseny-diák riport „Összes" ága csak az országos (1) és megyei (3) versenyeket tartalmazza, így megegyezik az országos + összes megyei lekérdezés összegével.
+
+## [2.3.2] - 2026-05-29
+
+### Új funkciók
+- **Sportoló soft delete tulajdonlás alapján:** A testnevelő és az iskolaigazgató törölheti a saját iskolája diákjait; a törlés csak `is_deleted`/`deleted_at` beállítás, az adat a táblában marad. Az archivált diákok kimaradnak az élő-diák listákból (nevezés, sportolói lista).
+- **Iskolaigazgató `sportolok_listazasa` jog:** Az igazgató is eléri a Sportolók listát.
+
+### Adatbázis migráció
+- `database/changes.sql` — `is_deleted` és `deleted_at` oszlopok a `vespa_athletes` táblához.
+
 ## [2.3.0] - 2026-05-29
 
 ### Új funkciók
