@@ -241,7 +241,9 @@ function vespa_download_medical_approval($contest_id)
         ob_end_clean();
     }
     header('Content-Type: application/pdf');
-    header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
+    // A lemezen maradhat az azonosítós név (ütközésmentes), a letöltött fájl
+    // viszont a verseny nevét kapja.
+    vespa_send_contest_download_header($contest_id, 'orvosi engedély', 'pdf');
     header('Content-Length: ' . filesize($filename));
     header('Cache-Control: private, max-age=0, must-revalidate');
     header('Pragma: public');
@@ -402,7 +404,7 @@ function vespa_download_listing($contest_id, $isBase64 = false, $saveFile = fals
             ob_end_clean();
         }
         header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
+        vespa_send_contest_download_header($contest_id, 'kiírás', 'pdf');
         header('Content-Length: ' . filesize($filename));
         header('Cache-Control: private, max-age=0, must-revalidate');
         header('Pragma: public');
@@ -715,7 +717,7 @@ function vespa_download_logistic($contest_id)
     autosize_columns($spreadsheet->getActiveSheet());
     
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    header('Content-Disposition: attachment;filename="sportolo_logisztika_' . $contest_id . '.xlsx"');
+    vespa_send_contest_download_header($contest_id, 'sportolói logisztika', 'xlsx');
     header('Cache-Control: max-age=0');
     header('Cache-Control: max-age=1');
     
@@ -825,7 +827,7 @@ function vespa_download_emails($contest_id)
     autosize_columns($spreadsheet->getActiveSheet());
 
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    header('Content-Disposition: attachment;filename="email_lista_' . $contest_id . '.xlsx"');
+    vespa_send_contest_download_header($contest_id, 'nevezettek email lista', 'xlsx');
     header('Cache-Control: max-age=0');
     header('Cache-Control: max-age=1');
     
@@ -966,7 +968,7 @@ FROM vespa_athletes as a
     autosize_columns($spreadsheet->getActiveSheet());
     
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    header('Content-Disposition: attachment;filename="verseny_nevezes_' . $contest_id . '.xlsx"');
+    vespa_send_contest_download_header($contest_id, 'nevezési lista', 'xlsx');
     header('Cache-Control: max-age=0');
     header('Cache-Control: max-age=1');
     
@@ -1042,7 +1044,7 @@ function vespa_download_answers($contest_id)
         ob_end_clean();
     }
     header('Content-Type: application/pdf');
-    header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
+    vespa_send_contest_download_header($contest_id, 'beszámoló', 'pdf');
     header('Content-Length: ' . filesize($filename));
     header('Cache-Control: private, max-age=0, must-revalidate');
     header('Pragma: public');

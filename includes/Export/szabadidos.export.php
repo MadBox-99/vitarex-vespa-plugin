@@ -59,7 +59,7 @@ function vespa_szabadidos_export()
     }
 
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    header('Content-Disposition: attachment; filename="szabadidos_nevezok.xlsx"');
+    vespa_send_contest_download_header($contest_id, 'szabadidős nevezők', 'xlsx');
     header('Cache-Control: max-age=0');
 
     $writer = new Xlsx($spreadsheet);

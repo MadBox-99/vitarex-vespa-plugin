@@ -355,3 +355,45 @@ function vespa_school_has_teachers($school_id, $contest_id)
 
     return intval($count) > 0;
 }
+
+/**
+ * Letöltött fájl neve a verseny nevéből: "<verseny neve>_<megnevezés>.<kiterjesztés>".
+ * A korábbi fájlnevek a verseny azonosítóját tartalmazták, amiből a letöltő nem
+ * látta, melyik versenyhez tartozik a dokumentum.
+ */
+function vespa_contest_download_filename($contest_id, $megnevezes, $kiterjesztes)
+{
+    global $wpdb;
+
+    $contest_name = $wpdb->get_var($wpdb->prepare(
+        "SELECT contest_name FROM vespa_contests WHERE contest_id=%d",
+        intval($contest_id)
+    ));
+
+    $contest_name = vespa_filename_resz(
+        stripslashes((string) $contest_name),
+        'verseny_' . intval($contest_id)
+    );
+
+    return $contest_name . '_' . $megnevezes . '.' . $kiterjesztes;
+}
+
+/**
+ * Content-Disposition fejléc a verseny nevéből képzett fájlnévvel. Az ASCII
+ * fallback azoknak a klienseknek kell, amelyek az RFC 5987 filename* mezőt nem
+ * értik — ékezetes név esetén ott csonka fájlnév keletkezne.
+ */
+function vespa_send_contest_download_header($contest_id, $megnevezes, $kiterjesztes)
+{
+    $filename = vespa_contest_download_filename($contest_id, $megnevezes, $kiterjesztes);
+
+    $ascii = preg_replace('#[^A-Za-z0-9._ -]#', '', remove_accents($filename));
+    if (trim($ascii) === '') {
+        $ascii = 'verseny_' . intval($contest_id) . '.' . $kiterjesztes;
+    }
+
+    header(
+        'Content-Disposition: attachment; filename="' . $ascii . '"; '
+        . "filename*=UTF-8''" . rawurlencode($filename)
+    );
+}

@@ -39,6 +39,9 @@ if (is_numeric($id) && $id > 0) {
             <div class="form-group">
                 <label>Megnevezés</label>
                 <input type="text" class="form-control" name="contest_name" id="contest_name" autocomplete="off" value='<?php echo ($record == null ? '' : esc_attr(stripslashes($record->contest_name))); ?>'>
+                <?php if ($record == null) : ?>
+                    <p class="description" style="margin-top:5px;">A megnevezés automatikusan kitöltésre kerül, amennyiben ettől a névtől eltérőt szeretne, kérjük csak abban az esetben töltse ki a mezőt!</p>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -145,11 +148,6 @@ if (is_numeric($id) && $id > 0) {
             </div>
         </div>
 
-        <div class="col-md-2" id="is_donto_line" style="display:none;">
-            <div class="form-group">
-                <label><input type="checkbox" id="is_donto"> Döntő</label>
-            </div>
-        </div>
         <?php endif; ?>
 
         <div class="col-md-12">
@@ -318,33 +316,51 @@ if (is_numeric($id) && $id > 0) {
 
 </div>
 
+<?php
+// A szabadidősportról való visszaváltáshoz kell egy "rendes" sorozat: a
+// legfrissebb olyan, ami nem a Szabadidősport sorozat (series_id=1).
+$vespa_default_series_id = $wpdb->get_var("SELECT series_id FROM vespa_series WHERE series_id <> 1 ORDER BY series_id DESC LIMIT 1");
+$vespa_default_series_id = intval($vespa_default_series_id) > 0 ? intval($vespa_default_series_id) : 1;
+?>
 <script>
-    // szabadidősport beállitása a másik mezőn is tipus vagy lebonyolitás választásnál, ha szabadidősport kerül kiválasztásra
+    // A típus, a lebonyolítás és a sorozat szabadidősport esetén együtt jár —
+    // a mentés is ezt követeli meg. Ezért nem elég ODAFELÉ szinkronizálni:
+    // szabadidősportról egy másik típusra váltva a lebonyolítást és a sorozatot
+    // is ki kell léptetni belőle, különben a mentés "Szabadidő versenytípusnak
+    // a lebonyolítása is csak szabadidősport lehet!" hibával elszáll, és a
+    // tévesen szabadidősként felvett verseny nem minősíthető át megyeivé.
+    var VESPA_DEFAULT_SERIES_ID = <?php echo $vespa_default_series_id; ?>;
+
     jQuery('#contest_types').on('change', function(e) {
-        const contestSubtype = jQuery('#contest_subtypes').val()
-        const contestSeries = jQuery('#contest_series').val()
-        if(this.value == 4 && (contestSubtype != 3 || contestSeries != 1)){
+        if (this.value == 4) {
             jQuery('#contest_subtypes').val(3)
             jQuery('#contest_series').val(1)
-            updateVisibility(contestType)
+        } else {
+            if (jQuery('#contest_subtypes').val() == 3) {
+                jQuery('#contest_subtypes').val(2) // Nem továbbjutásos
+            }
+            if (jQuery('#contest_series').val() == 1) {
+                jQuery('#contest_series').val(VESPA_DEFAULT_SERIES_ID)
+            }
         }
+        updateVisibility(this.value)
     });
-    jQuery('#contest_subtypes').on('change', function(e) { 
-        const contestType = jQuery('#contest_types').val()
+    jQuery('#contest_subtypes').on('change', function(e) {
         const contestSeries = jQuery('#contest_series').val()
+        const contestType = jQuery('#contest_types').val()
         if(this.value == 3 && (contestType != 4 || contestSeries != 1)){
             jQuery("#contest_types").val(4)
             jQuery('#contest_series').val(1)
-            updateVisibility(contestType)
+            updateVisibility(4)
         }
     });
-    jQuery('#contest_series').on('change', function(e) { 
-        const contestType = jQuery('#contest_series').val()
+    jQuery('#contest_series').on('change', function(e) {
+        const contestType = jQuery('#contest_types').val()
         const contestSubtype = jQuery('#contest_subtypes').val()
         if(this.value == 1 && (contestType != 4 || contestSubtype != 3)){
             jQuery("#contest_types").val(4);
             jQuery("#contest_subtypes").val(3);
-            updateVisibility(contestType)
+            updateVisibility(4)
         }
     });
     function updateVisibility(type){
@@ -392,18 +408,16 @@ if (is_numeric($id) && $id > 0) {
 
 <?php if ($record == null) : ?>
 <script>
-    // Verseny nevének automatikus összeállítása új verseny felvételekor
-    // (megye + típus + sportág + döntő). Meglévő versenynél ez a blokk
-    // nem is töltődik be, a contest_name mezőt így soha nem érinti.
+    // Verseny nevének automatikus összeállítása új verseny felvételekor.
+    // A szórend típusonként más, mert magyarul csak így helyes:
+    //   megyei     -> "Nógrád megyei Atlétika Diákolimpia"
+    //   országos   -> "Atlétika Diákolimpia Országos Döntő"
+    //   regionális -> "Atlétika Diákolimpia Regionális"
+    //   szabadidős -> "Atlétika" (nem Diákolimpia-verseny)
+    // A "Döntő" szót kizárólag az országos verseny kapja meg, automatikusan.
+    // Meglévő versenynél ez a blokk nem is töltődik be, a contest_name mezőt
+    // így soha nem érinti.
     jQuery(function($) {
-        var contestTypeNames = <?php
-            $contest_type_map = array();
-            $contest_type_list = $wpdb->get_results("SELECT * FROM vespa_contest_types");
-            foreach ($contest_type_list as $ct) {
-                $contest_type_map[$ct->contest_type_id] = $ct->contest_type_name;
-            }
-            echo wp_json_encode($contest_type_map);
-        ?>;
         var stateNames = <?php
             $state_map = array();
             $state_list = $wpdb->get_results("SELECT * FROM vespa_states");
@@ -430,47 +444,37 @@ if (is_numeric($id) && $id > 0) {
 
             var typeId = $('#contest_types').val();
             var stateId = $('#state_id').val();
-            var sport = ($('#sportag_nev').val() || '').toString();
-            var isDonto = $('#is_donto').is(':checked');
+            var sport = ($('#sportag_nev').val() || '').toString().trim();
 
-            var lead = '';
-            if (typeId == 3) {
-                // megyei verseny: a megye neve + a "megyei" szó
-                var stateName = stateNames[stateId] || '';
-                lead = (stateName + ' megyei').replace(/\s+/g, ' ').trim();
-            } else {
-                lead = contestTypeNames[typeId] || '';
+            // Sportág nélkül nincs értelmes név — ilyenkor a mezőt üresen
+            // hagyjuk, nem tesszük bele a puszta "Diákolimpia" szót.
+            if (sport === '') {
+                $('#contest_name').val('');
+                return;
             }
 
-            var parts = [lead, sport];
-            if (typeId == 1 || (typeId == 3 && isDonto)) {
-                parts.push('döntő');
+            var parts;
+            if (typeId == 3) {
+                // megyei: megye neve + "megyei" + sportág + "Diákolimpia"
+                var stateName = stateNames[stateId] || '';
+                parts = [stateName === '' ? '' : stateName + ' megyei', sport, 'Diákolimpia'];
+            } else if (typeId == 1) {
+                parts = [sport, 'Diákolimpia', 'Országos', 'Döntő'];
+            } else if (typeId == 2) {
+                parts = [sport, 'Diákolimpia', 'Regionális'];
+            } else {
+                // szabadidősport: nem Diákolimpia-verseny, csak a sportág neve
+                parts = [sport];
             }
 
             var name = parts.join(' ').replace(/\s+/g, ' ').trim();
             $('#contest_name').val(name);
         }
 
-        function updateDontoVisibility() {
-            var typeId = $('#contest_types').val();
-            if (typeId == 1) {
-                // országos verseny mindig döntő, a jelölőnégyzet nem is jelenik meg
-                $('#is_donto_line').hide();
-                $('#is_donto').prop('checked', true);
-            } else if (typeId == 3) {
-                // megyei versenynél az admin dönti el
-                $('#is_donto_line').show();
-            } else {
-                $('#is_donto_line').hide();
-                $('#is_donto').prop('checked', false);
-            }
-            composeContestName();
-        }
+        $('#contest_types, #contest_subtypes, #contest_series, #state_id, #sportag_nev')
+            .on('change', composeContestName);
 
-        $('#state_id, #sportag_nev, #is_donto').on('change', composeContestName);
-        $('#contest_types').on('change', updateDontoVisibility);
-
-        updateDontoVisibility();
+        composeContestName();
     });
 </script>
 <?php endif; ?>

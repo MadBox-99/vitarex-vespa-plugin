@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.3.17] - 2026-08-03
+
+### Javítások
+- **Verseny nevének szórendje:** A generált versenynév típusonként más sorrendet követ, mert magyarul csak így helyes — megyei: „Nógrád megyei Atlétika Diákolimpia”, országos: „Atlétika Diákolimpia Országos Döntő”, regionális: „Atlétika Diákolimpia Regionális”, szabadidősport: csak a sportág neve. A „Döntő” szó nagy kezdőbetűs.
+- **Döntő jelölőnégyzet megyei versenynél:** A megyei verseny nem döntő, ezért a jelölőnégyzet megszűnt. A „Döntő” szót továbbra is (és kizárólag) az országos verseny kapja meg automatikusan.
+- **Szabadidősport verseny átminősítése:** Egy tévesen szabadidősportként felvett verseny nem volt átminősíthető megyeivé: a típus váltásakor a lebonyolítás és a sorozat szabadidősporton maradt, és a mentés „Szabadidő versenytípusnak a lebonyolítása is csak szabadidősport lehet!” hibával elszállt. A típusváltás mostantól mindkét irányban szinkronizál.
+- **Súgószöveg a Megnevezés mezőnél:** Új verseny felvitelekor a mező alatt megjelenik, hogy a megnevezés automatikusan kitöltésre kerül, és csak eltérő név esetén kell kézzel beírni.
+- **Letöltött fájlok neve:** Az Excel- és PDF-letöltések a verseny azonosítója helyett a verseny nevét kapják (pl. „Nógrád megyei Atlétika Diákolimpia_sportolói logisztika.xlsx”). Érintett: kiírás, beszámoló, orvosi engedély, sportolói logisztika, nevezettek email lista, nevezési lista, szabadidős nevezők.
+
 ## [2.3.16] - 2026-07-28
 
 ### Új funkciók
