@@ -245,15 +245,15 @@ $sport_events = $wpdb->get_results("SELECT * FROM vespa_sport_events WHERE is_de
                     case 'iskola_sportoltatott_diakok':
                         return `${baseUrl}&dateFrom=${this.selectedRiportData.dateFrom}&dateTo=${this.selectedRiportData.dateTo}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}&disabilityGroupId=${this.selectedRiportData.disabilityGroupId}&gender=${this.selectedRiportData.gender}&sport=${this.selectedRiportData.sport}&sportEventId=${this.selectedRiportData.sportEvent}`
                     case 'tanev_diakolimpia_diakok':
-                        return `${baseUrl}&series=${this.selectedRiportData.series}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}&disabilityGroupId=${this.selectedRiportData.disabilityGroupId}&gender=${this.selectedRiportData.gender}&sport=${this.selectedRiportData.sport}&sportEventId=${this.selectedRiportData.sportEvent}`
+                        return `${baseUrl}&series=${this.selectedRiportData.series}&year=${this.selectedRiportData.year}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}&disabilityGroupId=${this.selectedRiportData.disabilityGroupId}&gender=${this.selectedRiportData.gender}&sport=${this.selectedRiportData.sport}&sportEventId=${this.selectedRiportData.sportEvent}`
                     case 'szezon_riport':
                         return `${baseUrl}&series=${this.selectedRiportData.series}&year=${this.selectedRiportData.year}&schoolDistrict=${this.selectedRiportData.schoolDistrict}&institutionId=${this.selectedRiportData.institutionId}&disabilityGroupId=${this.selectedRiportData.disabilityGroupId}&gender=${this.selectedRiportData.gender}`
                     case 'tanev_diakolimpia_versenyszam':
-                        return `${baseUrl}&series=${this.selectedRiportData.series}`;
+                        return `${baseUrl}&series=${this.selectedRiportData.series}&year=${this.selectedRiportData.year}`;
                     case 'tanev_diakolimpia_versenyszam_sportag':
-                        return `${baseUrl}&series=${this.selectedRiportData.series}`;
+                        return `${baseUrl}&series=${this.selectedRiportData.series}&year=${this.selectedRiportData.year}`;
                     case 'tanev_versenyen_indult_iskolak':
-                        return `${baseUrl}&series=${this.selectedRiportData.series}&schoolDistrict=${this.selectedRiportData.schoolDistrict}`
+                        return `${baseUrl}&series=${this.selectedRiportData.series}&year=${this.selectedRiportData.year}&schoolDistrict=${this.selectedRiportData.schoolDistrict}`
                     default:
                         break;
                 }               
@@ -271,7 +271,7 @@ $sport_events = $wpdb->get_results("SELECT * FROM vespa_sport_events WHERE is_de
                 return [{disability_group_id: 0, disability_group_name: 'Összes'}, ...this.disabilities]
             },
             getSeriesList() {
-                return [...this.series]
+                return [{series_id: 0, series_name: 'Összes szezon (nincs szűrés)'}, ...this.series]
             },
             getGenderList() {
                 return [...this.gender]
@@ -310,19 +310,19 @@ $sport_events = $wpdb->get_results("SELECT * FROM vespa_sport_events WHERE is_de
                         this.showedInputs = {...this.defaultShowState, filter: 1, interval: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1, sport: 1, sportEvent: 1}
                         break;
                     case 'tanev_diakolimpia_diakok':
-                        this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1, sport: 1, sportEvent: 1}
+                        this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, year: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1, sport: 1, sportEvent: 1}
                         break;
                     case 'szezon_riport':
                         this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, year: 1, gender: 1, disabilityGroup: 1, schoolDistrict: 1, institution: 1}
                         break;
                     case 'tanev_versenyen_indult_iskolak':
-                        this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, schoolDistrict: 1}
+                        this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, year: 1, schoolDistrict: 1}
                         break;
                     case 'tanev_diakolimpia_versenyszam':
-                        this.showedInputs = {...this.defaultShowState, filter: 1, series: 1}
+                        this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, year: 1}
                         break;
                     case 'tanev_diakolimpia_versenyszam_sportag':
-                        this.showedInputs = {...this.defaultShowState, filter: 1, series: 1}
+                        this.showedInputs = {...this.defaultShowState, filter: 1, series: 1, year: 1}
                         break;
                     default:
                         break;
