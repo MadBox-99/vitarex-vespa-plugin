@@ -516,6 +516,9 @@ function vespa_download_riport_versenyen_resztvevo_iskolak_szama()
     $schoolDistrict = $_GET['schoolDistrict'];
 
     $seriesId = $_GET["series"];
+    // Az időszak-szűrőhöz szükséges év; ha nincs megadva, a helper alapértelmezés
+    // szerint kezeli (0 = nincs időszak-szűrés).
+    $year = isset($_GET['year']) ? $_GET['year'] : 0;
     $filterType = '';
     $params = [];
     if($filter == 'all') $filterType = 'Összes verseny';
@@ -547,7 +550,12 @@ function vespa_download_riport_versenyen_resztvevo_iskolak_szama()
     $ind++;
     $sheet
         ->setCellValue('A' . $ind, 'Szűrés:')
-        ->setCellValue('B' . $ind, $filterType);
+        ->setCellValue('B' . $ind, $filterType)
+        ->setCellValue('C' . $ind, 'Időszak:')
+        ->setCellValue('D' . $ind, vespa_riport_periodus_felirat(
+            vespa_riport_szezon_neve($seriesId),
+            $year
+        ));
     $ind+=2;
     $sheet
     ->setCellValue('A' . $ind, 'Iskola neve')
@@ -562,7 +570,14 @@ function vespa_download_riport_versenyen_resztvevo_iskolak_szama()
             JOIN vespa_institutions as vi ON va.school_id=vi.institution_id
             JOIN vespa_contests as vc ON vae.contest_id=vc.contest_id
             JOIN vespa_constest_events as vce ON vae.contest_event_id=vce.id
-            WHERE vc.contest_series = $seriesId";
+            WHERE 1";
+
+    // A $seriesId eddig nyersen, prepared paraméter nélkül került az SQL-be.
+    // Az időszak-feltétel MINDEN további feltétel ELŐTT kerül be, hogy a
+    // helyőrzők sorrendje egyezzen a $params sorrendjével.
+    $periodus = vespa_riport_periodus_szuro($seriesId, $year);
+    $sql     .= $periodus['sql'];
+    $params   = array_merge($params, $periodus['params']);
 
     if ($filter == 'country') {
         $sql .= " AND vc.contest_type=1";
@@ -581,7 +596,7 @@ function vespa_download_riport_versenyen_resztvevo_iskolak_szama()
 
     $sql .= " GROUP BY vi.institution_id ORDER BY vi.ins_name ASC";
 
-    $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
+    $data = vespa_riport_get_results($sql, $params);
 
     foreach ($data as $row) {
         $sheet->setCellValue('A' . $ind, $row->ins_name);
