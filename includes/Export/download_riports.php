@@ -798,6 +798,12 @@ function vespa_download_riport_tanev($type)
     $year = isset($_GET['year']) ? $_GET['year'] : 0;
     $sportId = isset($_GET['sport']) ? $_GET['sport'] : 0;
     $sportEventId = isset($_GET['sportEventId']) ? $_GET['sportEventId'] : 0;
+    // Az intézmény, a nem és a fogyatékossági csoport eddig hiányzott ebből a
+    // riportból: a felület mutatta és el is küldte őket, a backend viszont
+    // soha nem olvasta ki, ezért némán szűretlen számok jöttek ki.
+    $institutionId = isset($_GET['institutionId']) ? $_GET['institutionId'] : 0;
+    $disabilityGroupId = isset($_GET['disabilityGroupId']) ? $_GET['disabilityGroupId'] : 0;
+    $gender = isset($_GET['gender']) ? $_GET['gender'] : '';
     $stateId = is_numeric($filter) ? (int)$filter : 0;
     $filterType = '';
     if($filter == 'all') $filterType = 'Összes verseny';
@@ -871,10 +877,16 @@ function vespa_download_riport_tanev($type)
     } elseif (is_numeric($filter) && $stateId == 0) {
         $sql .= " AND vc.contest_type=3";
     }
-    if($schoolDistrictId > 0) {
-         $sql .= " AND vi.school_district_id=%d";
-         $params[] = $schoolDistrictId;
-    }
+    // Az intézmény, a nem és a fogyatékossági csoport eddig hiányzott ebből a
+    // riportból: a felület mutatta és el is küldte őket, a backend viszont
+    // soha nem olvasta ki, ezért némán szűretlen számok jöttek ki.
+    $intezmeny = vespa_riport_intezmeny_szuro($schoolDistrictId, $institutionId);
+    $sql      .= $intezmeny['sql'];
+    $params    = array_merge($params, $intezmeny['params']);
+
+    $sportolo = vespa_riport_sportolo_szuro($disabilityGroupId, $gender);
+    $sql     .= $sportolo['sql'];
+    $params   = array_merge($params, $sportolo['params']);
     if (is_numeric($sportId) && $sportId > 0) {
         $sql .= " AND vce.sport_id=%d";
         $params[] = intval($sportId);
@@ -889,10 +901,14 @@ function vespa_download_riport_tanev($type)
     $params = [];
     $sql = "SELECT vi.institution_id, vi.ins_name FROM `vespa_institutions` as vi
             WHERE 1";
-    if($schoolDistrictId > 0) {
-        $sql .= " AND vi.school_district_id=%d";
-        $params[] = $schoolDistrictId;
-    }
+    // Az intézmény-szűrőnek ITT IS érvényesülnie kell: e nélkül egy intézményt
+    // kiválasztva egyetlen adatsor mellett több száz nullás sor jönne ki.
+    // A sportoló-szűrő viszont NEM kerül ide: a nem és a fogyatékossági csoport
+    // a diák tulajdonsága, nem az intézményé, és ez a lekérdezés nem is ismeri
+    // a `va` aliast — csak a darabszámokat befolyásolják, a lista tagjait nem.
+    $intezmeny = vespa_riport_intezmeny_szuro($schoolDistrictId, $institutionId);
+    $sql      .= $intezmeny['sql'];
+    $params    = array_merge($params, $intezmeny['params']);
     if($stateId > 0) {
         $sql .= " AND vi.ins_state=%d";
         $params[] = $stateId;
