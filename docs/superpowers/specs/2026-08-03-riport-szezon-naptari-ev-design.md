@@ -198,9 +198,11 @@ function vespa_riport_get_results($sql, $params)
 Ez nem tiszta függvény (a `$wpdb`-t használja), ezért nem unit-tesztelt; a
 szerepe kizárólag az, hogy egyetlen call-site se maradjon ki. Az érintett
 `$wpdb->get_results($wpdb->prepare($sql, ...$params))` hívások
-(`:163`, `:445`, `:572`, `:866`, `:879`) erre cserélődnek. A `:277`, `:697-698`,
+(`:163`, `:445`, `:572`, `:866`, `:879`) erre cserélődnek. A `:697-698` és a
 `:1016` hívások az intervallumos riportokhoz tartoznak, ahol a `$params` sosem
-üres — ezek érintetlenek maradnak.
+üres — ezek érintetlenek maradnak. A `:277` hívás a `szezon_riport`-on belüli
+`$sqlContests` lekérdezés; ez NEM intervallumos riport, és szintén a helperre
+áll át.
 
 #### A négy riportfüggvény módosítása
 

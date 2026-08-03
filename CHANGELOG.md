@@ -3,13 +3,13 @@
 ## [2.3.21] - 2026-08-03
 
 ### Új funkciók
-- **Szezon és naptári év külön szűrhető a riportokban:** A tanév-alapú riportoknál a versenysorozat eddig kötelező volt, a naptári év pedig csak azon belül szűkített — tiszta naptári éves kimutatás így nem volt készíthető. Mostantól a versenysorozat legördülőben van „Összes szezon (nincs szűrés)" opció, és a naptári év mező mind az öt tanév-riportnál megjelenik. Mind a négy kombináció használható: csak szezon, csak naptári év, mindkettő (a szezon adott évbe eső fele), vagy egyik sem. Az alapértelmezés továbbra is a legutóbbi szezon.
-- **Egyértelmű időszak-felirat az XLSX fejlécében:** Minden érintett riport fejléce megmondja, mi volt beállítva — „2025/2026", „2025/2026 — naptári év: 2025", „Naptári év: 2025" vagy „Nincs időszakszűrés (összes verseny)". Eddig a szezon és a naptári év összemosódott a fájlban.
+- **Szezon és naptári év külön szűrhető a riportokban:** A tanév-alapú riportoknál a versenysorozat eddig kötelező volt, a naptári év pedig csak azon belül szűkített — tiszta naptári éves kimutatás így nem volt készíthető. Mostantól a versenysorozat legördülőben van „Összes szezon (nincs szűrés)” opció, és a naptári év mező mind az öt tanév-riportnál megjelenik. Mind a négy kombináció használható: csak szezon, csak naptári év, mindkettő (a szezon adott évbe eső fele), vagy egyik sem. Az alapértelmezés továbbra is a legutóbbi szezon.
+- **Egyértelmű időszak-felirat az XLSX fejlécében:** Minden érintett riport fejléce megmondja, mi volt beállítva — „2025/2026”, „2025/2026 — naptári év: 2025”, „Naptári év: 2025” vagy „Nincs időszakszűrés (összes verseny)”. Eddig a szezon és a naptári év összemosódott a fájlban.
 
 ### Javítások
 - **Szezon riport szezon nélkül:** A Szezon riport eddig némán megszakadt (üres válasz), ha nem volt kiválasztva versenysorozat. Mostantól szezon nélkül is lefut.
-- **Versenysorozat prepared paraméterként:** A „Tanévben versenyen indult iskolák" riport a kiválasztott versenysorozat azonosítóját közvetlenül, előkészített paraméter nélkül fűzte a lekérdezésbe.
-- **Sérült XLSX szűrő nélküli riportnál:** Ha egy riport minden szűrője „összes" állásban volt, az adatbázis-réteg figyelmeztetést írhatott a válaszba, ami a bináris XLSX-fájlt megsértette. Érintett volt a „Tanévi diákolimpia diákok" riport intézmény-listája is.
+- **Versenysorozat prepared paraméterként:** A „Tanévben versenyen indult iskolák” riport a kiválasztott versenysorozat azonosítóját közvetlenül, előkészített paraméter nélkül fűzte a lekérdezésbe.
+- **Sérült XLSX szűrő nélküli riportnál:** Ha egy riport minden szűrője „összes” állásban volt, az adatbázis-réteg figyelmeztetést írhatott a válaszba, ami a bináris XLSX-fájlt megsértette. Érintett volt a „Tanévi diákolimpia diákok” riport intézmény-listája is.
 
 ## [2.3.18] - 2026-08-03
 

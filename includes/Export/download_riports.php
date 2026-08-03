@@ -271,7 +271,7 @@ $data = vespa_riport_get_results($sql, $params);
     // a versenyszámlálás a diák szerinti GROUP BY-jal fut, és HIBAÜZENET NÉLKÜL
     // rossz értéket ad.
     $sqlContests = str_replace('GROUP BY va.athlete_id, vc.contest_type', 'GROUP BY vc.contest_id', $sql);
-    $data = $wpdb->get_results($wpdb->prepare($sqlContests, ...$params));
+    $data = vespa_riport_get_results($sqlContests, $params);
     $sheet
         ->setCellValue('B' . $ind, 'Összesen')
         ->setCellValue('C' . $ind, 'Országos')
