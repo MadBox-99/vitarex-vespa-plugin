@@ -343,10 +343,12 @@ function vespa_download_riport_verseny_versenyszam()
 
     $type = $_GET['download_riports'];
 
-    $filter = $_GET['filter'];
-    $dateFrom = $_GET['dateFrom'];
-    $dateTo = $_GET['dateTo'];
-    $seriesId = $_GET['series'];
+    // Minden paraméter isset-védett: a hiányzó GET paraméter PHP warningot
+    // írna a válaszba, ami a binárisan írt XLSX-et is elronthatja.
+    $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+    $dateFrom = isset($_GET['dateFrom']) ? $_GET['dateFrom'] : '';
+    $dateTo = isset($_GET['dateTo']) ? $_GET['dateTo'] : '';
+    $seriesId = isset($_GET['series']) ? $_GET['series'] : 0;
     // A tanév-riportoknál (lásd lent) a naptári év is szűrhet; a hiányzó GET
     // paraméter warningot okozna, ezért isset-védett.
     $year = isset($_GET['year']) ? $_GET['year'] : 0;
@@ -512,10 +514,12 @@ function vespa_download_riport_versenyen_resztvevo_iskolak_szama()
 
     require VITAREX_VESPA_PLUGIN_DIR  . '/lib/vendor/autoload.php';
 
-    $filter = $_GET['filter'];
-    $schoolDistrict = $_GET['schoolDistrict'];
+    // Minden paraméter isset-védett: a hiányzó GET paraméter PHP warningot
+    // írna a válaszba, ami a binárisan írt XLSX-et is elronthatja.
+    $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+    $schoolDistrict = isset($_GET['schoolDistrict']) ? $_GET['schoolDistrict'] : 0;
 
-    $seriesId = $_GET["series"];
+    $seriesId = isset($_GET['series']) ? $_GET['series'] : 0;
     // Az időszak-szűrőhöz szükséges év; ha nincs megadva, a helper alapértelmezés
     // szerint kezeli (0 = nincs időszak-szűrés).
     $year = isset($_GET['year']) ? $_GET['year'] : 0;
@@ -622,13 +626,15 @@ function vespa_download_riport_verseny_diak()
 
     require VITAREX_VESPA_PLUGIN_DIR  . '/lib/vendor/autoload.php';
 
-    $dateFrom = $_GET['dateFrom'];
-    $dateTo = $_GET['dateTo'];
-    $filter = $_GET['filter'];
-    $schoolDistrict = $_GET['schoolDistrict'];
-    $gender = $_GET['gender'];
-    $disabilityGroupId = $_GET['disabilityGroupId'];
-    $institutionId = $_GET['institutionId'];
+    // Minden paraméter isset-védett: a hiányzó GET paraméter PHP warningot
+    // írna a válaszba, ami a binárisan írt XLSX-et is elronthatja.
+    $dateFrom = isset($_GET['dateFrom']) ? $_GET['dateFrom'] : '';
+    $dateTo = isset($_GET['dateTo']) ? $_GET['dateTo'] : '';
+    $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+    $schoolDistrict = isset($_GET['schoolDistrict']) ? $_GET['schoolDistrict'] : 0;
+    $gender = isset($_GET['gender']) ? $_GET['gender'] : '';
+    $disabilityGroupId = isset($_GET['disabilityGroupId']) ? $_GET['disabilityGroupId'] : 0;
+    $institutionId = isset($_GET['institutionId']) ? $_GET['institutionId'] : 0;
     $filterType = '';
     $params = [];
     if($filter == 'all') $filterType = 'Összes verseny';
@@ -801,12 +807,14 @@ function vespa_download_riport_tanev($type)
 
     require VITAREX_VESPA_PLUGIN_DIR  . '/lib/vendor/autoload.php';
 
-    $filter = $_GET['filter'];
-    $schoolDistrictId = $_GET['schoolDistrict'];
-    $dateFrom = $_GET['dateFrom'];
-    $dateTo = $_GET['dateTo'];
-    $seriesId = $_GET['series'];
-    // A naptári év szűrő új, ezért isset-védett - a régi, védelem nélküli GET-olvasásokhoz nem nyúlunk.
+    // Minden paraméter isset-védett: a hiányzó GET paraméter PHP warningot
+    // írna a válaszba, ami a binárisan írt XLSX-et is elronthatja.
+    $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+    $schoolDistrictId = isset($_GET['schoolDistrict']) ? $_GET['schoolDistrict'] : 0;
+    $dateFrom = isset($_GET['dateFrom']) ? $_GET['dateFrom'] : '';
+    $dateTo = isset($_GET['dateTo']) ? $_GET['dateTo'] : '';
+    $seriesId = isset($_GET['series']) ? $_GET['series'] : 0;
+    // A naptári év szűrő új paraméter.
     $year = isset($_GET['year']) ? $_GET['year'] : 0;
     $sportId = isset($_GET['sport']) ? $_GET['sport'] : 0;
     $sportEventId = isset($_GET['sportEventId']) ? $_GET['sportEventId'] : 0;
@@ -960,12 +968,16 @@ function vespa_download_riport_legnepszerubb_sportagak()
 
     require VITAREX_VESPA_PLUGIN_DIR  . '/lib/vendor/autoload.php';
 
-    $dateFrom = $_GET['dateFrom'];
-    $dateTo = $_GET['dateTo'];
-    $filter = $_GET['filter'];
-    $schoolDistrictId = $_GET['schoolDistrict'];
-    $gender = $_GET['gender'];
-    $disabilityGroupId = $_GET['disabilityGroupId'];
+    // Minden paraméter isset-védett: a hiányzó GET paraméter PHP warningot
+    // írna a válaszba, ami a binárisan írt XLSX-et is elronthatja.
+    // Az institutionId itt új olvasás - a szűrőhasználata egy későbbi taskban kerül be.
+    $dateFrom = isset($_GET['dateFrom']) ? $_GET['dateFrom'] : '';
+    $dateTo = isset($_GET['dateTo']) ? $_GET['dateTo'] : '';
+    $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+    $schoolDistrictId = isset($_GET['schoolDistrict']) ? $_GET['schoolDistrict'] : 0;
+    $institutionId = isset($_GET['institutionId']) ? $_GET['institutionId'] : 0;
+    $gender = isset($_GET['gender']) ? $_GET['gender'] : '';
+    $disabilityGroupId = isset($_GET['disabilityGroupId']) ? $_GET['disabilityGroupId'] : 0;
     $sportId = isset($_GET['sport']) ? $_GET['sport'] : 0;
     $sportEventId = isset($_GET['sportEventId']) ? $_GET['sportEventId'] : 0;
     $filterType = '';
