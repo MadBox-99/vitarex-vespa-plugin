@@ -9,7 +9,7 @@
 #
 # Minden build AUTOMATIKUSAN +1 patch verziót lép a fő plugin fájlban (Version: + define).
 # A major/minor emelés szándékos és kézi (szerkeszd a vitarex-vespa-plugin.php-t).
-# A megemelt verziót utána commitold!
+# A megemelt verziót a script a végén commitolja és pusholja (csak a fő plugin fájlt).
 #
 # A szerver-adatokat egy gitignore-olt deploy.env fájlból olvassa (lásd deploy.env.example).
 #
@@ -142,7 +142,38 @@ if [[ "$UPLOAD" -eq 1 ]]; then
     echo "    unzip -o $REMOTE_UPLOAD_DIR/$ZIP_NAME -d /útvonal/wp-content/plugins/"
 fi
 
-echo "==> Emlékeztető: a megemelt verziót ($VERSION) commitold a vitarex-vespa-plugin.php-ben!"
 echo "==> Emlékeztető: új telepítésnél futtasd a database/changes.sql új migrációit az éles DB-n."
-git commit -m "$VERSION"
-git push
+
+# --- a verzióemelés commitolása és pusholása ---
+# Csak a fő plugin fájlt stage-eljük: a munkakönyvtár egyéb módosításai nem
+# kerülhetnek bele egy verzió-commitba. (Korábban itt `git add` nélkül állt a
+# commit, ezért a verzióemelés sosem került bele, és a "nothing to commit"
+# hibán a set -e miatt a script a push előtt elszállt.)
+if ! git -C "$SCRIPT_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+    echo "FIGYELEM: nem git repó, a verzióemelés nincs commitolva." >&2
+    exit 0
+fi
+
+git -C "$SCRIPT_DIR" add -- "$MAIN_FILE"
+
+if git -C "$SCRIPT_DIR" diff --cached --quiet -- "$MAIN_FILE"; then
+    echo "==> A $VERSION verzió már commitolva van, nincs mit commitolni."
+    exit 0
+fi
+
+git -C "$SCRIPT_DIR" commit -q -m "chore: verzió $VERSION"
+echo "==> Commitolva: chore: verzió $VERSION"
+
+BRANCH="$(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD)"
+if [[ "$BRANCH" == "HEAD" ]]; then
+    echo "FIGYELEM: leválasztott HEAD, a push kimarad. A commit helyben megvan." >&2
+    exit 0
+fi
+
+if git -C "$SCRIPT_DIR" push origin "$BRANCH"; then
+    echo "==> Pusholva: origin/$BRANCH"
+else
+    echo "FIGYELEM: a push nem sikerült, de a commit helyben megvan." >&2
+    echo "           Pushold kézzel: git push origin $BRANCH" >&2
+    exit 1
+fi
