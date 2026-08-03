@@ -73,21 +73,19 @@ function vespa_download_riport_szezon_riport()
         $filterType = 'Összes verseny (országos + regionális + megyei)';
     }
 
-    if(is_numeric($seriesId) && $seriesId > 0){
-        $st = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_series WHERE series_id=%d",$seriesId));
-        $sheet
-            ->setCellValue('A' . $ind, 'Tanév/Diákolimpia szezon')
-            ->setCellValue('B' . $ind, $st->series_name);
-        if (is_numeric($year) && $year > 0) {
-            $sheet->setCellValue('C' . $ind, "Naptári év: $year");
-        }
-        $ind++;
-        $sheet
-            ->setCellValue('A' . $ind, 'Szűrés')
-            ->setCellValue('B' . $ind, $filterType);
-        $ind += 2;
-    }
-    else die;
+    // A szezon és a naptári év külön-külön elhagyható, ezért a fejléc-írás
+    // nem függhet attól, hogy van-e szezon. Korábban itt egy die() állt: szezon
+    // nélkül a riport némán megszakadt, üres választ adva.
+    $seriesName = vespa_riport_szezon_neve($seriesId);
+
+    $sheet
+        ->setCellValue('A' . $ind, 'Időszak')
+        ->setCellValue('B' . $ind, vespa_riport_periodus_felirat($seriesName, $year));
+    $ind++;
+    $sheet
+        ->setCellValue('A' . $ind, 'Szűrés')
+        ->setCellValue('B' . $ind, $filterType);
+    $ind += 2;
 
     $sql = "SELECT va.athlete_id, va.gender, va.disability_type, vdg.disability_group_name, va.birth_date, vi.institution_id, vc.contest_name, vc.contest_type, vc.state_id, vce.contest_id, vce.id as contest_event_id, vce.sport_id, vce.event_id, vs.sport_name, vse.sport_event_name FROM `vespa_athletes` as va
             JOIN vespa_athlete_entries as vae ON va.athlete_id=vae.athlete_id
@@ -97,9 +95,13 @@ function vespa_download_riport_szezon_riport()
             LEFT JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
             LEFT JOIN vespa_sport_events as vse ON vce.event_id=vse.sport_event_id
             JOIN vespa_disability_groups as vdg ON va.disability_type=vdg.disability_group_id
-            WHERE vc.contest_series=%d";
+            WHERE 1";
 
-    $params = [$seriesId];
+    // Az időszak-feltétel MINDEN további feltétel ELŐTT kerül be, hogy a %d
+    // helyőrzők sorrendje egyezzen a $params sorrendjével.
+    $periodus = vespa_riport_periodus_szuro($seriesId, $year);
+    $sql   .= $periodus['sql'];
+    $params = $periodus['params'];
 
     // Mind a NÉGY ág kötelező. Korábban az 'all' és a 0 ("Összes megye") ág
     // hiányzott, ezért ezekben az esetekben SEMMILYEN contest_type feltétel nem
@@ -149,18 +151,13 @@ function vespa_download_riport_szezon_riport()
         $params[] = $gender;
     }
 
-    if (is_numeric($year) && $year > 0) {
-        $sql .= " AND YEAR(vc.start_at)=%d";
-        $params[] = $year;
-    }
-
 // (diák, versenytípus) páronként egy sor. Így a típus szerinti vödrök
 // determinisztikusak; a több típuson induló diák minden érintett vödörbe
 // beleszámít. Az "össz" és a nemek szerinti bontás ezért athlete_id szerint
 // egyedivé tesz (lásd lent).
 $sql .= " GROUP BY va.athlete_id, vc.contest_type";
 
-$data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
+$data = vespa_riport_get_results($sql, $params);
 
     // A GROUP BY (athlete_id, contest_type) miatt a több típuson induló diák
     // több sorban szerepel. Az "össz" és a nemek szerinti bontás EGYEDI diákot
