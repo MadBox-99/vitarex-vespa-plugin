@@ -107,29 +107,34 @@ if (is_numeric($id) && $id > 0) {
             <select id="doc_downloader" class="form-control input-sm" data-url="<?php echo home_url('/'); ?>?download_contest_docs=">
                 <option value="">Dokumentum letöltése</option>
 
-                <option value="listing">Kiírás</option>
+                <?php
+                // A legördülő és a letöltő végpont ugyanazt a szabályt kérdezi
+                // (vespa_user_can_download_contest_doc), így nem tud elcsúszni
+                // egymástól, ami eddig megtörtént: a beszámolót a menüpont
+                // bárkinek felkínálta, aki a versenyt látta.
+                ?>
+                <?php if (vespa_user_can_download_contest_doc('listing')) : ?>
+                    <option value="listing">Kiírás</option>
+                <?php endif; ?>
 
-                <?php if (vespa_contest_has_answers($id)) : ?>
+                <?php if (vespa_contest_has_answers($id) && vespa_user_can_download_contest_doc('answers')) : ?>
                     <option value="answers">Beszámoló</option>
                 <?php endif; ?>
 
-                
-                <?php if (
-                        VESPA_Roles::getInstance()->current_user_has_role(VESPA_Roles::MEGYEI_VERSENYIGAZGATO)
-                        || VESPA_Roles::getInstance()->current_user_has_role(VESPA_Roles::FOVESZ_FODISZ_SPORTIGAZGATO)
-                        || VESPA_Roles::getInstance()->current_user_has_role(VESPA_Roles::ADMINISZTRATOR)
-                        || is_super_admin()
-                    )  : ?>
+                <?php if (vespa_user_can_download_contest_doc('logistic')) : ?>
                     <option value="logistic">Sportolói logisztika</option>
-                    <option value="emails">Nevezettek email lista</option>
-                <?php endif; ?>    
+                <?php endif; ?>
 
-                <?php if (!VESPA_Roles::getInstance()->current_user_has_role(VESPA_Roles::TESTNEVELO)) : ?>
+                <?php if (vespa_user_can_download_contest_doc('emails')) : ?>
+                    <option value="emails">Nevezettek email lista</option>
+                <?php endif; ?>
+
+                <?php if (vespa_user_can_download_contest_doc('athletes')) : ?>
                     <option value="athletes">Nevezési lista</option>
                 <?php endif; ?>
 
-
-                <?php if (VESPA_Roles::getInstance()->current_user_has_role(VESPA_Roles::TESTNEVELO)) : ?>
+                <?php if (VESPA_Roles::getInstance()->current_user_has_role(VESPA_Roles::TESTNEVELO)
+                        && vespa_user_can_download_contest_doc('medical_approval')) : ?>
                     <option value="medical_approval">Orvosi engedély</option>
                 <?php endif; ?>
             </select>

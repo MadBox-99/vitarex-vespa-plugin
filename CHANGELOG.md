@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.18] - 2026-08-03
+
+### Javítások
+- **Verseny-dokumentumok letöltése jogosultsághoz kötve:** A `?download_contest_docs=` végpont eddig semmilyen jogosultságot nem ellenőrzött (a helyén egy `TODO` állt), és `init`-en fut, ezért a linket ismerve bejelentkezés nélkül is letölthető volt a beszámoló, a sportolói logisztika, a nevezettek email listája és a nevezési lista. Mostantól minden dokumentumtípusnak van szabálya, jogosulatlan hívásra 403 a válasz.
+- **Beszámoló láthatósága:** A beszámoló PDF-je és a versenylista „Beszámoló" oszlopa csak a versenyt kezelő szerepeknek jelenik meg (rendszergazda, FOVESZ/FODISZ sportigazgató, diák sportigazgató, megyei versenyigazgató, megyei vezető) — ugyanannak a körnek, amelyik rögzíteni is tudja. A testnevelő és az iskolaigazgató eddig látta az oszlopot és letölthette a PDF-et.
+- **A felület és a végpont közös szabályon:** A verseny adatlapján a „Dokumentum letöltése" legördülő ugyanazt a döntést kérdezi, mint a letöltő végpont, így a kettő nem tud elcsúszni. A szabály tiszta függvényben van, 40 unit teszttel. Senki nem veszít olyan hozzáférést, ami eddig a felületen elérhető volt.
+
 ## [2.3.17] - 2026-08-03
 
 ### Javítások

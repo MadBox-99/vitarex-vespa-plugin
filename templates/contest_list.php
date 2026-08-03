@@ -521,11 +521,16 @@
         });
     }
 
+    // A beszámoló a versenyt kezelő szerepek ügye: aki nem tudja rögzíteni,
+    // annak a kitöltöttségét sem mutatjuk (a testnevelő és az iskolaigazgató
+    // eddig látta az oszlopot).
+    $vespa_show_beszamolo = current_user_can(VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles);
+
     // A beszámoló kitöltöttsége EGYETLEN lekérdezésből, a táblázatok
     // kirajzolása előtt. Soronkénti hívás négy táblázatnyi versenyre N
     // lekérdezést jelentene.
-    $beszamolo_szamlalok  = vespa_contest_answer_counts();
-    $beszamolo_kerdesszam = vespa_contest_question_count();
+    $beszamolo_szamlalok  = $vespa_show_beszamolo ? vespa_contest_answer_counts() : array();
+    $beszamolo_kerdesszam = $vespa_show_beszamolo ? vespa_contest_question_count() : 0;
 
     ?>
 
@@ -624,7 +629,9 @@
                                 <th>Helyszín</th>
                                 <th>Cím</th>
                                 <th>Fogy. csoport</th>
+                                <?php if ($vespa_show_beszamolo) : ?>
                                 <th>Beszámoló</th>
+                                <?php endif; ?>
                                 <th class="no-export">Műveletek</th>
                             </tr>
 
@@ -664,6 +671,7 @@
                                             echo implode(', ', $mapped); 
                                         ?>
                                     </td>
+                                    <?php if ($vespa_show_beszamolo) : ?>
                                     <td>
                                         <?php
                                             $beszamolo_db = isset($beszamolo_szamlalok[intval($race->contest_id)])
@@ -675,6 +683,7 @@
                                             <?php echo esc_html($beszamolo_cella['cimke']); ?>
                                         </span>
                                     </td>
+                                    <?php endif; ?>
                                     <td class="no-export">
                                         <div style="display: flex;">
                                             <div style="font-size: 20px; cursor: pointer;" class="tooltip mx-2">
@@ -762,7 +771,9 @@
                                 <th>Helyszín</th>
                                 <th>Cím</th>
                                 <th>Fogy. csoport</th>
+                                <?php if ($vespa_show_beszamolo) : ?>
                                 <th>Beszámoló</th>
+                                <?php endif; ?>
                                 <th class="no-export">Műveletek</th>
                             </tr>
                         </thead>
@@ -801,6 +812,7 @@
                                             echo implode(', ', $mapped);
                                         ?>
                                     </td>
+                                    <?php if ($vespa_show_beszamolo) : ?>
                                     <td>
                                         <?php
                                             $beszamolo_db = isset($beszamolo_szamlalok[intval($race->contest_id)])
@@ -812,6 +824,7 @@
                                             <?php echo esc_html($beszamolo_cella['cimke']); ?>
                                         </span>
                                     </td>
+                                    <?php endif; ?>
                                     <td class="no-export">
                                         <div style="display: flex;">
                                             <div style="font-size: 20px; cursor: pointer;" class="tooltip mx-2">
@@ -873,7 +886,9 @@
                                 <th>Helyszín</th>
                                 <th>Cím</th>
                                 <th>Fogy. csoport</th>
+                                <?php if ($vespa_show_beszamolo) : ?>
                                 <th>Beszámoló</th>
+                                <?php endif; ?>
                                 <th class="no-export">Műveletek</th>
                             </tr>
                         </thead>
@@ -911,6 +926,7 @@
                                             echo implode(', ', $mapped);
                                         ?>
                                     </td>
+                                    <?php if ($vespa_show_beszamolo) : ?>
                                     <td>
                                         <?php
                                             $beszamolo_db = isset($beszamolo_szamlalok[intval($race->contest_id)])
@@ -922,6 +938,7 @@
                                             <?php echo esc_html($beszamolo_cella['cimke']); ?>
                                         </span>
                                     </td>
+                                    <?php endif; ?>
                                     <td class="no-export">
                                         <div style="display: flex;">
                                             <div style="font-size: 20px; cursor: pointer;" class="tooltip mx-2">
@@ -969,7 +986,9 @@
                                 <th>Helyszín</th>
                                 <th>Cím</th>
                                 <th>Fogy. csoport</th>
+                                <?php if ($vespa_show_beszamolo) : ?>
                                 <th>Beszámoló</th>
+                                <?php endif; ?>
                                 <th class="no-export">Műveletek</th>
                             </tr>
                         </thead>
@@ -1007,6 +1026,7 @@
                                             echo implode(', ', $mapped);
                                         ?>
                                     </td>
+                                    <?php if ($vespa_show_beszamolo) : ?>
                                     <td>
                                         <?php
                                             $beszamolo_db = isset($beszamolo_szamlalok[intval($race->contest_id)])
@@ -1018,6 +1038,7 @@
                                             <?php echo esc_html($beszamolo_cella['cimke']); ?>
                                         </span>
                                     </td>
+                                    <?php endif; ?>
                                     <td class="no-export">
                                         <div style="display: flex;">
                                             <div style="font-size: 20px; cursor: pointer;" class="tooltip mx-2">

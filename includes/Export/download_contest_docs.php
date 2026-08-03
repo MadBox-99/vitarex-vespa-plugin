@@ -9,10 +9,19 @@ add_action('init', 'init_download_contest_docs');
 function init_download_contest_docs()
 {
     if (isset($_GET['download_contest_docs'])) {
-        $type       = $_GET['download_contest_docs'];
-        $contest_id = $_GET['contest_id'];
+        $type       = sanitize_key($_GET['download_contest_docs']);
+        $contest_id = isset($_GET['contest_id']) ? intval($_GET['contest_id']) : 0;
 
-        // TODO: has right to access this contest?
+        // A dokumentumok szerephez kötöttek: a felületen eddig is csak a
+        // jogosultaknak jelent meg a menüpont, a közvetlen URL viszont
+        // bárkinek — akár bejelentkezés nélkül is — kiszolgálta őket.
+        if ($contest_id <= 0 || !vespa_user_can_download_contest_doc($type)) {
+            wp_die(
+                'Nincs jogosultságod a dokumentum letöltéséhez.',
+                'Jogosulatlan hozzáférés',
+                array('response' => 403)
+            );
+        }
 
         if ('listing' == $type) { // Kiiras
             vespa_download_listing($contest_id);
