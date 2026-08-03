@@ -4,14 +4,14 @@
     Plugin URI: https://cegem360.hu
     Description: VESPA
     Author: Cegem360 Kft.
-    Version: 2.3.18
+    Version: 2.3.20
     Author URI: https://cegem360.hu
     */
 
 $currentLocale = get_locale();
 setlocale(LC_ALL, $currentLocale . '.utf8');
 
-define('VITAREX_VESPA_VERSION', '2.3.18');
+define('VITAREX_VESPA_VERSION', '2.3.20');
 define('VITAREX_VESPA_PLUGIN_DIR', WP_PLUGIN_DIR . '/vitarex-vespa-plugin');
 define('VITAREX_VESPA_PLUGIN_URI', plugin_dir_url(__FILE__));
 define('VITAREX_VESPA_PLUGIN_TEXTDOMAIN', 'vitarex_vespa');
