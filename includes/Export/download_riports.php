@@ -128,28 +128,15 @@ function vespa_download_riport_szezon_riport()
         $params[] = VespaContestType::MEGYEI;
     }
 
-    if (is_numeric($schoolDistrict) && $schoolDistrict > 0) {
-        $sql .= " AND vi.school_district_id=%d";
-        $params[] = $schoolDistrict;
-    }
+    // A szűrőblokkok kézi másolatai helyett közös helper: így nem tud egyik
+    // riportban elgépelt változónévvel vagy hiányzó feltétellel elcsúszni.
+    $intezmeny = vespa_riport_intezmeny_szuro($schoolDistrict, $institutionId);
+    $sql      .= $intezmeny['sql'];
+    $params    = array_merge($params, $intezmeny['params']);
 
-    // Az intézmény-választást a felület eddig is elküldte
-    // (templates/riports_dashboard.php:235) és a mezőt is megjelenítette,
-    // de a backend soha nem olvasta ki -> némán hatástalan volt.
-    if (is_numeric($institutionId) && $institutionId > 0) {
-        $sql .= " AND vi.institution_id = %d";
-        $params[] = intval($institutionId);
-    }
-
-    if (is_numeric($disabilityGroupId) && $disabilityGroupId > 0) { 
-        $sql .= " AND va.disability_type=%d";
-        $params[] = $disabilityGroupId;
-    }
-
-    if ($gender == 'nő' || $gender == 'férfi') {
-        $sql .= " AND va.gender=%s";
-        $params[] = $gender;
-    }
+    $sportolo = vespa_riport_sportolo_szuro($disabilityGroupId, $gender);
+    $sql     .= $sportolo['sql'];
+    $params   = array_merge($params, $sportolo['params']);
 
 // (diák, versenytípus) páronként egy sor. Így a típus szerinti vödrök
 // determinisztikusak; a több típuson induló diák minden érintett vödörbe
@@ -593,10 +580,11 @@ function vespa_download_riport_versenyen_resztvevo_iskolak_szama()
     else if (is_numeric($filter) && $filter == 0) {
         $sql .= " AND vc.contest_type=3";
     }
-    if (is_numeric($schoolDistrict) && $schoolDistrict > 0) {
-        $sql .= " AND vi.school_district_id=%d";
-        $params[] = $schoolDistrict ;
-    }
+    // Ennek a riportnak a felülete intézményt nem kínál, ezért az
+    // intézmény-argumentum fixen 0.
+    $intezmeny = vespa_riport_intezmeny_szuro($schoolDistrict, 0);
+    $sql      .= $intezmeny['sql'];
+    $params    = array_merge($params, $intezmeny['params']);
 
     $sql .= " GROUP BY vi.institution_id ORDER BY vi.ins_name ASC";
 
@@ -700,22 +688,14 @@ function vespa_download_riport_verseny_diak()
     else if (is_numeric($filter) && $filter == 0) {
         $sql .= " AND vc.contest_type=3";
     }
-    if (is_numeric($schoolDistrict) && $schoolDistrict > 0) {
-        $sql .= " AND vi.school_district_id=%d";
-        $params[] = $schoolDistrict ;
-    }
-    if (is_numeric($disabilityGroupId) && $disabilityGroupId > 0) {
-        $sql .= " AND va.disability_type=%d";
-        $params[] = $disabilityGroupId;
-    }
-    if (is_numeric($institutionId) && $institutionId > 0) {
-        $sql .= " AND vi.institution_id = %d";
-        $params[] = $institutionId;
-    }
-    if ($gender == 'nő' || $gender == 'férfi') {
-        $sql .= " AND va.gender=%s";
-        $params[] = $gender;
-    }
+    $intezmeny = vespa_riport_intezmeny_szuro($schoolDistrict, $institutionId);
+    $sql      .= $intezmeny['sql'];
+    $params    = array_merge($params, $intezmeny['params']);
+
+    $sportolo = vespa_riport_sportolo_szuro($disabilityGroupId, $gender);
+    $sql     .= $sportolo['sql'];
+    $params   = array_merge($params, $sportolo['params']);
+
     $sqlAgeGroups = "
     SELECT vca.*, va.agegroup_name 
     FROM vespa_contest_agegroups as vca
