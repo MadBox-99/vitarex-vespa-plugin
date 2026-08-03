@@ -806,6 +806,8 @@ function vespa_download_riport_tanev($type)
     $dateFrom = $_GET['dateFrom'];
     $dateTo = $_GET['dateTo'];
     $seriesId = $_GET['series'];
+    // A naptári év szűrő új, ezért isset-védett - a régi, védelem nélküli GET-olvasásokhoz nem nyúlunk.
+    $year = isset($_GET['year']) ? $_GET['year'] : 0;
     $sportId = isset($_GET['sport']) ? $_GET['sport'] : 0;
     $sportEventId = isset($_GET['sportEventId']) ? $_GET['sportEventId'] : 0;
     $stateId = is_numeric($filter) ? (int)$filter : 0;
@@ -836,9 +838,14 @@ function vespa_download_riport_tanev($type)
         ->setCellValue('B' . $ind, $filterType)
         ->setCellValue('C' . $ind, 'Időszak:');
 
-    if(is_numeric($seriesId) && $seriesId > 0){
-        $st = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_series WHERE series_id=%d",$seriesId));
-        $sheet->setCellValue('D' . $ind, $st->series_name);
+    // Az ágválasztás a RIPORTTÍPUSRA épül, nem a $seriesId értékére: a szezon
+    // már elhagyható, és tanév-riportnál akkor sem a dateFrom/dateTo
+    // tartományt kell kiírni, ha nincs kiválasztva szezon.
+    if('tanev_diakolimpia_diakok' == $type){
+        $sheet->setCellValue('D' . $ind, vespa_riport_periodus_felirat(
+            vespa_riport_szezon_neve($seriesId),
+            $year
+        ));
     }
     else {
         $sheet->setCellValue('D' . $ind, $dateFrom)->setCellValue('E' . $ind, $dateTo);
@@ -858,10 +865,9 @@ function vespa_download_riport_tanev($type)
             WHERE 1";
  
     if('tanev_diakolimpia_diakok' == $type){
-        if ($seriesId > 0) {
-            $sql .= " AND vc.contest_series=%d";
-            $params[] = $seriesId;
-        }
+        $periodus = vespa_riport_periodus_szuro($seriesId, $year);
+        $sql     .= $periodus['sql'];
+        $params   = array_merge($params, $periodus['params']);
     }
     else {
         $sql .= " AND vc.start_at >= %s AND vc.end_at <= %s";
@@ -890,7 +896,7 @@ function vespa_download_riport_tanev($type)
         $params[] = intval($sportEventId);
     }
     $sql .= " GROUP BY vi.institution_id;";
-    $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
+    $data = vespa_riport_get_results($sql, $params);
 
     $params = [];
     $sql = "SELECT vi.institution_id, vi.ins_name FROM `vespa_institutions` as vi
@@ -903,7 +909,9 @@ function vespa_download_riport_tanev($type)
         $sql .= " AND vi.ins_state=%d";
         $params[] = $stateId;
     }
-    $allSchool = $wpdb->get_results($wpdb->prepare($sql, ...$params));
+    // Ennek a lekérdezésnek a $params tömbje már ma is üresen maradhat, ha se
+    // tankerület, se megye nincs szűrve — a burkoló ilyenkor prepare() nélkül fut.
+    $allSchool = vespa_riport_get_results($sql, $params);
     foreach ($allSchool as $school) {
         $school->diakok = 0;
         foreach ($data as $validData) {
