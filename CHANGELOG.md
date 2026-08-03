@@ -9,7 +9,7 @@
 ### Javítások
 - **Szezon riport szezon nélkül:** A Szezon riport eddig némán megszakadt (üres válasz), ha nem volt kiválasztva versenysorozat. Mostantól szezon nélkül is lefut.
 - **Versenysorozat prepared paraméterként:** A „Tanévben versenyen indult iskolák" riport a kiválasztott versenysorozat azonosítóját közvetlenül, előkészített paraméter nélkül fűzte a lekérdezésbe.
-- **Sérült XLSX szűrő nélkuli riportnál:** Ha egy riport minden szűrője „összes" állásban volt, az adatbázis-réteg figyelmeztetést írhatott a válaszba, ami a bináris XLSX-fájlt megsértette. Érintett volt a „Tanévi diákolimpia diákok" riport intézmény-listája is.
+- **Sérült XLSX szűrő nélküli riportnál:** Ha egy riport minden szűrője „összes" állásban volt, az adatbázis-réteg figyelmeztetést írhatott a válaszba, ami a bináris XLSX-fájlt megsértette. Érintett volt a „Tanévi diákolimpia diákok" riport intézmény-listája is.
 
 ## [2.3.18] - 2026-08-03
 
