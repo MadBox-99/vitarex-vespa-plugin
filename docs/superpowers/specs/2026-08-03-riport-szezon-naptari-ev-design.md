@@ -160,8 +160,14 @@ Viselkedés:
 function vespa_riport_periodus_felirat($seriesName, $year)
 ```
 
-A szezon nevét a hívó nézi ki az adatbázisból (ezt ma is megteszi), így a
-függvény tiszta marad. A négy visszaadott szöveget lásd a fenti táblázatban.
+A szezon nevét nem ez a függvény kérdezi le, így tiszta marad. A négy
+visszaadott szöveget lásd a fenti táblázatban.
+
+Mivel a szezon nevére mind a négy riportfüggvénynek szüksége van a fejléchez, a
+lekérdezés egy harmadik, **nem tiszta** helperbe kerül ugyanebbe a fájlba —
+`vespa_riport_szezon_neve($seriesId): string`, ami üres szöveget ad, ha nincs
+szezonszűrés vagy a sorozat nem található. A `$wpdb`-t használja, ezért nincs
+unit tesztje; a szerepe a négyszeres másolat elkerülése.
 
 #### Prepared-statement burkoló
 

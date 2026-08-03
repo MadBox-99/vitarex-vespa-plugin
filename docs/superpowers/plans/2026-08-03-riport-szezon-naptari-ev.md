@@ -48,6 +48,7 @@ A `includes/Core/` alatti fájlokat a plugin automatikusan betölti (`vitarex-ve
   - `vespa_riport_pozitiv_egesz($ertek): bool`
   - `vespa_riport_periodus_szuro($seriesId, $year, $szabadidosKivetel = false): array` — visszatérés: `array('sql' => string, 'params' => array<int>)`
   - `vespa_riport_periodus_felirat($seriesName, $year): string`
+  - `vespa_riport_szezon_neve($seriesId): string` — a szezon neve azonosítóból, üres szöveg ha nincs szezonszűrés
   - `vespa_riport_get_results($sql, $params): array|null` — a `$wpdb->get_results()` burkolója
 
 - [ ] **Step 1: Write the failing test**
@@ -282,6 +283,30 @@ function vespa_riport_periodus_felirat($seriesName, $year)
 }
 
 /**
+ * A versenysorozat neve azonosító alapján; üres szöveg, ha nincs szezonszűrés
+ * vagy a sorozat nem található.
+ *
+ * Mind a négy érintett riportfüggvénynek ugyanerre van szüksége a fejléc
+ * feliratához, ezért egy helyen áll. A $wpdb-t használja, ezért nem tiszta és
+ * nincs unit tesztje.
+ */
+function vespa_riport_szezon_neve($seriesId)
+{
+    global $wpdb;
+
+    if (!vespa_riport_pozitiv_egesz($seriesId)) {
+        return '';
+    }
+
+    $sor = $wpdb->get_row($wpdb->prepare(
+        "SELECT series_name FROM vespa_series WHERE series_id=%d",
+        (int) $seriesId
+    ));
+
+    return $sor ? $sor->series_name : '';
+}
+
+/**
  * A riport-lekérdezések futtatása üres paramétertömb esetén is biztonságosan.
  *
  * A $wpdb->prepare() helyőrző nélküli lekérdezésre _doing_it_wrong()
@@ -372,11 +397,7 @@ erre:
     // A szezon és a naptári év külön-külön elhagyható, ezért a fejléc-írás
     // nem függhet attól, hogy van-e szezon. Korábban itt egy die() állt: szezon
     // nélkül a riport némán megszakadt, üres választ adva.
-    $seriesName = '';
-    if (vespa_riport_pozitiv_egesz($seriesId)) {
-        $st = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_series WHERE series_id=%d", (int) $seriesId));
-        $seriesName = $st ? $st->series_name : '';
-    }
+    $seriesName = vespa_riport_szezon_neve($seriesId);
 
     $sheet
         ->setCellValue('A' . $ind, 'Időszak')
@@ -513,12 +534,10 @@ erre:
         ->setCellValue('B' . $ind, $filterType)
         ->setCellValue('C' . $ind, 'Időszak:');
     if ($tanevRiport) {
-        $seriesName = '';
-        if (vespa_riport_pozitiv_egesz($seriesId)) {
-            $st = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_series WHERE series_id=%d", (int) $seriesId));
-            $seriesName = $st ? $st->series_name : '';
-        }
-        $sheet->setCellValue('D' . $ind, vespa_riport_periodus_felirat($seriesName, $year));
+        $sheet->setCellValue('D' . $ind, vespa_riport_periodus_felirat(
+            vespa_riport_szezon_neve($seriesId),
+            $year
+        ));
     }
     else {
         $sheet->setCellValue('D' . $ind, $dateFrom)->setCellValue('E' . $ind, $dateTo);
@@ -638,17 +657,14 @@ Ennek a riportnak ma **nincs** időszak-felirata a fejlécben. Cseréld ezt a bl
 erre:
 
 ```php
-    $seriesName = '';
-    if (vespa_riport_pozitiv_egesz($seriesId)) {
-        $st = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_series WHERE series_id=%d", (int) $seriesId));
-        $seriesName = $st ? $st->series_name : '';
-    }
-
     $sheet
         ->setCellValue('A' . $ind, 'Szűrés:')
         ->setCellValue('B' . $ind, $filterType)
         ->setCellValue('C' . $ind, 'Időszak:')
-        ->setCellValue('D' . $ind, vespa_riport_periodus_felirat($seriesName, $year));
+        ->setCellValue('D' . $ind, vespa_riport_periodus_felirat(
+            vespa_riport_szezon_neve($seriesId),
+            $year
+        ));
     $ind+=2;
 ```
 
@@ -745,12 +761,10 @@ erre:
     // már elhagyható, és tanév-riportnál akkor sem a dateFrom/dateTo
     // tartományt kell kiírni, ha nincs kiválasztva szezon.
     if('tanev_diakolimpia_diakok' == $type){
-        $seriesName = '';
-        if (vespa_riport_pozitiv_egesz($seriesId)) {
-            $st = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_series WHERE series_id=%d", (int) $seriesId));
-            $seriesName = $st ? $st->series_name : '';
-        }
-        $sheet->setCellValue('D' . $ind, vespa_riport_periodus_felirat($seriesName, $year));
+        $sheet->setCellValue('D' . $ind, vespa_riport_periodus_felirat(
+            vespa_riport_szezon_neve($seriesId),
+            $year
+        ));
     }
     else {
         $sheet->setCellValue('D' . $ind, $dateFrom)->setCellValue('E' . $ind, $dateTo);
