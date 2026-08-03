@@ -125,3 +125,64 @@ function vespa_riport_get_results($sql, $params)
 
     return $wpdb->get_results($params ? $wpdb->prepare($sql, ...$params) : $sql);
 }
+
+/**
+ * Az intézményre vonatkozó szűrés SQL-töredéke és prepared paraméterei.
+ *
+ * A `vi` (vespa_institutions) táblára szűr, ezért csak olyan lekérdezésben
+ * használható, amely ezt az aliast ismeri. A sorrend kötött: előbb a
+ * tankerület helyőrzője, utána az intézményé.
+ *
+ * @param mixed $schoolDistrictId  GET-ből jövő nyers érték; csak a pozitív egész szűr
+ * @param mixed $institutionId     GET-ből jövő nyers érték; csak a pozitív egész szűr
+ * @return array {sql: string, params: array}
+ */
+function vespa_riport_intezmeny_szuro($schoolDistrictId, $institutionId)
+{
+    $sql    = '';
+    $params = array();
+
+    if (vespa_riport_pozitiv_egesz($schoolDistrictId)) {
+        $sql .= ' AND vi.school_district_id=%d';
+        $params[] = (int) $schoolDistrictId;
+    }
+
+    if (vespa_riport_pozitiv_egesz($institutionId)) {
+        $sql .= ' AND vi.institution_id=%d';
+        $params[] = (int) $institutionId;
+    }
+
+    return array('sql' => $sql, 'params' => $params);
+}
+
+/**
+ * A sportolóra vonatkozó szűrés SQL-töredéke és prepared paraméterei.
+ *
+ * A `va` (vespa_athletes) táblára szűr. Szándékosan külön áll az
+ * intézmény-szűrőtől: a tanév-riport intézmény-listázó lekérdezése csak a `vi`
+ * táblát ismeri, ott ez a töredék hibás SQL-t adna. A vágás a query-aliasok
+ * mentén fut, nem tetszőlegesen.
+ *
+ * @param mixed $disabilityGroupId csak a pozitív egész szűr
+ * @param mixed $gender            csak a pontosan 'nő' vagy 'férfi' szűr
+ * @return array {sql: string, params: array}
+ */
+function vespa_riport_sportolo_szuro($disabilityGroupId, $gender)
+{
+    $sql    = '';
+    $params = array();
+
+    if (vespa_riport_pozitiv_egesz($disabilityGroupId)) {
+        $sql .= ' AND va.disability_type=%d';
+        $params[] = (int) $disabilityGroupId;
+    }
+
+    // Fehérlista, nem feketelista: a felület 'összes'-t is küld, a GET-ből
+    // pedig bármi jöhet. Csak a két ismert érték kerülhet a lekérdezésbe.
+    if ($gender === 'nő' || $gender === 'férfi') {
+        $sql .= ' AND va.gender=%s';
+        $params[] = $gender;
+    }
+
+    return array('sql' => $sql, 'params' => $params);
+}

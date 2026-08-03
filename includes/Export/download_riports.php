@@ -128,28 +128,15 @@ function vespa_download_riport_szezon_riport()
         $params[] = VespaContestType::MEGYEI;
     }
 
-    if (is_numeric($schoolDistrict) && $schoolDistrict > 0) {
-        $sql .= " AND vi.school_district_id=%d";
-        $params[] = $schoolDistrict;
-    }
+    // A szűrőblokkok kézi másolatai helyett közös helper: így nem tud egyik
+    // riportban elgépelt változónévvel vagy hiányzó feltétellel elcsúszni.
+    $intezmeny = vespa_riport_intezmeny_szuro($schoolDistrict, $institutionId);
+    $sql      .= $intezmeny['sql'];
+    $params    = array_merge($params, $intezmeny['params']);
 
-    // Az intézmény-választást a felület eddig is elküldte
-    // (templates/riports_dashboard.php:235) és a mezőt is megjelenítette,
-    // de a backend soha nem olvasta ki -> némán hatástalan volt.
-    if (is_numeric($institutionId) && $institutionId > 0) {
-        $sql .= " AND vi.institution_id = %d";
-        $params[] = intval($institutionId);
-    }
-
-    if (is_numeric($disabilityGroupId) && $disabilityGroupId > 0) { 
-        $sql .= " AND va.disability_type=%d";
-        $params[] = $disabilityGroupId;
-    }
-
-    if ($gender == 'nő' || $gender == 'férfi') {
-        $sql .= " AND va.gender=%s";
-        $params[] = $gender;
-    }
+    $sportolo = vespa_riport_sportolo_szuro($disabilityGroupId, $gender);
+    $sql     .= $sportolo['sql'];
+    $params   = array_merge($params, $sportolo['params']);
 
 // (diák, versenytípus) páronként egy sor. Így a típus szerinti vödrök
 // determinisztikusak; a több típuson induló diák minden érintett vödörbe
@@ -343,10 +330,12 @@ function vespa_download_riport_verseny_versenyszam()
 
     $type = $_GET['download_riports'];
 
-    $filter = $_GET['filter'];
-    $dateFrom = $_GET['dateFrom'];
-    $dateTo = $_GET['dateTo'];
-    $seriesId = $_GET['series'];
+    // Minden paraméter isset-védett: a hiányzó GET paraméter PHP warningot
+    // írna a válaszba, ami a binárisan írt XLSX-et is elronthatja.
+    $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+    $dateFrom = isset($_GET['dateFrom']) ? $_GET['dateFrom'] : '';
+    $dateTo = isset($_GET['dateTo']) ? $_GET['dateTo'] : '';
+    $seriesId = isset($_GET['series']) ? $_GET['series'] : 0;
     // A tanév-riportoknál (lásd lent) a naptári év is szűrhet; a hiányzó GET
     // paraméter warningot okozna, ezért isset-védett.
     $year = isset($_GET['year']) ? $_GET['year'] : 0;
@@ -512,10 +501,12 @@ function vespa_download_riport_versenyen_resztvevo_iskolak_szama()
 
     require VITAREX_VESPA_PLUGIN_DIR  . '/lib/vendor/autoload.php';
 
-    $filter = $_GET['filter'];
-    $schoolDistrict = $_GET['schoolDistrict'];
+    // Minden paraméter isset-védett: a hiányzó GET paraméter PHP warningot
+    // írna a válaszba, ami a binárisan írt XLSX-et is elronthatja.
+    $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+    $schoolDistrict = isset($_GET['schoolDistrict']) ? $_GET['schoolDistrict'] : 0;
 
-    $seriesId = $_GET["series"];
+    $seriesId = isset($_GET['series']) ? $_GET['series'] : 0;
     // Az időszak-szűrőhöz szükséges év; ha nincs megadva, a helper alapértelmezés
     // szerint kezeli (0 = nincs időszak-szűrés).
     $year = isset($_GET['year']) ? $_GET['year'] : 0;
@@ -589,10 +580,11 @@ function vespa_download_riport_versenyen_resztvevo_iskolak_szama()
     else if (is_numeric($filter) && $filter == 0) {
         $sql .= " AND vc.contest_type=3";
     }
-    if (is_numeric($schoolDistrict) && $schoolDistrict > 0) {
-        $sql .= " AND vi.school_district_id=%d";
-        $params[] = $schoolDistrict ;
-    }
+    // Ennek a riportnak a felülete intézményt nem kínál, ezért az
+    // intézmény-argumentum fixen 0.
+    $intezmeny = vespa_riport_intezmeny_szuro($schoolDistrict, 0);
+    $sql      .= $intezmeny['sql'];
+    $params    = array_merge($params, $intezmeny['params']);
 
     $sql .= " GROUP BY vi.institution_id ORDER BY vi.ins_name ASC";
 
@@ -622,13 +614,15 @@ function vespa_download_riport_verseny_diak()
 
     require VITAREX_VESPA_PLUGIN_DIR  . '/lib/vendor/autoload.php';
 
-    $dateFrom = $_GET['dateFrom'];
-    $dateTo = $_GET['dateTo'];
-    $filter = $_GET['filter'];
-    $schoolDistrict = $_GET['schoolDistrict'];
-    $gender = $_GET['gender'];
-    $disabilityGroupId = $_GET['disabilityGroupId'];
-    $institutionId = $_GET['institutionId'];
+    // Minden paraméter isset-védett: a hiányzó GET paraméter PHP warningot
+    // írna a válaszba, ami a binárisan írt XLSX-et is elronthatja.
+    $dateFrom = isset($_GET['dateFrom']) ? $_GET['dateFrom'] : '';
+    $dateTo = isset($_GET['dateTo']) ? $_GET['dateTo'] : '';
+    $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+    $schoolDistrict = isset($_GET['schoolDistrict']) ? $_GET['schoolDistrict'] : 0;
+    $gender = isset($_GET['gender']) ? $_GET['gender'] : '';
+    $disabilityGroupId = isset($_GET['disabilityGroupId']) ? $_GET['disabilityGroupId'] : 0;
+    $institutionId = isset($_GET['institutionId']) ? $_GET['institutionId'] : 0;
     $filterType = '';
     $params = [];
     if($filter == 'all') $filterType = 'Összes verseny';
@@ -694,22 +688,14 @@ function vespa_download_riport_verseny_diak()
     else if (is_numeric($filter) && $filter == 0) {
         $sql .= " AND vc.contest_type=3";
     }
-    if (is_numeric($schoolDistrict) && $schoolDistrict > 0) {
-        $sql .= " AND vi.school_district_id=%d";
-        $params[] = $schoolDistrict ;
-    }
-    if (is_numeric($disabilityGroupId) && $disabilityGroupId > 0) {
-        $sql .= " AND va.disability_type=%d";
-        $params[] = $disabilityGroupId;
-    }
-    if (is_numeric($institutionId) && $institutionId > 0) {
-        $sql .= " AND vi.institution_id = %d";
-        $params[] = $institutionId;
-    }
-    if ($gender == 'nő' || $gender == 'férfi') {
-        $sql .= " AND va.gender=%s";
-        $params[] = $gender;
-    }
+    $intezmeny = vespa_riport_intezmeny_szuro($schoolDistrict, $institutionId);
+    $sql      .= $intezmeny['sql'];
+    $params    = array_merge($params, $intezmeny['params']);
+
+    $sportolo = vespa_riport_sportolo_szuro($disabilityGroupId, $gender);
+    $sql     .= $sportolo['sql'];
+    $params   = array_merge($params, $sportolo['params']);
+
     $sqlAgeGroups = "
     SELECT vca.*, va.agegroup_name 
     FROM vespa_contest_agegroups as vca
@@ -801,15 +787,23 @@ function vespa_download_riport_tanev($type)
 
     require VITAREX_VESPA_PLUGIN_DIR  . '/lib/vendor/autoload.php';
 
-    $filter = $_GET['filter'];
-    $schoolDistrictId = $_GET['schoolDistrict'];
-    $dateFrom = $_GET['dateFrom'];
-    $dateTo = $_GET['dateTo'];
-    $seriesId = $_GET['series'];
-    // A naptári év szűrő új, ezért isset-védett - a régi, védelem nélküli GET-olvasásokhoz nem nyúlunk.
+    // Minden paraméter isset-védett: a hiányzó GET paraméter PHP warningot
+    // írna a válaszba, ami a binárisan írt XLSX-et is elronthatja.
+    $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+    $schoolDistrictId = isset($_GET['schoolDistrict']) ? $_GET['schoolDistrict'] : 0;
+    $dateFrom = isset($_GET['dateFrom']) ? $_GET['dateFrom'] : '';
+    $dateTo = isset($_GET['dateTo']) ? $_GET['dateTo'] : '';
+    $seriesId = isset($_GET['series']) ? $_GET['series'] : 0;
+    // A naptári év szűrő új paraméter.
     $year = isset($_GET['year']) ? $_GET['year'] : 0;
     $sportId = isset($_GET['sport']) ? $_GET['sport'] : 0;
     $sportEventId = isset($_GET['sportEventId']) ? $_GET['sportEventId'] : 0;
+    // Az intézmény, a nem és a fogyatékossági csoport eddig hiányzott ebből a
+    // riportból: a felület mutatta és el is küldte őket, a backend viszont
+    // soha nem olvasta ki, ezért némán szűretlen számok jöttek ki.
+    $institutionId = isset($_GET['institutionId']) ? $_GET['institutionId'] : 0;
+    $disabilityGroupId = isset($_GET['disabilityGroupId']) ? $_GET['disabilityGroupId'] : 0;
+    $gender = isset($_GET['gender']) ? $_GET['gender'] : '';
     $stateId = is_numeric($filter) ? (int)$filter : 0;
     $filterType = '';
     if($filter == 'all') $filterType = 'Összes verseny';
@@ -883,10 +877,16 @@ function vespa_download_riport_tanev($type)
     } elseif (is_numeric($filter) && $stateId == 0) {
         $sql .= " AND vc.contest_type=3";
     }
-    if($schoolDistrictId > 0) {
-         $sql .= " AND vi.school_district_id=%d";
-         $params[] = $schoolDistrictId;
-    }
+    // Az intézmény, a nem és a fogyatékossági csoport eddig hiányzott ebből a
+    // riportból: a felület mutatta és el is küldte őket, a backend viszont
+    // soha nem olvasta ki, ezért némán szűretlen számok jöttek ki.
+    $intezmeny = vespa_riport_intezmeny_szuro($schoolDistrictId, $institutionId);
+    $sql      .= $intezmeny['sql'];
+    $params    = array_merge($params, $intezmeny['params']);
+
+    $sportolo = vespa_riport_sportolo_szuro($disabilityGroupId, $gender);
+    $sql     .= $sportolo['sql'];
+    $params   = array_merge($params, $sportolo['params']);
     if (is_numeric($sportId) && $sportId > 0) {
         $sql .= " AND vce.sport_id=%d";
         $params[] = intval($sportId);
@@ -901,10 +901,14 @@ function vespa_download_riport_tanev($type)
     $params = [];
     $sql = "SELECT vi.institution_id, vi.ins_name FROM `vespa_institutions` as vi
             WHERE 1";
-    if($schoolDistrictId > 0) {
-        $sql .= " AND vi.school_district_id=%d";
-        $params[] = $schoolDistrictId;
-    }
+    // Az intézmény-szűrőnek ITT IS érvényesülnie kell: e nélkül egy intézményt
+    // kiválasztva egyetlen adatsor mellett több száz nullás sor jönne ki.
+    // A sportoló-szűrő viszont NEM kerül ide: a nem és a fogyatékossági csoport
+    // a diák tulajdonsága, nem az intézményé, és ez a lekérdezés nem is ismeri
+    // a `va` aliast — csak a darabszámokat befolyásolják, a lista tagjait nem.
+    $intezmeny = vespa_riport_intezmeny_szuro($schoolDistrictId, $institutionId);
+    $sql      .= $intezmeny['sql'];
+    $params    = array_merge($params, $intezmeny['params']);
     if($stateId > 0) {
         $sql .= " AND vi.ins_state=%d";
         $params[] = $stateId;
@@ -960,26 +964,31 @@ function vespa_download_riport_legnepszerubb_sportagak()
 
     require VITAREX_VESPA_PLUGIN_DIR  . '/lib/vendor/autoload.php';
 
-    $dateFrom = $_GET['dateFrom'];
-    $dateTo = $_GET['dateTo'];
-    $filter = $_GET['filter'];
-    $schoolDistrictId = $_GET['schoolDistrict'];
-    $gender = $_GET['gender'];
-    $disabilityGroupId = $_GET['disabilityGroupId'];
+    // Minden paraméter isset-védett: a hiányzó GET paraméter PHP warningot
+    // írna a válaszba, ami a binárisan írt XLSX-et is elronthatja.
+    $dateFrom = isset($_GET['dateFrom']) ? $_GET['dateFrom'] : '';
+    $dateTo = isset($_GET['dateTo']) ? $_GET['dateTo'] : '';
+    $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+    $schoolDistrictId = isset($_GET['schoolDistrict']) ? $_GET['schoolDistrict'] : 0;
+    $institutionId = isset($_GET['institutionId']) ? $_GET['institutionId'] : 0;
+    $gender = isset($_GET['gender']) ? $_GET['gender'] : '';
+    $disabilityGroupId = isset($_GET['disabilityGroupId']) ? $_GET['disabilityGroupId'] : 0;
     $sportId = isset($_GET['sport']) ? $_GET['sport'] : 0;
     $sportEventId = isset($_GET['sportEventId']) ? $_GET['sportEventId'] : 0;
     $filterType = '';
-    if($filter == 'all') $filterType = 'Összes verseny';
-    else if ($filter == 'country') $filterType = "Legnépszerűbb országos sportágak";
-    else if (is_numeric($filter) && $filter > 0) {
-        $st = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_states WHERE state_id=%d", $filter));
-        $filterType = "Legnépszerűbb megyei sportágak - $st->state_name";
+    // Az ágak sorrendje kötött: a 0 ("Összes megye") ellenőrzése a > 0 ág UTÁN
+    // áll. Korábban a 0 egyik ágra sem illett, ezért a függvény die()-olt: az
+    // "Összes megye" szűrés üres választ adott, fájl nélkül.
+    if ($filter === 'country') {
+        $filterType = 'Legnépszerűbb országos sportágak';
+    } elseif (is_numeric($filter) && $filter > 0) {
+        $st = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_states WHERE state_id=%d", (int) $filter));
+        $filterType = 'Legnépszerűbb megyei sportágak - ' . ($st ? $st->state_name : $filter);
+    } elseif (is_numeric($filter) && intval($filter) === 0) {
+        $filterType = 'Legnépszerűbb megyei sportágak - összes';
+    } else {
+        $filterType = 'Összes verseny';
     }
-    else if (is_numeric($schoolDistrictId) && $schoolDistrictId > 0) {
-        $sd = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_school_districts WHERE school_district_id=%d",$schoolDistrictId));
-        $filterType = "Legnépszerűbb tankerületi sportágak - $sd->school_district_name";
-    }
-    else die;
 
     $spreadsheet = new Spreadsheet();
     $sheet       = $spreadsheet->getActiveSheet();
@@ -1015,27 +1024,31 @@ function vespa_download_riport_legnepszerubb_sportagak()
     $params[] = date('Y-m-d', strtotime($filterFrom));
     $params[] = date('Y-m-d', strtotime($filterTo));
 
-    if ($filter == 'country') {
+    if ($filter === 'country') {
         $sql .= " AND vc.contest_type=1";
     } elseif (is_numeric($filter) && $filter > 0) {
         $sql .= " AND vc.contest_type=3 AND vc.state_id=%d";
-        $params[] = $filter;
+        $params[] = (int) $filter;
+    } elseif (is_numeric($filter) && intval($filter) === 0) {
+        // "Összes megye": a felirat megyei versenyekről szól, tehát a
+        // lekérdezésnek is arra kell szűrnie.
+        $sql .= " AND vc.contest_type=3";
     }
-    
-    if (is_numeric($schoolDistrict) && $schoolDistrict > 0) {
-        $sql .= " AND vi.school_district_id=%d";
-        $params[] = $schoolDistrict;
-    }
-    
-    if (is_numeric($disabilityGroupId) && $disabilityGroupId > 0) {
-        $sql .= " AND va.disability_type=%d";
-        $params[] = $disabilityGroupId;
-    }
-    
-    if ($gender == 'nő' || $gender == 'férfi') {
-        $sql .= " AND va.gender=%s";
-        $params[] = $gender;
-    }
+    // Az 'all' ág szándékosan nem kap contest_type megkötést: ennél a
+    // riportnál az "Összes verseny" tényleg mindent jelent, a szabadidős
+    // versenyeket is (eltér a szezon_riport-tól, ahol az 'all' 1,2,3-at jelent).
+
+    // A tankerület-szűrés eddig halott volt: a blokk egy elgépelt, nem
+    // létező változóra hivatkozott, miközben a beolvasott érték a
+    // $schoolDistrictId-ben van. Az intézmény-szűrés pedig teljesen
+    // hiányzott, pedig a lekérdezés már ma is join-olja a vi táblát.
+    $intezmeny = vespa_riport_intezmeny_szuro($schoolDistrictId, $institutionId);
+    $sql      .= $intezmeny['sql'];
+    $params    = array_merge($params, $intezmeny['params']);
+
+    $sportolo = vespa_riport_sportolo_szuro($disabilityGroupId, $gender);
+    $sql     .= $sportolo['sql'];
+    $params   = array_merge($params, $sportolo['params']);
 
     if (is_numeric($sportId) && $sportId > 0) {
         $sql .= " AND vce.sport_id=%d";
