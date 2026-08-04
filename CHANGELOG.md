@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.22] - 2026-08-04
+
+### Javítások
+- **Sérült XLSX a „Versenyre jelentkeztetett diákok” riportnál:** A riport két dátum-paramétert tévesen a fő lekérdezés paraméterlistájához fűzött, pedig azok egy másik lekérdezéshez tartoztak. Emiatt a `wpdb::prepare()` több argumentumot kapott, mint ahány helyőrző volt, és figyelmeztetést írt a válaszba — a binárisan írt XLSX-fájl így megsérült. A riport számai eddig is helyesek voltak; csak a fájl elé került szemét. Mostantól a dátumok is előkészített paraméterként mennek, és a fájl minden szűrés mellett ép.
+
+### Fejlesztői eszközök
+- **Helyi WordPress teszt környezet:** Új `tests/herd/` könyvtár, amelyből egy paranccsal felépíthető egy teljes helyi WordPress az éles adatbázis másolatával, mindkét plugin bekötve. Eddig a riportokat csak élesben lehetett ellenőrizni. Mellette riport-mátrix (27 szűrő-kombináció épség-ellenőrzéssel) és egy eszköz, amely számokban bizonyítja, hogy egy szűrő tényleg hat. A fenti hibát ez a környezet találta meg.
+
 ## [2.3.21] - 2026-08-03
 
 ### Új funkciók

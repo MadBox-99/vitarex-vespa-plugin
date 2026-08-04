@@ -670,7 +670,12 @@ function vespa_download_riport_verseny_diak()
             LEFT JOIN vespa_sports as vs ON vce.sport_id=vs.sport_id
             LEFT JOIN vespa_sport_events as vse ON vce.event_id=vse.sport_event_id
             JOIN vespa_disability_groups as vdg ON va.disability_type=vdg.disability_group_id
-            WHERE vc.start_at >= '$filterFrom' AND vc.end_at <= '$filterTo'";
+            WHERE vc.start_at >= %s AND vc.end_at <= %s";
+
+    // A két dátum itt kerül a paraméterlistába, mert a lekérdezésben is ez a
+    // két helyőrző jön elsőként — a prepare() sorrend szerint párosít.
+    $params[] = $filterFrom;
+    $params[] = $filterTo;
 
     if ($filter == 'all') {
         // Az "Összes" csak az országos (1) és megyei (3) versenyeket tartalmazza,
@@ -704,8 +709,6 @@ function vespa_download_riport_verseny_diak()
     WHERE vc.start_at >= %s 
     AND vc.end_at <= %s
 ";
-    $params[] = $filterFrom;
-    $params[] = $filterTo;
 
     $data = $wpdb->get_results($wpdb->prepare($sql, ...$params));
     $ageGroups = $wpdb->get_results($wpdb->prepare($sqlAgeGroups, $filterFrom, $filterTo));
