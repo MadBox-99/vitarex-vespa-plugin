@@ -1,13 +1,5 @@
 # Changelog
 
-## [2.3.22] - 2026-08-03
-
-### Javítások
-- **A riportokban mutatott szűrők végre tényleg szűrnek:** Több riportnál a felület felkínált egy szűrőt (Intézmény, Nem, Fogyatékossági csoport, Tankerület), a riport viszont némán figyelmen kívül hagyta, és szűretlen számokat adott — hibajelzés nélkül. Érintett volt az „Adott tanévben FODISZ diákolimpián részt vett fogyatékkal élő diákok száma”, az „Adott időszakban versenyen indult diákok száma iskolánként” és az „Adott időszakra a sportágak népszerűsége” riport. Ezek a riportok mostantól más — helyes — számokat adnak, ha a szűrők használatban vannak.
-- **A sportág-népszerűségi riport üres választ adott:** Az „Adott időszakra a sportágak népszerűsége” riport „Összes megye” szűréssel nem generált fájlt, csak egy üres választ. Mostantól lefut, és a megyei versenyekre szűr, ahogy a felirata ígéri.
-- **Halott tankerület-szűrés:** Ugyanennél a riportnál a tankerület szerinti szűrés egy elgépelt változónév miatt soha nem érvényesült.
-- **Hiányzó GET paraméterek:** A riportok több paramétert is ellenőrzés nélkül olvastak ki, ami PHP-figyelmeztetést írhatott a válaszba, és a binárisan írt XLSX-fájlt megsérthette. Mostantól minden paraméter olvasása védett.
-
 ## [2.3.21] - 2026-08-03
 
 ### Új funkciók
@@ -18,6 +10,10 @@
 - **Szezon riport szezon nélkül:** A Szezon riport eddig némán megszakadt (üres válasz), ha nem volt kiválasztva versenysorozat. Mostantól szezon nélkül is lefut.
 - **Versenysorozat prepared paraméterként:** A „Tanévben versenyen indult iskolák” riport a kiválasztott versenysorozat azonosítóját közvetlenül, előkészített paraméter nélkül fűzte a lekérdezésbe.
 - **Sérült XLSX szűrő nélküli riportnál:** Ha egy riport minden szűrője „összes” állásban volt, az adatbázis-réteg figyelmeztetést írhatott a válaszba, ami a bináris XLSX-fájlt megsértette. Érintett volt a „Tanévi diákolimpia diákok” riport intézmény-listája is.
+- **A riportokban mutatott szűrők végre tényleg szűrnek:** Több riportnál a felület felkínált egy szűrőt (Intézmény, Nem, Fogyatékossági csoport, Tankerület), a riport viszont némán figyelmen kívül hagyta, és szűretlen számokat adott — hibajelzés nélkül. Érintett volt az „Adott tanévben FODISZ diákolimpián részt vett fogyatékkal élő diákok száma”, az „Adott időszakban versenyen indult diákok száma iskolánként” és az „Adott időszakra a sportágak népszerűsége” riport. Ezek a riportok mostantól más — helyes — számokat adnak, ha a szűrők használatban vannak.
+- **A sportág-népszerűségi riport üres választ adott:** Az „Adott időszakra a sportágak népszerűsége” riport „Összes megye” szűréssel nem generált fájlt, csak egy üres választ. Mostantól lefut, és a megyei versenyekre szűr, ahogy a felirata ígéri.
+- **Halott tankerület-szűrés:** Ugyanennél a riportnál a tankerület szerinti szűrés egy elgépelt változónév miatt soha nem érvényesült.
+- **Hiányzó GET paraméterek:** A riportok több paramétert is ellenőrzés nélkül olvastak ki, ami PHP-figyelmeztetést írhatott a válaszba, és a binárisan írt XLSX-fájlt megsérthette. Mostantól minden paraméter olvasása védett.
 
 ## [2.3.18] - 2026-08-03
 
