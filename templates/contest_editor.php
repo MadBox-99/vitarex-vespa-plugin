@@ -6,6 +6,19 @@ $id         = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $record     = null;
 $groups = array(6);
 
+// A szerkesztő eddig jogosultság-ellenőrzés nélkül megnyílt annak is, aki a
+// Szerkesztés gombot nem látta, csak a linket ismerte. Új versenynél még nincs
+// típus, ezért ott az általános versenykezelés a feltétel — az országos szintet
+// a típusválasztó és a mentés zárja ki.
+$vespa_szerkesztheto = $id > 0
+    ? vespa_user_can_edit_contest($id)
+    : current_user_can(VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles);
+
+if (!$vespa_szerkesztheto) {
+    echo 'Nincs megfelelő jogosultságod az oldal megtekintéséhez.';
+    return;
+}
+
 if (is_numeric($id) && $id > 0) {
     $record = $GLOBALS['VESPA_Contests']->load($id);
     $site_title = stripslashes($record->contest_name) . ' - szerkesztése';
@@ -108,6 +121,12 @@ if (is_numeric($id) && $id > 0) {
                     $list = $wpdb->get_results("SELECT * FROM vespa_contest_types ORDER BY contest_type_name ASC");
 
                     foreach ($list as $item) {
+                        // Az országos szintet csak az adminisztrátor választhatja,
+                        // így nem-admin új versenyt sem tud országosként kiírni.
+                        if (!vespa_user_can_edit_contest_type($item->contest_type_id)) {
+                            continue;
+                        }
+
                         $selected = ($record != null && $record->contest_type == $item->contest_type_id) ? 'selected' : '';
                         echo '<option value="' . $item->contest_type_id . '" ' . $selected . '>' . $item->contest_type_name . '</option>';
                     }

@@ -42,7 +42,7 @@
                     <td><?php echo esc_html($item->escort_phone); ?></td>
                     <td><?php echo esc_html($item->escort_email); ?></td>
                     <td>
-                        <?php if( current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles ) ): ?>
+                        <?php if( vespa_user_can_edit_contest($id) ): ?>
                             <button class="btn btn-default btn-sm" onclick="showContestEscortEditor( <?php echo intval($item->contest_escort_id); ?> );" >Szerkeszt</button>
                             <button class="btn btn-default btn-sm" onclick="deleteContestEscort( <?php echo intval($item->contest_escort_id); ?> );">Töröl</button>
                         <?php endif; ?>
@@ -66,9 +66,8 @@
     function ajax_table_contest_escorts_add_record(){
         global $wpdb;
 
-        if( ! current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles ) ){
-            wp_send_json_error( array("message" => "Jogosulatlan hozzáférés"), 403 );
-        }
+        // Az országos verseny kísérőit csak az adminisztrátor kezelheti.
+        vespa_require_contest_edit(intval($_POST['contest_id']));
 
         $success = $wpdb->insert('vespa_contests_escorts', array(
             'contest_id'    => intval($_POST['contest_id']),
@@ -86,9 +85,7 @@
     function ajax_table_contest_escorts_modify_record(){
         global $wpdb;
 
-        if( ! current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles ) ){
-            wp_send_json_error( array("message" => "Jogosulatlan hozzáférés"), 403 );
-        }
+        vespa_require_contest_edit(vespa_contest_id_by_escort($_POST['contest_escort_id']));
 
         $success = $wpdb->update('vespa_contests_escorts', array(
             'school_id'     => vespa_get_my_school_id(),
@@ -117,9 +114,7 @@
     function ajax_table_contest_escorts_delete_record(){
         global $wpdb;
 
-        if( ! current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles ) ){
-            wp_send_json_error( array("message" => "Jogosulatlan hozzáférés"), 403 );
-        }
+        vespa_require_contest_edit(vespa_contest_id_by_escort($_POST['id']));
 
         $success = $wpdb->delete('vespa_contests_escorts', array( 'contest_escort_id' => intval($_POST['id'])), array('%d') );
 

@@ -95,7 +95,7 @@ if (is_numeric($id) && $id > 0) {
             <!--            
             <a href="#jelentkezok" class="btn btn-default btn-sm">Nevezettek</a>
 -->
-            <?php if (current_user_can(VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles)) : ?>
+            <?php if (vespa_user_can_edit_contest($id)) : ?>
                 <a href="<?php echo admin_url('admin.php?page=contests&action=question&id=') . $id; ?>" class="btn btn-default btn-sm">
                     <?php echo vespa_contest_has_answers($id) ? 'Beszámoló szerkesztése' : 'Beszámoló rögzítése'; ?>
                 </a>
@@ -148,10 +148,10 @@ if (is_numeric($id) && $id > 0) {
                 <h3 style="margin-top:0">Alapadatok</h3>
             </div>
             <div class="col-md-6">
-                <?php if (current_user_can(VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles) && $record->is_final == 0) : ?>
+                <?php if (vespa_user_can_edit_contest($id) && $record->is_final == 0) : ?>
                     <a href="<?php echo admin_url('admin.php?page=contests&id=') . $id; ?>" class="btn btn-default pull-right">Szerkesztés</a>
                 <?php endif ?>
-                <?php if (current_user_can(VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles) && $record->is_final == 1) : ?>
+                <?php if (vespa_user_can_edit_contest($id) && $record->is_final == 1) : ?>
                     <a href="#" class="btn btn-default pull-right" onclick="reopenContest(event,'<?php echo wp_get_current_user()->display_name ?>')">Szerkeszthetővé tesz</a>
                 <?php endif; ?>
             </div>

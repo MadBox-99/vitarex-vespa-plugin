@@ -45,7 +45,7 @@ function ajax_table_contest_races_display($id = null)
                     <td><?php echo $item->disgroup; ?></td>
                     <td><?php echo $item->dfrom . ' - ' . $item->dto; ?></td>
                     <td>
-                        <?php if (current_user_can(VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles)) : ?>
+                        <?php if (vespa_user_can_edit_contest($id)) : ?>
                             <button class="btn btn-default btn-sm" onclick="deleteContestRace( <?php echo $item->id; ?> );">Töröl</button>
                         <?php endif; ?>
                     </td>
@@ -69,9 +69,8 @@ function ajax_table_contest_races_add_record()
 {
     global $wpdb;
 
-    if(! current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles )){
-        wp_send_json_error(array("message" => "Jogosulatlan hozzáférés"), 403);
-    }
+    // Az országos verseny versenyszámait csak az adminisztrátor módosíthatja.
+    vespa_require_contest_edit(intval($_POST['contest_id']));
 
     // find min and max date
     $agnames = array();
@@ -223,9 +222,8 @@ function ajax_table_contest_races_modify_record()
 {
     global $wpdb;
 
-    if( ! current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles ) ){
-        wp_send_json_error( array("message" => "Jogosulatlan hozzáférés"), 403 );
-    }
+    // A módosítás csak a sor azonosítóját kapja meg, a versenyt abból nézzük ki.
+    vespa_require_contest_edit(vespa_contest_id_by_event($_POST['id']));
 
     $success = $wpdb->update('vespa_constest_events', array(
         'event_id'    => intval($_POST['event_id']),
@@ -240,9 +238,7 @@ function ajax_table_contest_races_delete_record()
 {
     global $wpdb;
 
-    if( ! current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles ) ){
-        wp_send_json_error( array("message" => "Jogosulatlan hozzáférés"), 403 );
-    }
+    vespa_require_contest_edit(vespa_contest_id_by_event($_POST['id']));
 
     $success = $wpdb->delete('vespa_constest_events', array('id' => intval($_POST['id'])), array('%d'));
 
@@ -260,9 +256,7 @@ function ajax_table_contest_races_finalize()
     $contest_id = is_numeric($_POST['contest_id']) ? $_POST['contest_id'] : -1;
     $sendEmail = is_numeric($_POST['emails']) ? true : false;
 
-    if(! current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles )){
-        wp_send_json_error(array("message" => "Jogosulatlan hozzáférés"), 403);
-    }
+    vespa_require_contest_edit($contest_id);
     $contest = $wpdb->get_row($wpdb->prepare("SELECT * FROM vespa_contests WHERE contest_id=%d",$contest_id));
     if(!isset($contest)){
         wp_send_json_error(array("message" => "Érvénytelen verseny"), 404);

@@ -241,7 +241,7 @@ function vespa_menu_contests()
         } else if ('question' == $_GET['action']) {
             // A mentés is ezt a jogosultságot követeli; enélkül a link
             // látszana, de a mentés elszállna.
-            if (!current_user_can(VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles)) {
+            if (!vespa_user_can_edit_contest(intval($_GET['id']))) {
                 echo 'Nincs megfelelő jogosultságod az oldal megtekintéséhez.';
                 return;
             }

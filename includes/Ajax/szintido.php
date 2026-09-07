@@ -134,11 +134,14 @@ function vespa_szintido_ajax_set_min()
 {
     check_ajax_referer('vespa_nonce', 'nonce');
 
-    if (!current_user_can(VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles)) {
+    $contest_event_id = isset($_POST['contest_event_id']) ? intval($_POST['contest_event_id']) : 0;
+
+    // A szintidő a versenyszám adata, ezért a hozzá tartozó verseny típusa dönt:
+    // országos versenynél csak az adminisztrátor állíthatja.
+    if (!vespa_user_can_edit_contest(vespa_contest_id_by_event($contest_event_id))) {
         wp_send_json_error(array('message' => 'Adott művelethez a felhasználó nem jogosult.'));
     }
 
-    $contest_event_id = isset($_POST['contest_event_id']) ? intval($_POST['contest_event_id']) : 0;
     $ido_szoveg        = isset($_POST['ido']) ? trim(sanitize_text_field(wp_unslash($_POST['ido']))) : '';
 
     global $wpdb;

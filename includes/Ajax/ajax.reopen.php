@@ -4,7 +4,8 @@
 function ajax_reopen_contest()
 {
     global $wpdb;
-    if (current_user_can(VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles)) {
+    // Az országos versenyt csak az adminisztrátor nyithatja vissza szerkesztésre.
+    if (vespa_user_can_edit_contest(intval($_POST['contest_id']))) {
         vitarex_log_function_call("Felhasználó: " . $_POST['caller'], true);
         $success = $wpdb->update('vespa_contests', array(
             'is_final'    => 0

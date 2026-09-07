@@ -13,13 +13,14 @@
 
             check_ajax_referer( 'vespa_nonce', 'nonce' );
 
-            if( ! current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles ) ){
-                wp_send_json_error( array('errors' => array('contest_id' => 'Nincs jogosultságod a beszámoló mentéséhez.')) );
-            }
-
             $contest_id = isset($_POST['contest_id']) ? intval($_POST['contest_id']) : 0;
             if( $contest_id <= 0 ){
                 wp_send_json_error( array('errors' => array('contest_id' => 'Hibás verseny.')) );
+            }
+
+            // Az országos verseny beszámolóját csak az adminisztrátor rögzítheti.
+            if( ! vespa_user_can_edit_contest( $contest_id ) ){
+                wp_send_json_error( array('errors' => array('contest_id' => 'Nincs jogosultságod a beszámoló mentéséhez.')) );
             }
 
             $kerdesek = $wpdb->get_results("SELECT * FROM vespa_contests_questions ORDER BY ordernum ASC");
@@ -162,7 +163,15 @@
         }
 
         public function checkDelete( $id ){
-            return current_user_can( 'manage_options' ) || current_user_can( VESPA_Roles::versenyek_kezelese_kiiras_modositas_torles );
+            global $wpdb;
+
+            // A sor a versenyhez tartozik, ezért a verseny típusa dönt.
+            $contest_id = intval($wpdb->get_var($wpdb->prepare(
+                "SELECT contest_id FROM vespa_questions_answered WHERE qa_id=%d",
+                intval($id)
+            )));
+
+            return vespa_user_can_edit_contest( $contest_id );
         }
 
         public function getFilters(){
@@ -182,7 +191,7 @@
             $btns .= '  <i class="fa fa-pencil" aria-hidden="true"></i>';
             $btns .= '</a>&nbsp;';
 
-            if( $this->checkDelete(0) ){
+            if( $this->checkDelete( $item->{$this->id_field} ) ){
                 $btns .= '<button class="btn btn-sm btn-default color-red delete-entity" data-modalid="" data-id="' . $item->{$this->id_field} . '">';
                 $btns .= '  <i class="fa fa-trash" aria-hidden="true"></i>';
                 $btns .= '</button>';

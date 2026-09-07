@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.23] - 2026-09-07
+
+### Javítások
+- **Az országos versenyeket csak adminisztrátor szerkesztheti:** Eddig egyetlen jogosultság (`versenyek_kezelese_kiiras_modositas_torles`) döntött minden versenytípusnál, ezért a megyei versenyigazgató, a megyei vezető, a diák sportigazgató és a FOVESZ/FODISZ sportigazgató az országos kiírásokat is módosíthatta. Mostantól az országos szint (`contest_type = 1`) a WordPress adminisztrátoré: az alapadatok mentése, a versenyszámok, a korosztályok, a kísérők, a szintidők, a beszámoló, a véglegesítés, a „Szerkeszthetővé tesz" és a törlés is. A többi versenytípusnál a jogosultság változatlan.
+- **Új verseny már nem írható ki országosként jogosultság nélkül:** A típusválasztóban az „Országos" opció csak az adminisztrátornak jelenik meg.
+- **A verseny mentése végre ellenőrzi a jogosultságot:** A `save_contests` végpont eddig semmilyen jogosultságot nem nézett — csak a Szerkesztés gomb volt elrejtve, a végpontot viszont bárki hívhatta. A mentés a küldött és a jelenlegi versenytípust is vizsgálja, így országos verseny nem menthető „megyeire átírva", és megyeiből sem lehet országost csinálni.
+- **A szerkesztő oldal közvetlen linkkel sem nyílik meg:** A `contest_editor.php` eddig annak is megnyílt, aki a Szerkesztés gombot nem látta, csak a címet ismerte.
+
 ## [2.3.22] - 2026-08-04
 
 ### Javítások

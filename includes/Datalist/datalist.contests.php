@@ -22,6 +22,23 @@ class VESPA_Contests extends VESPA_Datalist
     {
         global $wpdb;
 
+        // A mentés eddig semmilyen jogosultságot nem nézett: csak a Szerkesztés
+        // gomb volt elrejtve, a végpont bárkinek engedett. Két típust kell
+        // vizsgálni, hogy egyik irányban se lehessen megkerülni a szabályt:
+        // az országos versenyt ne lehessen „megyeire átírva" menteni, és
+        // megyeiből se lehessen országost csinálni.
+        $mentendo_tipus = isset($_POST['contest_types']) ? $_POST['contest_types'] : 0;
+        $jelenlegi_id   = isset($_POST['contest_id']) ? intval($_POST['contest_id']) : 0;
+
+        if (
+            !vespa_user_can_edit_contest_type($mentendo_tipus)
+            || ($jelenlegi_id > 0 && !vespa_user_can_edit_contest($jelenlegi_id))
+        ) {
+            wp_send_json_error(array('errors' => array(
+                'contest_types' => 'Nincs jogosultságod a verseny mentéséhez. Az országos versenyeket csak adminisztrátor szerkesztheti.'
+            )));
+        }
+
         $errors = array();
         $req_fields = array(
             'contest_name', 'contest_subtypes', 'contest_types', 'contest_series', 'organiser',
