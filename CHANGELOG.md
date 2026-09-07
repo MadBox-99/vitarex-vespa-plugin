@@ -7,6 +7,8 @@
 - **Új verseny már nem írható ki országosként jogosultság nélkül:** A típusválasztóban az „Országos" opció csak az adminisztrátornak jelenik meg.
 - **A verseny mentése végre ellenőrzi a jogosultságot:** A `save_contests` végpont eddig semmilyen jogosultságot nem nézett — csak a Szerkesztés gomb volt elrejtve, a végpontot viszont bárki hívhatta. A mentés a küldött és a jelenlegi versenytípust is vizsgálja, így országos verseny nem menthető „megyeire átírva", és megyeiből sem lehet országost csinálni.
 - **A szerkesztő oldal közvetlen linkkel sem nyílik meg:** A `contest_editor.php` eddig annak is megnyílt, aki a Szerkesztés gombot nem látta, csak a címet ismerte.
+- **A versenyigazgató és a megyei vezető csak a saját megyéje versenyeit szerkesztheti:** Eddig bármelyik megye versenyét módosíthatta, sőt a regionális és a szabadidős versenyeket is. Mostantól a hatóköre a saját megyéje megyei versenyeire (`contest_type = 3`, egyező megye) szűkül — a mentés, a versenyszámok, a kísérők, a szintidők, a beszámoló, a véglegesítés és a törlés is. Akinél nincs beállítva megye a felhasználói adatlapon, egyetlen megyei versenyt sem szerkeszthet. Aki a megyei szerep mellett FOVESZ/FODISZ vagy diák sportigazgatói szerepet is kapott, nem szigorodik be: az erősebb jogkör érvényesül. A **versenyek listája nem változik**, továbbra is látja a többi versenyt.
+- **A szerkesztőben a megye legördülő is szűkül:** A megyei szintű szerepnek csak a saját megyéje jelenik meg, így nem tud véletlenül más megyének versenyt kiírni, majd a mentésnél hibára futni.
 
 ## [2.3.22] - 2026-08-04
 

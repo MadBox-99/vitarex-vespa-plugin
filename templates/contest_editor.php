@@ -142,7 +142,19 @@ if (is_numeric($id) && $id > 0) {
                     <option value="0">Nincs kitöltve</option>
                     <?php
                     $list = $wpdb->get_results("SELECT * FROM vespa_states ORDER BY state_name ASC");
+
+                    // A megyei szintű szerep csak a saját megyéjének írhat ki
+                    // versenyt, ezért a többi megyét fel sem kínáljuk neki.
+                    $vespa_jogok = vespa_contest_szerkesztes_jogok();
+                    $vespa_sajat_megye = empty($vespa_jogok['megyei_szerep'])
+                        ? 0
+                        : intval($vespa_jogok['sajat_megye']);
+
                     foreach ($list as $item) {
+                        if ($vespa_sajat_megye > 0 && intval($item->state_id) !== $vespa_sajat_megye) {
+                            continue;
+                        }
+
                         $selected = ($record != null && $record->state_id == $item->state_id ? 'selected' : '');
                         echo '<option value="' . $item->state_id . '" ' . $selected . '>' . $item->state_name . '</option>';
                     }
