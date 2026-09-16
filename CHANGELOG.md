@@ -39,6 +39,11 @@
 - **Halott tankerület-szűrés:** Ugyanennél a riportnál a tankerület szerinti szűrés egy elgépelt változónév miatt soha nem érvényesült.
 - **Hiányzó GET paraméterek:** A riportok több paramétert is ellenőrzés nélkül olvastak ki, ami PHP-figyelmeztetést írhatott a válaszba, és a binárisan írt XLSX-fájlt megsérthette. Mostantól minden paraméter olvasása védett.
 
+## [2.3.20] - 2026-08-03
+
+### Fejlesztői eszközök
+- **A build verzióemelése tényleg bekerül a commitba:** A `build.sh` záró commitja előtt nem volt `git add`, ezért a megemelt verziószám sosem került bele — a „nothing to commit" hibán pedig a `set -e` miatt a script a `git push` előtt elszállt. Mostantól csak a fő plugin fájl kerül stage-be, a munkakönyvtár egyéb módosításai nem keverednek a verzió-commitba.
+
 ## [2.3.18] - 2026-08-03
 
 ### Javítások
