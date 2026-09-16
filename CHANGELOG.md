@@ -1,5 +1,7 @@
 # Changelog
 
+> A verziószámok szándékosan nem folytonosak: a `build.sh` minden futásnál +1 patch verziót lép, akkor is, ha közben nem volt tartalmi változás. Ezért egyes számok (pl. 2.3.19, 2.3.24) mögött nincs önálló bejegyzés — az a tartalom a legközelebbi alatta lévő szakaszban szerepel.
+
 ## [2.3.25] - 2026-09-16
 
 ### Javítások
