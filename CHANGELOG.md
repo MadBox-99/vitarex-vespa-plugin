@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.3.25] - 2026-09-16
+
+### Javítások
+- **A versenyigazgató és a megyei vezető a regionális versenyeket is kezelheti:** A 2.3.23-as szűkítés a regionális versenyeket is elvette tőlük; kérésre visszakapták. A regionális verseny megyétől függetlenül az övék (létrehozás, szerkesztés, versenyszámok, kísérők, szintidők, beszámoló, véglegesítés, törlés), mert a régió több megyét fog át, és a verseny megyéje ott csak a helyszíné. Ehhez nem kell beállított megye a felhasználói adatlapon. A megyei verseny (`contest_type = 3`) továbbra is csak a saját megyéjükben, az országos és a szabadidős verseny továbbra sem az övék.
+- **A szerkesztőben újra minden megye választható:** A 2.3.23-ban bevezetett megye-szűkítés visszavonva. Regionális versenynél a megye a helyszíné, azt szűkített legördülővel nem lehetett megadni, és egy másik megyéhez kötött verseny megyéje mentéskor elveszett volna. A megyei típusnál az egyezést továbbra is a mentés ellenőrzi, érthető hibaüzenettel.
+
 ## [2.3.23] - 2026-09-07
 
 ### Javítások

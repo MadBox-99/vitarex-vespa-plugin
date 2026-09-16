@@ -72,8 +72,9 @@ allit_szerep('fovesz_fodisz_sportigazgato', array('admin' => false, 'versenykeze
 allit_szerep('diak_sportigazgato', array('admin' => false, 'versenykezeles' => true), $orszagos_kivetelevel);
 
 // ---- Megyei szintű szerepek --------------------------------------------
-// A versenyigazgató és a megyei vezető csak a saját megyéje megyei
-// versenyeit szerkesztheti. Eddig minden nem országos versenyt módosíthatott,
+// A versenyigazgató és a megyei vezető hatóköre: a saját megyéje megyei
+// versenyei, illetve — megyétől függetlenül — a regionális versenyek, mert a
+// régió több megyét fog át. Eddig minden nem országos versenyt módosíthatott,
 // bármelyik megyéé volt.
 
 $megyei = array('admin' => false, 'versenykezeles' => true, 'megyei_szerep' => true, 'sajat_megye' => 5);
@@ -82,8 +83,12 @@ allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::MEGYEI, $megyei,
 allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::MEGYEI, $megyei, 7) === false, 'megyei szerep / másik megye megyei versenye -> nem');
 allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::MEGYEI, $megyei, 0) === false, 'megyei szerep / megye nélküli megyei verseny -> nem');
 allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::ORSZAGOS, $megyei, 5) === false, 'megyei szerep / országos verseny -> nem');
-allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::REGIONALIS, $megyei, 5) === false, 'megyei szerep / regionális verseny a saját megyéjében -> nem');
 allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::SZABADIDOS, $megyei, 5) === false, 'megyei szerep / szabadidős verseny a saját megyéjében -> nem');
+
+// Regionális: a régió több megyét fog át, ezért nincs megyeszűrés.
+allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::REGIONALIS, $megyei, 5) === true, 'megyei szerep / regionális verseny a saját megyéjében -> igen');
+allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::REGIONALIS, $megyei, 7) === true, 'megyei szerep / regionális verseny másik megyében -> igen');
+allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::REGIONALIS, $megyei, 0) === true, 'megyei szerep / megye nélküli regionális verseny -> igen');
 
 // A megye szövegesen is érkezhet a $_POST-ból, illetve az adatbázisból.
 allit(vespa_contest_szerkesztes_engedelyezett('3', $megyei, '5') === true, 'megyei szerep / szöveges típus és megye -> igen');
@@ -91,15 +96,18 @@ allit(vespa_contest_szerkesztes_engedelyezett('3', $megyei, '5') === true, 'megy
 // Megye nélkül (null) csak a típust nézzük: ez kell a szerkesztő
 // típusválasztójához, ahol még nincs kiválasztott megye.
 allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::MEGYEI, $megyei) === true, 'megyei szerep / típusválasztó: megyei típus -> igen');
-allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::REGIONALIS, $megyei) === false, 'megyei szerep / típusválasztó: regionális típus -> nem');
+allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::REGIONALIS, $megyei) === true, 'megyei szerep / típusválasztó: regionális típus -> igen');
+allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::SZABADIDOS, $megyei) === false, 'megyei szerep / típusválasztó: szabadidős típus -> nem');
 
-// Akinek nincs beállítva megyéje, megyei versenyt sem szerkeszthet — eddig a
-// hiányzó megye csendben 0 lett, és a szűrés így senkire nem illett.
+// Akinek nincs beállítva megyéje, megyei versenyt nem szerkeszthet — eddig a
+// hiányzó megye csendben 0 lett, és a szűrés így senkire nem illett. A
+// regionálishoz viszont nem kell megye, azt ő is kezelheti.
 $megye_nelkuli = array('admin' => false, 'versenykezeles' => true, 'megyei_szerep' => true, 'sajat_megye' => 0);
 
 allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::MEGYEI, $megye_nelkuli, 5) === false, 'megye nélküli versenyigazgató / megyei verseny -> nem');
 allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::MEGYEI, $megye_nelkuli, 0) === false, 'megye nélküli versenyigazgató / megye nélküli verseny -> nem');
-allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::MEGYEI, $megye_nelkuli) === false, 'megye nélküli versenyigazgató / típusválasztó -> nem');
+allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::MEGYEI, $megye_nelkuli) === false, 'megye nélküli versenyigazgató / típusválasztó: megyei -> nem');
+allit(vespa_contest_szerkesztes_engedelyezett(VespaContestType::REGIONALIS, $megye_nelkuli, 7) === true, 'megye nélküli versenyigazgató / regionális verseny -> igen');
 
 // Aki megyei szerep mellett országos hatókörű szerepet is kapott, nem
 // szigorodik be: a FOVESZ/FODISZ sportigazgatói jogköre marad az erősebb.

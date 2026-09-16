@@ -44,7 +44,7 @@ class VespaContest
 		}
 
 		// A megyei szintű szerep azt sem törölheti, amit szerkeszteni sem tud:
-		// más megye versenyét, illetve regionális vagy szabadidős versenyt.
+		// más megye megyei versenyét, illetve szabadidős versenyt.
 		$jogok = vespa_contest_szerkesztes_jogok();
 		if (
 			!empty($jogok['megyei_szerep'])
@@ -93,8 +93,8 @@ class VespaContest
  * kiírásokat és bármelyik megye versenyét is módosíthatták. Két szűkítés van:
  *
  *  - az országos szint a WordPress adminisztrátoré;
- *  - a versenyigazgató és a megyei vezető csak a saját megyéje megyei
- *    versenyeit szerkesztheti.
+ *  - a versenyigazgató és a megyei vezető a saját megyéje megyei versenyeit,
+ *    illetve — megyétől függetlenül — a regionális versenyeket kezelheti.
  *
  * A döntés tiszta függvényben van (tesztek: tests/test-contest-edit-access.php),
  * a WordPress-től csak a jogosultság-jelzőket kapja.
@@ -136,9 +136,14 @@ function vespa_contest_szerkesztes_engedelyezett($contest_type, $jogok, $contest
 		return false;
 	}
 
-	// A megyei szintű szerepek hatóköre a saját megyéjük megyei versenye. A
-	// regionális és a szabadidős verseny több megyét érint, ezért nem az övék.
+	// A megyei szintű szerepek hatóköre a saját megyéjük megyei versenye, és
+	// megyétől függetlenül a regionális verseny — a régió több megyét fog át,
+	// a verseny megyéje ott csak a helyszíné. A szabadidős verseny nem az övék.
 	if (!empty($jogok['megyei_szerep'])) {
+		if ($tipus === VespaContestType::REGIONALIS) {
+			return true;
+		}
+
 		if ($tipus !== VespaContestType::MEGYEI) {
 			return false;
 		}
