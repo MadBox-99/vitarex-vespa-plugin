@@ -6,6 +6,10 @@
     Author: Cegem360 Kft.
     Version: 2.3.26
     Author URI: https://cegem360.hu
+    Requires at least: 6.0
+    Tested up to: 6.8
+    Requires PHP: 8.0
+    Text Domain: vitarex_vespa
     */
 
 $currentLocale = get_locale();

@@ -2,6 +2,13 @@
 
 > A verziószámok szándékosan nem folytonosak: a `build.sh` minden futásnál +1 patch verziót lép, akkor is, ha közben nem volt tartalmi változás. Ezért egyes számok (pl. 2.3.19, 2.3.24) mögött nincs önálló bejegyzés — az a tartalom a legközelebbi alatta lévő szakaszban szerepel.
 
+## [Kiadatlan]
+
+A következő buildnél kerül ki; a build.sh a verziószámot ekkor emeli.
+
+### Fejlesztői / üzemeltetési
+- **Verziókövetelmények a plugin fejlécében:** Eddig nem volt feltüntetve, milyen környezet kell a pluginhoz. Mostantól a fejléc kimondja: `Requires PHP: 8.0` (a kódban használt `str_contains()` miatt PHP 7.x-en fatal error lenne), `Requires at least: 6.0`, `Tested up to: 6.8` (az éles környezet 6.8.3-on fut), valamint `Text Domain: vitarex_vespa`. A WordPress 6.5 óta a `Requires PHP` alapján meg is akadályozza az aktiválást a nem megfelelő környezetben, tehát ez nem csak dokumentáció.
+
 ## [2.3.25] - 2026-09-16
 
 ### Javítások
