@@ -396,15 +396,25 @@ function vespa_download_listing($contest_id, $isBase64 = false, $saveFile = fals
    
     $html .= '</table>';
 
-    $html .= stripslashes($record->listing_text);
+    // A TinyMCE a textarea-ba nem a HTML-t írja vissza, hanem a "Szöveg" fül
+    // szerinti alakot: a bekezdésekből és a sortörésekből csak újsor marad
+    // (pre_wpautop). A WordPress a saját tartalmánál megjelenítéskor futtatja
+    // rá a wpautop()-ot — itt is ezt kell tenni, különben a kiírás szövege a
+    // PDF-ben egyetlen bekezdéssé olvad össze. A régi, <p>-vel mentett
+    // rekordokat a wpautop változatlanul hagyja.
+    $html .= wpautop(stripslashes($record->listing_text));
 
     $sport_id = $list[0]->sport_id;
+
+    // A WriteHTML-nek a base64-es ág előtt kell lefutnia: enélkül az API-nak
+    // visszaadott PDF csak a címlapot tartalmazta, az adattáblát és a kiírás
+    // szövegét nem.
+    $mpdf->WriteHTML($html);
 
     if($isBase64){
         return base64_encode($mpdf->Output('', 'S'));
     }
 
-    $mpdf->WriteHTML($html);
     $mpdf->Output($filename, 'F');
     if($saveFile)
         return $filename;
