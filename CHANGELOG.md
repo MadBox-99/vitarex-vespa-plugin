@@ -6,6 +6,8 @@
 
 A következő buildnél kerül ki; a build.sh a verziószámot ekkor emeli.
 
+## [2.3.27] - 2026-09-17
+
 ### Javítások
 - **A kiírás extra szövegének formázása nem vész el a PDF-ben:** Ha a szerkesztőben több enterrel bekezdéseket vagy sortöréseket vitt be a felhasználó, a kész versenykiírásban minden egyetlen bekezdéssé olvadt össze. Ennek az oka nem a mentés volt: a WordPress TinyMCE-je a textarea-ba nem a HTML-t írja vissza, hanem a „Szöveg" fül szerinti alakot, amelyben a `<p>` és a `<br>` helyén csak újsor áll — a HTML pedig az újsort nem veszi figyelembe. A WordPress a saját tartalmánál megjelenítéskor futtat egy `wpautop()`-ot, a kiírás PDF-je viszont nem, ezért a bekezdések elvesztek. Mostantól a PDF is átengedi a szöveget a `wpautop()`-on. A korábbi, `<p>`-vel mentett kiírások változatlanul jelennek meg.
 - **Az API-n keresztül kért versenykiírás végre teljes:** A base64-ben visszaadott PDF csak a címlapot tartalmazta, mert a függvény még a `WriteHTML()` előtt visszatért — az adattábla (rendező, helyszín, korosztályok, nevezési határidő, versenyszámok) és a kiírás szövege lemaradt róla. A letöltött PDF ettől nem volt érintett, csak az API-s ág.
